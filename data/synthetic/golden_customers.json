@@ -1,0 +1,50 @@
+[
+  {
+    "customer_id": "C000",
+    "description": "S0 - Estable / No intervenir. Liquidez normal, comportamiento histórico impecable.",
+    "days_to_due": 5,
+    "balance_ratio": 3.5,
+    "income_variation": 0.05,
+    "spending_velocity": 0.8,
+    "payment_delay_avg": 0.0,
+    "reminder_response": 0.9,
+    "failed_attempts": 0,
+    "expected_risk": "LOW"
+  },
+  {
+    "customer_id": "C101",
+    "description": "S1 - Fricción u olvido. Saldo suficiente, pero históricamente paga 1 día antes o el mismo día.",
+    "days_to_due": 1,
+    "balance_ratio": 2.0,
+    "income_variation": 0.0,
+    "spending_velocity": 1.0,
+    "payment_delay_avg": 1.0,
+    "reminder_response": 0.5,
+    "failed_attempts": 0,
+    "expected_risk": "MEDIUM"
+  },
+  {
+    "customer_id": "C102",
+    "description": "S2 - Desfase de fecha. Ingresos han variado y tiene historial de pagar tarde consistentemente (espera pago).",
+    "days_to_due": 3,
+    "balance_ratio": 0.2,
+    "income_variation": -0.4,
+    "spending_velocity": 1.5,
+    "payment_delay_avg": 5.0,
+    "reminder_response": 0.8,
+    "failed_attempts": 1,
+    "expected_risk": "HIGH"
+  },
+  {
+    "customer_id": "C104",
+    "description": "S3 - Presión de liquidez. Saldo bajísimo, alto gasto y rebotes.",
+    "days_to_due": 2,
+    "balance_ratio": 0.1,
+    "income_variation": -0.8,
+    "spending_velocity": 3.2,
+    "payment_delay_avg": 2.0,
+    "reminder_response": 0.6,
+    "failed_attempts": 3,
+    "expected_risk": "HIGH"
+  }
+]
