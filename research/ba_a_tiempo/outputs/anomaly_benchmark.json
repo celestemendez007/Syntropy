@@ -1,0 +1,54 @@
+{
+  "IsolationForest": {
+    "auc_s0_vs_s3": 0.9588,
+    "fit_time_s": 0.208,
+    "latency_p50_ms": 10.687,
+    "latency_p95_ms": 12.204,
+    "model_size_kb": 2259.6,
+    "golden_g01_estable": 0.246,
+    "golden_g02_anomalia_benigna": 0.691,
+    "golden_g07_caida_ingreso": 0.512,
+    "golden_g07_pctil_anomalia": 10.8,
+    "golden_g12_cliente_nuevo": 0.209,
+    "golden_check_pass": true
+  },
+  "LocalOutlierFactor": {
+    "auc_s0_vs_s3": 0.6824,
+    "fit_time_s": 0.085,
+    "latency_p50_ms": 1.199,
+    "latency_p95_ms": 1.448,
+    "model_size_kb": 1113.4,
+    "golden_g01_estable": 0.049,
+    "golden_g02_anomalia_benigna": 1.0,
+    "golden_g07_caida_ingreso": 0.1,
+    "golden_g07_pctil_anomalia": 0.5,
+    "golden_g12_cliente_nuevo": 0.027,
+    "golden_check_pass": true
+  },
+  "OneClassSVM": {
+    "auc_s0_vs_s3": 0.8365,
+    "fit_time_s": 0.027,
+    "latency_p50_ms": 0.581,
+    "latency_p95_ms": 0.679,
+    "model_size_kb": 27.3,
+    "golden_g01_estable": 0.497,
+    "golden_g02_anomalia_benigna": 1.0,
+    "golden_g07_caida_ingreso": 0.598,
+    "golden_g07_pctil_anomalia": 3.2,
+    "golden_g12_cliente_nuevo": 0.452,
+    "golden_check_pass": true
+  },
+  "ZScore_Mahalanobis": {
+    "auc_s0_vs_s3": 0.9736,
+    "fit_time_s": 0.71,
+    "latency_p50_ms": 0.691,
+    "latency_p95_ms": 0.784,
+    "model_size_kb": 27.4,
+    "golden_g01_estable": 0.008,
+    "golden_g02_anomalia_benigna": 0.231,
+    "golden_g07_caida_ingreso": 0.034,
+    "golden_g07_pctil_anomalia": 16.7,
+    "golden_g12_cliente_nuevo": 0.005,
+    "golden_check_pass": true
+  }
+}

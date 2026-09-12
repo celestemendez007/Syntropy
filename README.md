@@ -28,3 +28,31 @@ Para considerar este MVP como exitoso durante el hackathon, debe cumplirse lo si
 * **Celeste:** Backend, Policy Engine y Agente Conversacional (Owner rama `main` y `develop`).
 * **Elena:** Data, Machine Learning y Explicabilidad.
 * **Camila:** Frontend, Experiencia de Cliente (UX), QA y Demo.
+
+## 📊 Estado del motor de ML (actualizado)
+
+`src/ml/risk_engine.py` ya no es un mock. Estado real por componente:
+
+| Componente | Estado | Detalle |
+|---|---|---|
+| Generador de datos sintéticos | ✅ Real | 3,000 clientes, 6 ciclos históricos, reproducible (seed fija). `research/ba_a_tiempo/` |
+| `anomaly_score` | ✅ Real | Isolation Forest, comparado contra LOF/One-Class SVM/z-score Mahalanobis. Ver `research/ba_a_tiempo/outputs/anomaly_benchmark_report.md` |
+| `situation_hint` (S0-S3) | ✅ Real | Reglas deterministas, no ML |
+| `low_digital_response` | ✅ Real | Regla sobre tasa de respuesta y uso de app |
+| `top_factors` | ✅ Real | Ablación por feature sobre Isolation Forest |
+| `risk_score` / `risk_level` | ⚠️ Proxy interino | = `anomaly_score` hasta integrar el modelo supervisado |
+| Riesgo supervisado (LR/Random Forest/LightGBM) | ⏳ Pendiente | Fase 3, diseño listo, benchmark no corrido aún |
+| Canal preferido / momento óptimo | ⏳ Pendiente | Fase 4 |
+| NBA con feedback loop | ⏳ Pendiente | Fase 5 |
+
+Documentación completa del diseño (dataset, feature engineering, golden customers, casos extremos,
+benchmark de modelos con veredicto razonado) en `research/ba_a_tiempo/`. `docs/contracts.md` y
+`docs/data_dictionary.md` reflejan el esquema real (v2), no el mock original.
+
+Para regenerar los datos o el benchmark:
+```bash
+cd research/ba_a_tiempo
+python3 -c "from ba_a_tiempo import generator; generator.run_all()"
+python3 -c "from ba_a_tiempo import anomaly_benchmark as AB; r,s = AB.run_benchmark(); AB.build_report(r,s)"
+python3 -m pytest tests/ -q
+```
