@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentación de Perfiles y Modelos - BA A Tiempo</title>
+    <title>Documentación General - BA A Tiempo</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -46,7 +46,7 @@
         h2 {
             border-bottom: 2px solid var(--card-bg);
             padding-bottom: 10px;
-            margin-top: 40px;
+            margin-top: 50px;
             color: var(--primary);
         }
 
@@ -104,7 +104,7 @@
             font-size: 0.95rem;
         }
 
-        .model-section {
+        .section-box {
             background: linear-gradient(145deg, var(--card-bg), #111827);
             border-radius: var(--border-radius);
             padding: 30px;
@@ -120,102 +120,226 @@
             font-size: 0.8rem;
             margin-left: 10px;
         }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.02);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .flow-step strong {
+            color: var(--primary);
+            margin-right: 10px;
+            min-width: 150px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        th {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        tr:hover td {
+            background-color: rgba(255,255,255,0.02);
+        }
+        
+        .priority-P0 { color: #f87171; font-weight: bold; }
+        .priority-P1 { color: #fbbf24; font-weight: bold; }
+        .priority-P2 { color: #34d399; font-weight: bold; }
+        .priority-P3 { color: #94a3b8; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>BA A Tiempo - Documentación de Inteligencia</h1>
+        <h1>BA A Tiempo - MVP Hackathon 2026</h1>
         <p style="color: var(--text-muted); font-size: 1.1rem;">
-            Clasificación de Perfiles Dinámicos y Arquitectura de Modelos ML para el MVP (Hackathon 2026).
+            Documentación integral: Tareas, Perfiles, Modelos, Flujo y Productos Esperados.
         </p>
     </header>
 
-    <h2>🎯 1. Perfiles de Clientes y Recomendaciones (Intervención)</h2>
-    <p class="text-muted">
-        No se etiquetará psicológicamente a la persona. Las categorías representan una <strong>situación observable del ciclo actual</strong> y pueden cambiar mes a mes.
-    </p>
+    <!-- 1. TAREAS DE INICIO A FIN -->
+    <h2>📋 1. Clasificación de Tareas (De Inicio a Fin)</h2>
+    <p class="text-muted">Desglose de las responsabilidades necesarias para completar el MVP end-to-end, clasificadas por fase de desarrollo.</p>
+    
+    <div class="section-box">
+        <h3 style="color: var(--accent); margin-top:0;">Fase 1: Estructura y Reglas Base (0 - 4h)</h3>
+        <table>
+            <tr><th>ID</th><th>Owner</th><th>Prioridad</th><th>Tarea</th></tr>
+            <tr><td>T00 - T01</td><td>Todas / Celeste</td><td class="priority-P0">P0 Crucial</td><td>Congelar alcance (README), crear Repo, ramas, y definir contratos JSON.</td></tr>
+            <tr><td>T02</td><td>Celeste/Camila</td><td class="priority-P0">P0 Crucial</td><td>Cerrar matriz State-Skills-Tools (Estados del agente) y prompts por fase.</td></tr>
+            <tr><td>T03</td><td>Elena</td><td class="priority-P0">P0 Crucial</td><td>Dataset sintético, diccionario de variables y clientes Golden S0-S4.</td></tr>
+            <tr><td>T04</td><td>Camila</td><td class="priority-P0">P0 Crucial</td><td>Wireframes M1-M4 (Nudge, Chat, Dashboard) y fixtures iniciales en UI.</td></tr>
+        </table>
 
+        <h3 style="color: var(--accent); margin-top:30px;">Fase 2: Motores de Machine Learning y Decisiones (4 - 10h)</h3>
+        <table>
+            <tr><th>ID</th><th>Owner</th><th>Prioridad</th><th>Tarea</th></tr>
+            <tr><td>T05</td><td>Elena</td><td class="priority-P0">P0 Crucial</td><td>Entrenar Isolation Forest y generar `anomaly_model`.</td></tr>
+            <tr><td>T06</td><td>Camila</td><td class="priority-P0">P0 Crucial</td><td>Entrenar Logistic Regression baseline para `risk_score`.</td></tr>
+            <tr><td>T07</td><td>Celeste</td><td class="priority-P0">P0 Crucial</td><td>Policy Engine y validadores financieros deterministas.</td></tr>
+            <tr><td>T08</td><td>Celeste</td><td class="priority-P0">P0 Crucial</td><td>Next Best Action (NBA) por reglas (intervención, canal, acción).</td></tr>
+        </table>
+
+        <h3 style="color: var(--accent); margin-top:30px;">Fase 3: Inteligencia Conversacional e Interfaz (10 - 16h)</h3>
+        <table>
+            <tr><th>ID</th><th>Owner</th><th>Prioridad</th><th>Tarea</th></tr>
+            <tr><td>T09 - T10</td><td>Celeste</td><td class="priority-P0">P0 Crucial</td><td>ConversationState, Agente LLM por estados (START→CLOSE) y Tool Calling.</td></tr>
+            <tr><td>T11</td><td>Camila</td><td class="priority-P0">P0 Crucial</td><td>Construir UI M1-M3 (Home Móvil y Chat) y conectar a endpoints.</td></tr>
+            <tr><td>T12</td><td>Elena/Camila</td><td class="priority-P1">P1 Urgente</td><td>Integrar Isolation Forest + LR en un único `risk_result`.</td></tr>
+            <tr><td>T13</td><td>Camila</td><td class="priority-P1">P1 Urgente</td><td>Construir Dashboard M4 interno para trazabilidad.</td></tr>
+        </table>
+
+        <h3 style="color: var(--accent); margin-top:30px;">Fase 4: Pruebas, Contingencias y Cierre (16 - 24h)</h3>
+        <table>
+            <tr><th>ID</th><th>Owner</th><th>Prioridad</th><th>Tarea</th></tr>
+            <tr><td>T14 - T17</td><td>Todas</td><td class="priority-P0">P0 Crucial</td><td>Diseño y ejecución de Matrices de Pruebas (Seguridad, Datos y Conversación).</td></tr>
+            <tr><td>T18 - T20</td><td>Todas</td><td class="priority-P1">P1 Urgente</td><td>Cross-reviews, Model Card conjunto y asegurar logs auditables.</td></tr>
+            <tr><td>T21 - T22</td><td>Todas</td><td class="priority-P0">P0 Crucial</td><td>Prueba end-to-end de 3 casos + Pitch/Ensayo comercial.</td></tr>
+            <tr><td>T23 - T24</td><td>Camila/Celeste</td><td class="priority-P3">P3 Extensión</td><td>K-Means (Si aporta valor) y Demo por Voz.</td></tr>
+            <tr><td>T25</td><td>Todas</td><td class="priority-P0">P0 Crucial</td><td>Code Freeze, backups, capturas de video (contingencia) y descanso.</td></tr>
+        </table>
+    </div>
+
+    <!-- 2. PERFILES Y MODELOS -->
+    <h2>🎯 2. Perfiles de Clientes y Modelos ML</h2>
+    
     <div class="grid">
         <!-- Perfil S0 -->
         <div class="card">
             <h3>S0 <span class="badge">Estable</span></h3>
             <span class="label">Señales Observables</span>
-            <p class="text-muted">Sin señales relevantes; el cliente mantiene su patrón histórico esperado y liquidez normal.</p>
-            
+            <p class="text-muted">Sin señales relevantes; patrón histórico esperado y liquidez normal.</p>
             <span class="label">Recomendación (NBA)</span>
             <p style="color: #4ade80; font-weight: 600;">NO_CONTACT</p>
-            <p class="text-muted" style="font-size: 0.85rem;">No intervenir ni molestar al cliente innecesariamente.</p>
         </div>
 
         <!-- Perfil S1 -->
         <div class="card">
             <h3>S1 <span class="badge">Fricción / Olvido</span></h3>
             <span class="label">Señales Observables</span>
-            <p class="text-muted">Liquidez aparente suficiente, pero presenta un atraso breve o está extremadamente cerca del vencimiento.</p>
-            
+            <p class="text-muted">Liquidez suficiente, pero presenta atraso leve o cercanía al vencimiento.</p>
             <span class="label">Recomendación (NBA)</span>
-            <p style="color: #fcd34d; font-weight: 600;">Nudge Simple + Acción Directa</p>
-            <p class="text-muted" style="font-size: 0.85rem;">Recordatorio suave orientado a facilitar el pago rápido.</p>
+            <p style="color: #fcd34d; font-weight: 600;">Nudge Simple</p>
         </div>
 
         <!-- Perfil S2 -->
         <div class="card">
             <h3>S2 <span class="badge">Desfase de Fecha</span></h3>
             <span class="label">Señales Observables</span>
-            <p class="text-muted">El cliente muestra intención de pago (o historial de pago tardío constante), pero el ingreso/fecha disponible no coincide con el vencimiento.</p>
-            
+            <p class="text-muted">Intención de pago, pero ingreso/fecha disponible no coincide con el corte.</p>
             <span class="label">Recomendación (NBA)</span>
             <p style="color: #fb923c; font-weight: 600;">Consultar Opciones</p>
-            <p class="text-muted" style="font-size: 0.85rem;">Ofrecer cambio de fecha o promesa de pago autorizada.</p>
         </div>
 
         <!-- Perfil S3 -->
         <div class="card">
             <h3>S3 <span class="badge">Presión de Liquidez</span></h3>
             <span class="label">Señales Observables</span>
-            <p class="text-muted">Cobertura insuficiente en cuenta, variaciones negativas de ingreso, o el cliente indica directamente que no puede cubrir la cuota.</p>
-            
+            <p class="text-muted">Cobertura insuficiente o el cliente indica directamente que no puede pagar.</p>
             <span class="label">Recomendación (NBA)</span>
-            <p style="color: #f87171; font-weight: 600;">Alternativas Válidas / Humano</p>
-            <p class="text-muted" style="font-size: 0.85rem;">Presentar plan de pagos parciales o escalar a asesor.</p>
+            <p style="color: #f87171; font-weight: 600;">Alternativas Válidas / Asesor</p>
         </div>
 
         <!-- Perfil S4 -->
         <div class="card">
             <h3>S4 <span class="badge">Baja Respuesta</span></h3>
             <span class="label">Señales Observables</span>
-            <p class="text-muted">Historial de mensajes ignorados, evasión digital, llamadas no atendidas o rechazo explícito.</p>
-            
+            <p class="text-muted">Historial de mensajes ignorados, evasión digital o rechazo.</p>
             <span class="label">Recomendación (NBA)</span>
             <p style="color: #c084fc; font-weight: 600;">Cambiar Canal/Hora</p>
-            <p class="text-muted" style="font-size: 0.85rem;">Reducir la insistencia y probar el canal preferido alternativo.</p>
         </div>
     </div>
 
-    <h2>🧠 2. Arquitectura de Modelos (Machine Learning)</h2>
-    <p class="text-muted">
-        El sistema consolida las salidas de estos modelos en un único <code>risk_result</code> combinado, aislando al frontend de la lógica interna de los algoritmos.
-    </p>
-
-    <div class="model-section">
-        <h3>🌲 Isolation Forest <span class="owner">Owner: Elena</span></h3>
-        <p class="text-muted"><strong>Objetivo:</strong> Detectar comportamiento atípico y estrés financiero en el ciclo actual comparado con el patrón histórico.</p>
-        <p class="text-muted"><strong>Salida Principal:</strong> <code>anomaly_score</code> + ejemplos de anomalías.</p>
+    <div class="section-box" style="margin-top: 20px;">
+        <h3 style="color: var(--accent); margin-top:0;">Modelos Implementados</h3>
+        <ul style="color: var(--text-muted);">
+            <li><strong style="color:var(--text-main)">Isolation Forest (Elena):</strong> Detecta estrés financiero del ciclo actual (Anomaly Score).</li>
+            <li><strong style="color:var(--text-main)">Logistic Regression (Camila):</strong> Baseline de riesgo base supervisado (Risk Score).</li>
+            <li><strong style="color:var(--text-main)">K-Means (Camila / Opcional):</strong> Para clusters adicionales de comportamiento, descartable si no aporta claridad.</li>
+        </ul>
     </div>
 
-    <div class="model-section">
-        <h3>📈 Logistic Regression (Baseline) <span class="owner">Owner: Camila</span></h3>
-        <p class="text-muted"><strong>Objetivo:</strong> Proveer un modelo supervisado base (baseline de riesgo) entrenado sobre el dataset sintético y el preprocesamiento compartido.</p>
-        <p class="text-muted"><strong>Salida Principal:</strong> <code>risk_score</code> + <code>risk_level</code>.</p>
+    <!-- 3. FLUJO FINAL -->
+    <h2>🔄 3. El Flujo End-to-End (Cómo funciona el sistema)</h2>
+    <p class="text-muted">Regla Central: "ML detecta. Las reglas deciden. El LLM comprende. El backend valida."</p>
+    
+    <div class="section-box">
+        <div class="flow-step">
+            <strong>1. Datos & ML</strong>
+            <span>Datos sintéticos → Isolation Forest + Logistic Regression extraen el Score de anomalía y riesgo.</span>
+        </div>
+        <div class="flow-step">
+            <strong>2. Decisión (NBA)</strong>
+            <span>El Next Best Action decide por reglas deterministas si intervenir, en qué canal, momento y objetivo.</span>
+        </div>
+        <div class="flow-step">
+            <strong>3. Nudge (UI)</strong>
+            <span>La Banca Móvil simulada muestra el Nudge preventivo (Tarjeta) solo al cliente que lo necesita.</span>
+        </div>
+        <div class="flow-step">
+            <strong>4. Chatbot (Agente)</strong>
+            <span>Agente por estados (Start→Understand→Confirm) comprende la situación del cliente con skills limitados.</span>
+        </div>
+        <div class="flow-step">
+            <strong>5. Autoridad Financiera</strong>
+            <span>El Policy Engine + Tools validan que la IA no prometa lo prohibido (fechas exageradas, montos mínimos, waivers).</span>
+        </div>
+        <div class="flow-step">
+            <strong>6. Resolución</strong>
+            <span>Cliente selecciona, rechaza o solicita a un humano, generando un cierre explícito y verificable.</span>
+        </div>
+        <div class="flow-step">
+            <strong>7. Memoria & Auditoría</strong>
+            <span>El Dashboard interno registra la trazabilidad, logs de la conversación, canal y memoria para el futuro.</span>
+        </div>
     </div>
 
-    <div class="model-section" style="opacity: 0.8; border-color: rgba(255,255,255,0.1);">
-        <h3>🎯 K-Means (Exploratorio - Fase P3) <span class="owner">Owner: Camila</span></h3>
-        <p class="text-muted"><strong>Objetivo:</strong> Descubrimiento no supervisado de clusters. Es un modelo <em>opcional (Extensión P3)</em>.</p>
-        <p class="text-muted"><strong>Decisión:</strong> Solo se integrará si aporta clusters interpretables y estables, de lo contrario se descarta para mantener la simpleza del MVP.</p>
+    <!-- 4. PRODUCTOS ESPERADOS -->
+    <h2>🏆 4. Productos Esperados (Entregables del MVP)</h2>
+    
+    <div class="grid">
+        <div class="card" style="border-left: 4px solid var(--accent);">
+            <h3>📱 Banca Móvil (Mock)</h3>
+            <p class="text-muted">Interfaz que simule la aplicación del banco, integrando el Nudge preventivo ("Revisar mi pago") con cero fricción.</p>
+        </div>
+        <div class="card" style="border-left: 4px solid var(--primary);">
+            <h3>💬 Asistente de Texto Inteligente</h3>
+            <p class="text-muted">Chat funcional empático, controlado por el motor de estados, que no alucina información financiera y comprende barreras reales.</p>
+        </div>
+        <div class="card" style="border-left: 4px solid #34d399;">
+            <h3>🛡️ Motor de Políticas / NBA</h3>
+            <p class="text-muted">Lógica determinista invisible al usuario pero infalible, que entrega un menú de opciones 100% autorizadas y seguras.</p>
+        </div>
+        <div class="card" style="border-left: 4px solid #fcd34d;">
+            <h3>📊 Dashboard de Auditoría</h3>
+            <p class="text-muted">Panel interno para el banco que muestra el riesgo, métricas, historial de la conversación, eficacia del contacto y trazabilidad total.</p>
+        </div>
     </div>
+
+    <footer style="margin-top: 50px; text-align: center; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+        BA A Tiempo | Entropy Hack 2026 - Hackeando para proteger el historial crediticio.
+    </footer>
 </div>
 
 </body>
