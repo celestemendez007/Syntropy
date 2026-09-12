@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Propuesta v2 - BA A Tiempo</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #38bdf8;
+            --primary-glow: rgba(56, 189, 248, 0.4);
+            --accent: #818cf8;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            border-bottom: 2px solid var(--card-bg);
+            padding-bottom: 10px;
+            margin-top: 50px;
+            color: var(--primary);
+        }
+
+        .section-box {
+            background: linear-gradient(145deg, var(--card-bg), #111827);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-top: 20px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        th {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        tr:hover td {
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        .highlight {
+            color: #4ade80;
+            font-weight: 600;
+        }
+        
+        .badge {
+            background: rgba(129, 140, 248, 0.2);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .important-note {
+            background: rgba(248, 113, 113, 0.1);
+            border-left: 4px solid #f87171;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Propuesta v2: Motor de Intervención con Aprendizaje</h1>
+        <p style="color: var(--text-muted); font-size: 1.1rem;">
+            Actualización del objetivo, arquitectura ampliada, y feedback loop para el Hackathon 2026.
+        </p>
+    </header>
+
+    <div class="important-note">
+        <strong>Principios Invariantes:</strong><br>
+        1. La IA conversa; el banco decide.<br>
+        2. El tono de una conversación describe la conversación, NO a la persona. Nunca se convierte en un atributo fijo del cliente ni altera su score financiero.
+    </div>
+
+    <!-- OBJETIVO AMPLIADO -->
+    <h2>🎯 1. Objetivo Ampliado (Lo que debemos lograr)</h2>
+    <div class="section-box">
+        <ol style="color: var(--text-muted); line-height: 1.8;">
+            <li>Detectar señales financieras tempranas antes del vencimiento.</li>
+            <li>Determinar la <strong>situación</strong> del cliente en el ciclo actual.</li>
+            <li>Aprender de patrones para decidir <strong>por qué canal</strong> y <strong>cuándo</strong> intervenir (con *fallback* a llamadas si no hay datos).</li>
+            <li>Conversar empáticamente para descubrir la barrera real.</li>
+            <li>Presentar <strong>únicamente alternativas autorizadas</strong> (ej. calendario, ahorro gradual).</li>
+            <li>Registrar métricas por conversación (barrera, tono, turnos, resolución).</li>
+            <li>Exponer un <strong>Dashboard Administrativo</strong> con el historial, métricas y retroalimentación hacia el motor de decisión.</li>
+        </ol>
+    </div>
+
+    <!-- MAPA DE COMPONENTES -->
+    <h2>🧠 2. Mapa de Componentes (Nuevos y Existentes)</h2>
+    <table>
+        <tr><th>Pregunta</th><th>Componente</th><th>Tipo</th><th>Estado</th></tr>
+        <tr><td>¿Se aleja de su patrón?</td><td>Isolation Forest</td><td>ML no supervisado</td><td>Cubierto (v1)</td></tr>
+        <tr><td>¿Hay señal de riesgo?</td><td>Regresión Logística</td><td>ML supervisado</td><td>Cubierto (v1)</td></tr>
+        <tr><td>¿En qué situación está este ciclo?</td><td>Reglas <code>situation_hint</code></td><td>Determinista</td><td>Cubierto (v1)</td></tr>
+        <tr><td>¿Por qué canal?</td><td><strong>Modelo de preferencia de canal</strong></td><td>ML supervisado + fallback</td><td><span class="highlight">Nuevo</span></td></tr>
+        <tr><td>¿Cuándo (días/hora)?</td><td><strong>Modelo de momento</strong></td><td>Estadístico poblacional</td><td><span class="highlight">Nuevo</span></td></tr>
+        <tr><td>¿Cuál es la barrera real?</td><td>LLM con categorías cerradas</td><td>IA Generativa + Regex/JSON</td><td><span class="highlight">Nuevo</span></td></tr>
+        <tr><td>¿Qué funciona mejor?</td><td><strong>Feedback loop</strong></td><td>Tabla de Prioridades NBA</td><td><span class="highlight">Nuevo</span></td></tr>
+    </table>
+
+    <!-- CATEGORÍAS CERRADAS (BARRERA Y TONO) -->
+    <h2>🗣️ 3. Categorías Cerradas para el LLM</h2>
+    
+    <div class="section-box">
+        <h3 style="color: var(--accent); margin-top:0;">Barreras Detectadas (Lo que dice el cliente)</h3>
+        <table>
+            <tr><th>Código</th><th>Significado</th><th>Ejemplo de Frase</th></tr>
+            <tr><td><code>FORGOT</code></td><td>Olvido / No lo tenía presente (S1)</td><td>"No me acordaba, disculpa"</td></tr>
+            <tr><td><code>DATE_MISMATCH</code></td><td>El ingreso llega después (S2)</td><td>"Me pagan hasta el 30"</td></tr>
+            <tr><td><code>LIQUIDITY</code></td><td>No alcanza el dinero (S3)</td><td>"Este mes tuve gastos y no alcanzo"</td></tr>
+            <tr><td><code>TECHNICAL</code></td><td>Intentó pagar y la app falló</td><td>"La app del banco no me deja"</td></tr>
+            <tr><td><code>DISPUTE</code></td><td>No reconoce el cobro</td><td>"Ese cargo no es mío"</td></tr>
+            <tr><td><code>ALREADY_PAID</code></td><td>Alega que ya lo pagó</td><td>"Ya pagué ayer en la tarde"</td></tr>
+        </table>
+        
+        <h3 style="color: var(--accent); margin-top:30px;">Tonos de Conversación</h3>
+        <p class="text-muted"><code>COOPERATIVE</code>, <code>NEUTRAL</code>, <code>TENSE</code>, <code>HOSTILE</code>.</p>
+        <p class="text-muted" style="font-size: 0.9rem;"><strong>Regla:</strong> Si el tono es <code>HOSTILE</code>, el sistema automáticamente finaliza la negociación IA y escala el caso a un asesor humano.</p>
+    </div>
+
+    <!-- EL FEEDBACK LOOP -->
+    <h2>🔄 4. El Ciclo de Aprendizaje (Feedback Loop)</h2>
+    <div class="section-box">
+        <p style="color: var(--text-muted);">
+            El aprendizaje del MVP no es una "caja negra". Es tabular y auditable. Se creará una tabla <code>nba_priority_table</code> que cruza:
+            <br><br>
+            <strong>[Situación] + [Barrera] + [Canal] + [Alternativa] = Success Rate</strong>
+            <br><br>
+            El <strong>Next Best Action (NBA)</strong> ordenará las alternativas que ofrezca el LLM usando esta tabla, poniendo primero aquellas que históricamente tienen mayor éxito (con suavizado Bayesiano).
+            <br><br>
+            <span style="color: #f87171;">⚠️ Prohibido:</span> Retroalimentar el score financiero con las interacciones del LLM (ej. un cliente enojado no significa que sea más riesgoso financieramente).
+        </p>
+    </div>
+
+    <!-- EL DASHBOARD -->
+    <h2>📊 5. El Dashboard de Administración (Requerimiento para Camila)</h2>
+    <div class="section-box">
+        <ul style="color: var(--text-muted); line-height: 1.8;">
+            <li><strong>Vista 1 (Cartera):</strong> Distribución de las situaciones, porcentaje de <code>NO_CONTACT</code>, y lista de clientes a contactar.</li>
+            <li><strong>Vista 2 (Conversaciones):</strong> Historial y transcripciones con filtros por tono, barrera y resultado. Detalle de si el LLM tuvo alucinaciones.</li>
+            <li><strong>Vista 3 (Interacción):</strong> Tasa de aceptación por canal y barrera. Promedio de turnos requeridos para cerrar.</li>
+            <li><strong>Vista 4 (Modelos):</strong> Distribución del *Anomaly Score* y métricas (sintéticas) de Regresión Logística. Rendimiento de los canales y horarios.</li>
+            <li><strong>Vista 5 (Aprendizaje):</strong> Botón para "recalcular" el *Feedback Loop* mostrando cómo se reordenan las alternativas en el catálogo del NBA.</li>
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>
