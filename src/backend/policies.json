@@ -1,0 +1,9 @@
+{
+  "_comment": "SUPUESTO DE DEMO: Estas políticas son ficticias para demostrar la arquitectura del MVP.",
+  "extension_max_days": 15,
+  "min_partial_payment_percentage": 20,
+  "allow_interest_waiver": false,
+  "require_explicit_confirmation": true,
+  "dispute_handling": "REQUIRE_VERIFICATION",
+  "escalate_to_human_available": true
+}
