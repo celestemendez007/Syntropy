@@ -7,7 +7,7 @@ export default function AdminTab() {
   const [saveStatus, setSaveStatus] = useState(null)
 
   useEffect(() => {
-    fetch('/api/archetypes')
+    fetch('http://localhost:8000/api/archetypes')
       .then(r => r.json())
       .then(data => {
         setArchetypes(data)
@@ -21,7 +21,7 @@ export default function AdminTab() {
 
   const handleSave = () => {
     setSaveStatus('Guardando...')
-    fetch('/api/archetypes', {
+    fetch('http://localhost:8000/api/archetypes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(archetypes)
