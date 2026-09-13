@@ -89,26 +89,95 @@ function MiniTable({ rows, columns }) {
   )
 }
 
-function HistoryTable({ rows }) {
+function HistoryTab({ data }) {
+  const [searchTerm, setSearchTerm] = useState('')
+  const [toneFilter, setToneFilter] = useState('')
+  const [barrierFilter, setBarrierFilter] = useState('')
+  const [hallucinationFilter, setHallucinationFilter] = useState('')
+  const [resultFilter, setResultFilter] = useState('')
+
+  const allRows = data.golden_conversations || []
+  
+  const filteredRows = allRows.filter(r => {
+    if (searchTerm && !r.customer_id.toLowerCase().includes(searchTerm.toLowerCase())) return false
+    if (toneFilter && r.tone_overall !== toneFilter) return false
+    if (barrierFilter && r.barrier_detected !== barrierFilter) return false
+    if (hallucinationFilter === 'yes' && !r.llm_hallucination_flag) return false
+    if (hallucinationFilter === 'no' && r.llm_hallucination_flag) return false
+    if (resultFilter && r.result !== resultFilter) return false
+    return true
+  })
+
+  // Get unique values for filters
+  const uniqueTones = [...new Set(allRows.map(r => r.tone_overall))]
+  const uniqueBarriers = [...new Set(allRows.map(r => r.barrier_detected))]
+  const uniqueResults = [...new Set(allRows.map(r => r.result))]
+
   return (
-    <MiniTable
-      rows={rows}
-      columns={[
-        { key: 'customer_id', label: 'ID Cliente' },
-        {
-          key: 'tone_overall', label: 'Emoción de la Persona',
-          render: (r) => <span className={`pill pill-${STATUS_COLOR[r.tone_overall] || 'warning'}`}>{r.tone_overall}</span>,
-        },
-        { key: 'barrier_detected', label: 'Clasificación del Problema' },
-        {
-          key: 'llm_hallucination_flag', label: 'Alucinación de IA',
-          render: (r) => (r.llm_hallucination_flag
-            ? <span className="pill pill-critical">Sí (Detectado)</span>
-            : <span className="pill pill-good">No</span>),
-        },
-        { key: 'result', label: 'Resolución Final' },
-      ]}
-    />
+    <div className="dashboard">
+      <header className="dashboard-header">
+        <h1>Historia de Llamadas y Mensajes</h1>
+        <p className="subtitle">Registro histórico con filtros interactivos.</p>
+      </header>
+
+      <div className="stat-row" style={{ marginBottom: '20px' }}>
+        <StatTile label="Llamadas y Mensajes Totales" value={data.conversation_metrics.n_conversations + data.golden_conversations.length} />
+        <StatTile label="Tasa de Resolución Exitosa" value={`${(data.conversation_metrics.acceptance_rate * 100).toFixed(1)}%`} />
+        <StatTile label="Tasa de Transferencia a Humano" value={`${(data.conversation_metrics.escalation_rate * 100).toFixed(1)}%`} />
+      </div>
+
+      <div className="card" style={{ marginBottom: '20px' }}>
+        <h3 style={{ marginBottom: '15px' }}>Filtros</h3>
+        <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+          <input 
+            type="text" 
+            placeholder="Buscar ID Cliente..." 
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            style={{ padding: '8px', background: '#0f172a', color: 'white', border: '1px solid #334155', borderRadius: '4px' }}
+          />
+          <select value={toneFilter} onChange={e => setToneFilter(e.target.value)} style={{ padding: '8px', background: '#0f172a', color: 'white', border: '1px solid #334155', borderRadius: '4px' }}>
+            <option value="">Cualquier Emoción</option>
+            {uniqueTones.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <select value={barrierFilter} onChange={e => setBarrierFilter(e.target.value)} style={{ padding: '8px', background: '#0f172a', color: 'white', border: '1px solid #334155', borderRadius: '4px' }}>
+            <option value="">Cualquier Barrera</option>
+            {uniqueBarriers.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
+          <select value={hallucinationFilter} onChange={e => setHallucinationFilter(e.target.value)} style={{ padding: '8px', background: '#0f172a', color: 'white', border: '1px solid #334155', borderRadius: '4px' }}>
+            <option value="">Alucinación: Todas</option>
+            <option value="yes">Sí (Detectado)</option>
+            <option value="no">No</option>
+          </select>
+          <select value={resultFilter} onChange={e => setResultFilter(e.target.value)} style={{ padding: '8px', background: '#0f172a', color: 'white', border: '1px solid #334155', borderRadius: '4px' }}>
+            <option value="">Cualquier Resolución</option>
+            {uniqueResults.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+          <button onClick={() => {
+            setSearchTerm(''); setToneFilter(''); setBarrierFilter(''); setHallucinationFilter(''); setResultFilter('');
+          }} className="btn-secondary">Limpiar Filtros</button>
+        </div>
+      </div>
+
+      <MiniTable
+        rows={filteredRows}
+        columns={[
+          { key: 'customer_id', label: 'ID Cliente' },
+          {
+            key: 'tone_overall', label: 'Emoción de la Persona',
+            render: (r) => <span className={`pill pill-${STATUS_COLOR[r.tone_overall] || 'warning'}`}>{r.tone_overall}</span>,
+          },
+          { key: 'barrier_detected', label: 'Clasificación del Problema' },
+          {
+            key: 'llm_hallucination_flag', label: 'Alucinación de IA',
+            render: (r) => (r.llm_hallucination_flag
+              ? <span className="pill pill-critical">Sí (Detectado)</span>
+              : <span className="pill pill-good">No</span>),
+          },
+          { key: 'result', label: 'Resolución Final' },
+        ]}
+      />
+    </div>
   )
 }
 
@@ -205,6 +274,7 @@ export default function App() {
     <div className="app-container">
       <nav className="top-nav">
         <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>Dashboard Central</button>
+        <button className={activeTab === 'history' ? 'active' : ''} onClick={() => setActiveTab('history')}>Registro Histórico</button>
         <button className={activeTab === 'technical' ? 'active' : ''} onClick={() => setActiveTab('technical')}>Algoritmos IA (Docs)</button>
         <button className={activeTab === 'simulator' ? 'active' : ''} onClick={() => setActiveTab('simulator')}>Simulador de Llamada (Fase 6)</button>
         <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>Arquetipos (Admin)</button>
@@ -216,6 +286,8 @@ export default function App() {
         <AdminTab />
       ) : activeTab === 'technical' ? (
         <TechnicalTab />
+      ) : activeTab === 'history' ? (
+        <HistoryTab data={data} />
       ) : (
       <div className="dashboard">
         <header className="dashboard-header">
@@ -303,16 +375,6 @@ export default function App() {
             </ul>
           </div>
         </div>
-      </section>
-
-      <section>
-        <h2>Historia de Llamadas y Mensajes</h2>
-        <div className="stat-row" style={{ marginBottom: '20px' }}>
-          <StatTile label="Llamadas y Mensajes Totales" value={data.conversation_metrics.n_conversations + data.golden_conversations.length} />
-          <StatTile label="Tasa de Resolución Exitosa" value={`${(data.conversation_metrics.acceptance_rate * 100).toFixed(1)}%`} />
-          <StatTile label="Tasa de Transferencia a Humano" value={`${(data.conversation_metrics.escalation_rate * 100).toFixed(1)}%`} />
-        </div>
-        <HistoryTable rows={data.golden_conversations} />
       </section>
 
       <footer className="dashboard-footer">
