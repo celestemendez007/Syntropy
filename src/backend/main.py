@@ -105,7 +105,7 @@ def chat(req: ChatRequest):
     if not groq_api_key:
         # --- Motor Conversacional Mock (Multi-Fase) ---
         last_msg = req.history[-1].content.lower().strip() if req.history else ""
-        n = len(req.history)  # number of messages in history (user messages)
+        n = sum(1 for msg in req.history if msg.role == 'user')  # count user turns
         
         alt_name  = alts[0]['alt_id']          if alts else "asesoría personalizada"
         alt_desc  = alts[0].get('description', '') if alts else ""
