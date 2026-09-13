@@ -1,6 +1,7 @@
 """HTTP and WebSocket transport for the integrated BA A Tiempo demo."""
 import asyncio
 import os
+import io
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -8,9 +9,9 @@ from typing import Literal
 from uuid import UUID
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request, Query, HTTPException
 from fastapi.concurrency import run_in_threadpool
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response, FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -23,7 +24,7 @@ class SessionRequest(BaseModel):
 
 class Command(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    action: Literal["message", "select", "confirm", "cancel", "callback", "seen", "snooze", "reminder", "channel", "select_product"]
+    action: Literal["message", "select", "confirm", "cancel", "callback", "seen", "snooze", "reminder", "channel", "select_product", "greet"]
     version: int = Field(ge=0)
     text: str | None = Field(default=None, min_length=1, max_length=1500)
     offer_id: str | None = Field(default=None, max_length=80)
@@ -57,7 +58,117 @@ async def demo_error(request, exc):
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "mode": "synthetic-demo", "conversation": "groq-with-local-fallback" if os.getenv("GROQ_API_KEY") else "local", "websocket": True}
+    return {"status": "ok", "mode": "synthetic-demo", "conversation": os.getenv('OLLAMA_MODEL', 'llama3.1:8b'), "websocket": True,
+            'voice': os.getenv('BA_VOICE', 'es-SV-LorenaNeural'), 'transcription': 'faster-whisper/' + os.getenv('WHISPER_MODEL', 'base')}
+
+class DemoLogin(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    multiple: bool = False
+
+@app.post('/api/demo/login', status_code=201)
+def demo_login(request: DemoLogin):
+    return app.state.service.random_session(request.multiple)
+
+@app.get('/api/admin/overview')
+def admin_overview():
+    from admin_service import predictions, benchmarks
+    data = predictions()
+    conversations = app.state.service.conversations()
+    timings = [e['latency_ms'] for c in conversations for e in c['events']
+               if e.get('type') == 'MODEL_RESPONSE' and e.get('latency_ms')]
+    return {'summary': data['summary'], 'distribution': data['distribution'], 'benchmarks': benchmarks(),
+            'activity': {'conversations': len(conversations),
+                         'calls': sum(len(c['calls']) for c in conversations),
+                         'agreements': sum(e.get('type') == 'AGREEMENT_CONFIRMED' for c in conversations for e in c['events']),
+                         'average_response_ms': round(sum(timings) / len(timings)) if timings else None}}
+
+@app.get('/api/admin/predictions')
+def admin_predictions(q: str = Query('', max_length=100), offset: int = Query(0, ge=0), limit: int = Query(25, ge=1, le=100)):
+    from admin_service import predictions
+    rows = [r for r in predictions()['rows'] if q.lower() in (r['customer_id'] + r['name'] + r['product']).lower()]
+    return {'total': len(rows), 'rows': rows[offset:offset + limit]}
+
+@app.get('/api/admin/conversations')
+def admin_conversations():
+    return app.state.service.conversations()
+
+@app.post('/api/sessions/{sid}/calls', status_code=201)
+async def start_call(sid: UUID):
+    result = await run_in_threadpool(app.state.service.start_call, str(sid))
+    await broadcast(str(sid), result['state'])
+    return result
+
+async def bounded_body(request, limit):
+    data = bytearray()
+    async for chunk in request.stream():
+        data.extend(chunk)
+        if len(data) > limit:
+            raise HTTPException(413, 'El audio supera el tamaño permitido.')
+    return bytes(data)
+
+@app.post('/api/sessions/{sid}/transcribe')
+async def transcribe_audio(sid: UUID, request: Request):
+    from voice_service import transcribe
+    await run_in_threadpool(app.state.service.get, str(sid))
+    data = await bounded_body(request, 4 * 1024 * 1024)
+    if not data:
+        raise HTTPException(400, 'No recibimos audio.')
+    try:
+        return await run_in_threadpool(transcribe, data)
+    except Exception:
+        raise HTTPException(503, 'No pudimos transcribir este audio. Puedes continuar hablando o escribir.')
+
+@app.get('/api/sessions/{sid}/speech/{message_id}')
+async def speech(sid: UUID, message_id: UUID):
+    from voice_service import synthesize
+    state = await run_in_threadpool(app.state.service.get, str(sid))
+    message = next((m for m in state['messages'] if m['id'] == str(message_id) and m['role'] == 'assistant'), None)
+    if not message:
+        raise HTTPException(404, 'Mensaje no disponible.')
+    try:
+        audio = await asyncio.wait_for(synthesize(message['content']), timeout=18)
+        return Response(audio, media_type='audio/mpeg', headers={'Cache-Control': 'private, max-age=3600'})
+    except Exception:
+        raise HTTPException(503, 'La voz natural no está disponible. El texto sigue disponible.')
+
+@app.post('/api/sessions/{sid}/calls/{call_id}/end')
+async def end_call(sid: UUID, call_id: UUID):
+    state = await run_in_threadpool(app.state.service.finish_call, str(sid), str(call_id))
+    await broadcast(str(sid), state)
+    return state
+
+@app.put('/api/sessions/{sid}/calls/{call_id}/audio')
+async def save_audio(sid: UUID, call_id: UUID, request: Request):
+    import av
+    with app.state.service.connect() as db:
+        if not db.execute('SELECT 1 FROM calls WHERE id=? AND session_id=?', (str(call_id), str(sid))).fetchone():
+            raise HTTPException(404, 'Llamada no disponible.')
+    data = await bounded_body(request, 40 * 1024 * 1024)
+    mime = request.headers.get('content-type', '').split(';')[0]
+    extensions = {'audio/webm': 'webm', 'audio/mp4': 'mp4', 'audio/ogg': 'ogg'}
+    if mime not in extensions:
+        raise HTTPException(415, 'Formato de grabación no compatible.')
+    try:
+        with av.open(io.BytesIO(data)) as media:
+            if not media.streams.audio:
+                raise ValueError('Missing audio')
+    except Exception:
+        raise HTTPException(400, 'La grabación no contiene audio válido.')
+    folder = app.state.service.db_path.parent / 'recordings'
+    folder.mkdir(exist_ok=True)
+    path = folder / f'{call_id}.{extensions[mime]}'
+    await run_in_threadpool(path.write_bytes, data)
+    state = await run_in_threadpool(app.state.service.finish_call, str(sid), str(call_id), str(path), mime)
+    await broadcast(str(sid), state)
+    return {'saved': True, 'audio_url': f'/api/sessions/{sid}/calls/{call_id}/audio'}
+
+@app.get('/api/sessions/{sid}/calls/{call_id}/audio')
+def call_audio(sid: UUID, call_id: UUID):
+    with app.state.service.connect() as db:
+        row = db.execute('SELECT recording,mime FROM calls WHERE id=? AND session_id=?', (str(call_id), str(sid))).fetchone()
+    if not row or not row[0] or not Path(row[0]).is_file():
+        raise HTTPException(404, 'Esta llamada aún no tiene grabación disponible.')
+    return FileResponse(row[0], media_type=row[1], headers={'Cache-Control': 'no-store'})
 
 @app.get("/api/scenarios")
 def scenarios():

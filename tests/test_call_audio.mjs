@@ -1,0 +1,29 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { CallAudio, encodeWav } from '../src/frontend/src/banking/callAudio.js'
+
+test('WAV preserves the actual microphone sample rate and mono samples',async()=>{
+ const b=encodeWav([new Float32Array([0,.5,-.5])],48000),v=new DataView(await b.arrayBuffer())
+ assert.equal(v.getUint32(24,true),48000);assert.equal(v.getUint32(40,true),6);assert.equal(v.getInt16(46,true),16383)
+})
+test('silence segments two utterances automatically without restarting the microphone',()=>{
+ let time=0;const original=globalThis.performance
+ Object.defineProperty(globalThis,'performance',{value:{now:()=>time},configurable:true})
+ try{
+  const a=new CallAudio('test',{});a.callId='test';a.context={sampleRate:16000};const audio=[];a.hear=b=>audio.push(b)
+  const speech=new Float32Array(1600).fill(.1),silence=new Float32Array(1600)
+  for(let turn=0;turn<2;turn++){for(let i=0;i<6;i++){time+=100;a.frame(speech)}for(let i=0;i<12;i++){time+=100;a.frame(silence)}}
+  assert.equal(audio.length,2);assert.equal(a.closed,false)
+ }finally{Object.defineProperty(globalThis,'performance',{value:original,configurable:true})}
+})
+test('sustained user speech interrupts playback but a transient click does not',()=>{
+ let time=100;const original=globalThis.performance
+ Object.defineProperty(globalThis,'performance',{value:{now:()=>time},configurable:true})
+ try{const a=new CallAudio('test',{});a.callId='test';a.context={sampleRate:16000};let stopped=0
+  a.speaking=true;a.source={stop:()=>stopped++};a.frame(new Float32Array(1600).fill(.1));assert.equal(stopped,0)
+  time+=200;a.frame(new Float32Array(1600).fill(.1));assert.equal(stopped,1)
+ }finally{Object.defineProperty(globalThis,'performance',{value:original,configurable:true})}
+})
+test('muted microphone cannot dispatch audio for transcription',()=>{
+ const a=new CallAudio('test',{});a.callId='test';a.muted=true;a.frame(new Float32Array(4096).fill(.8));assert.equal(a.parts.length,0)
+})

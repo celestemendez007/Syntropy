@@ -18,6 +18,8 @@ try {
     }
 } catch { }
 $pythonExe = (Get-Command python.exe).Source
+$localPython = Join-Path $projectRoot '.venv/Scripts/python.exe'
+if (Test-Path -LiteralPath $localPython) { $pythonExe = $localPython }
 $backendDir = Join-Path $projectRoot 'src/backend'
 $serverArgs = @('-B', '-m', 'uvicorn', 'main:app', '--app-dir', ('"' + $backendDir + '"'), '--host', '127.0.0.1', '--port', "$Port")
 $process = Start-Process -FilePath $pythonExe -ArgumentList $serverArgs -WorkingDirectory $projectRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $runtimeDir 'server.stdout.log') -RedirectStandardError (Join-Path $runtimeDir 'server.stderr.log') -PassThru

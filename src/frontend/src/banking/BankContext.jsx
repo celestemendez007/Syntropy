@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useReducer, useRef, useCallback, 
 const BankContext = createContext(null)
 const STORAGE = 'ba-a-tiempo-session-v1'
 function reducer(current, next) {
+  if (!next) return null
   if (!current || current.id !== next.id || next.version >= current.version) return next
   return current
 }
@@ -24,8 +25,9 @@ export function BankingProvider({ children }) {
   const [live, setLive] = useState(false)
   const [page, setPage] = useState(location.hash.slice(2) || 'inicio')
   const [callOpen, setCallOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
   const current = useRef(null)
-  const locked = useRef(false)
+  const queue = useRef(Promise.resolve())
   const initializing = useRef(null)
   const navigate = useCallback((next) => { location.hash = '/' + next; setPage(next); window.scrollTo({ top: 0, behavior: 'smooth' }) }, [])
   const accept = useCallback((next, follow = true) => {
@@ -35,13 +37,13 @@ export function BankingProvider({ children }) {
     dispatch(next)
     if (follow && changed && next.view_hint) navigate(next.view_hint)
   }, [navigate])
-  const create = useCallback(async (customer_id = 'GOLD-G05') => {
+  const create = useCallback(async (customer_id = null, multiple = false) => {
     setBusy(true); setError(null)
     try {
-      const next = await api('/api/sessions', { customer_id })
+      const next = await api(customer_id ? '/api/sessions' : '/api/demo/login', customer_id ? { customer_id } : { multiple })
       localStorage.setItem(STORAGE, next.id)
       accept(next, false); navigate('inicio'); setCallOpen(false)
-    } catch (e) { setError(e.message) } finally { setBusy(false) }
+    } catch (e) { setError(e.message) } finally { setBusy(false); setLoading(false) }
   }, [accept, navigate])
   useEffect(() => {
     const hash = () => setPage(location.hash.slice(2) || 'inicio')
@@ -49,10 +51,10 @@ export function BankingProvider({ children }) {
     if (!initializing.current) initializing.current = (async () => {
       const id = localStorage.getItem(STORAGE)
       if (id) {
-        try { accept(await api('/api/sessions/' + id), false); return }
-        catch (e) { if (e.status !== 404) { setError(e.message); return } }
+        try { accept(await api('/api/sessions/' + id), false); setLoading(false); return }
+        catch (e) { if (e.status !== 404) setError(e.message) }
       }
-      await create()
+      setLoading(false)
     })()
     return () => window.removeEventListener('hashchange', hash)
   }, [accept, create])
@@ -74,10 +76,12 @@ export function BankingProvider({ children }) {
     }, 5000)
     return () => { stopped = true; clearInterval(poll); clearInterval(heartbeat); clearTimeout(timer); socket.close() }
   }, [state?.id, accept])
-  const command = useCallback(async (action, payload = {}) => {
-    if (!current.current || locked.current) return null
-    locked.current = true; setBusy(true); setError(null)
-    const id = current.current.id
+  const command = useCallback((action, payload = {}) => {
+    const sessionId = current.current?.id
+    const execute = async () => {
+    if (!current.current || current.current.id !== sessionId) return null
+    setBusy(true); setError(null)
+    const id = sessionId
     try {
       const next = await api(`/api/sessions/${id}/commands`, { action, version: current.current.version, ...payload })
       accept(next)
@@ -86,8 +90,13 @@ export function BankingProvider({ children }) {
       setError(e.message)
       if (e.status === 409) { try { accept(await api('/api/sessions/' + id), false) } catch { /* retain current state */ } }
       return null
-    } finally { locked.current = false; setBusy(false) }
+    } finally { setBusy(false) }
+    }
+    const result = queue.current.then(execute, execute)
+    queue.current = result.catch(() => {})
+    return result
   }, [accept])
-  return <BankContext.Provider value={{ state, error, setError, busy, live, page, navigate, command, create, callOpen, setCallOpen }}>{children}</BankContext.Provider>
+  const logout = () => { localStorage.removeItem(STORAGE); current.current = null; dispatch(null); setCallOpen(false); setError(null) }
+  return <BankContext.Provider value={{ state, error, setError, busy, loading, live, page, navigate, command, create, logout, accept, callOpen, setCallOpen }}>{children}</BankContext.Provider>
 }
 export const useBank = () => useContext(BankContext)

@@ -1,101 +1,34 @@
-import React, { useEffect, useState } from 'react';
-
-const STATUS_COLOR = {
-  COOPERATIVE: 'good', NEUTRAL: 'warning', TENSE: 'serious', HOSTILE: 'critical', CONFUSED: 'warning',
-  START: 'neutral', GREETING: 'neutral', INTRO: 'neutral', LISTENING: 'warning', OFFERING: 'serious', CONFIRMING: 'good',
-  LLM_GENERATED: 'serious'
-};
-
-export default function LiveAdminDashboard() {
-  const [calls, setCalls] = useState([]);
-  const [error, setError] = useState(null);
-  const [expandedRow, setExpandedRow] = useState(null);
-
-  const fetchCalls = () => {
-    fetch('/api/admin/live_calls')
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => setCalls(data.reverse())) // Show newest first
-      .catch((e) => setError(e.message));
-  };
-
-  useEffect(() => {
-    fetchCalls();
-    // Poll every 5 seconds for live updates
-    const interval = setInterval(fetchCalls, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (error) {
-    return <div className="card error">Error cargando llamadas en vivo: {error}</div>;
-  }
-
-  return (
-    <div>
-      <div style={{ backgroundColor: 'var(--ba-navy)', color: '#fff', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '32px', height: '32px', backgroundColor: 'var(--ba-yellow)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ba-navy)', fontWeight: 'bold' }}>BA</div>
-          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '600' }}>Monitor en Vivo (Admin)</h2>
-        </div>
-        <button onClick={fetchCalls} style={{ backgroundColor: 'var(--ba-yellow)', color: 'var(--ba-navy)', border: 'none', padding: '8px 15px', borderRadius: 'var(--ba-radius-sm)', fontWeight: 'bold', cursor: 'pointer' }}>Actualizar</button>
-      </div>
-
-      <div style={{ padding: '20px' }}>
-        <div style={{ backgroundColor: 'var(--ba-card-bg)', borderRadius: 'var(--ba-radius-sm)', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-          <div className="table-scroll">
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '2px solid var(--ba-border)' }}>
-                  <th style={{ padding: '12px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>ID Usuario</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>Última Fase</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>Emoción</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>Hora</th>
-                  <th style={{ padding: '12px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {calls.length === 0 ? (
-                  <tr><td colSpan="5" style={{ padding: '20px', textAlign: 'center', color: 'var(--ba-text-muted)' }}>No hay interacciones registradas aún.</td></tr>
-                ) : (
-                  calls.map((call, idx) => (
-                    <React.Fragment key={idx}>
-                      <tr style={{ borderBottom: '1px solid var(--ba-border-subtle)' }}>
-                        <td style={{ padding: '15px 8px', color: 'var(--ba-navy)', fontWeight: '600' }}>{call.customer_id}</td>
-                    <td style={{ padding: '15px 8px' }}><span className={`badge ${STATUS_COLOR[call.phase] || 'neutral'}`}>{call.phase}</span></td>
-                    <td style={{ padding: '15px 8px' }}><span className={`badge ${STATUS_COLOR[call.emotion] || 'neutral'}`}>{call.emotion}</span></td>
-                    <td style={{ padding: '15px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.9rem' }}>{new Date(call.timestamp).toLocaleString()}</td>
-                    <td style={{ padding: '15px 8px' }}>
-                      <button 
-                        onClick={() => setExpandedRow(expandedRow === idx ? null : idx)}
-                        style={{ backgroundColor: 'transparent', border: '1px solid var(--ba-border)', color: 'var(--ba-navy)', padding: '5px 10px', borderRadius: 'var(--ba-radius-sm)', cursor: 'pointer', fontWeight: 'bold' }}
-                      >
-                        {expandedRow === idx ? 'Ocultar' : 'Ver Historial'}
-                      </button>
-                    </td>
-                  </tr>
-                  {expandedRow === idx && (
-                    <tr>
-                      <td colSpan="5">
-                        <div style={{ backgroundColor: 'var(--ba-bg)', padding: '20px', borderRadius: 'var(--ba-radius-sm)', textAlign: 'left', fontSize: '14px', border: '1px solid var(--ba-border)' }}>
-                          {call.history.map((msg, i) => (
-                            <div key={i} style={{ marginBottom: '12px', color: msg.role === 'assistant' ? 'var(--ba-navy)' : 'var(--ba-text-primary)' }}>
-                              <strong>{msg.role === 'assistant' ? 'IA / Agente:' : 'Cliente:'}</strong> {msg.content}
-                            </div>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      </div>
-      </div>
-    </div>
-  );
+import { useEffect, useState } from 'react'
+import './admin.css'
+const number=n=>new Intl.NumberFormat('es-SV',{maximumFractionDigits:1}).format(n??0)
+const money=n=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n??0)
+const percent=n=>number((n??0)*100)+'%'
+const time=s=>new Date(s).toLocaleString('es-SV')
+const level={LOW:'Bajo',MEDIUM:'Medio',HIGH:'Alto'}
+const products={PERSONAL_LOAN_ACCOUNT_DEBIT:'Personal · cargo a cuenta',PERSONAL_LOAN_PAYROLL_DEDUCTION:'Personal · planilla',VEHICLE_LOAN:'Vehículo',HOME_LOAN:'Vivienda',STUDY_LOAN:'Estudios',SALARY_ADVANCE:'Adelanto de salario',EXTRA_FINANCING:'Extrafinanciamiento',CREDICHEQUE:'Credicheque',OVERDRAFT_ELITE:'Sobregiro Elite',PERSONAL_LOAN_MORTGAGE_BACKED:'Garantía hipotecaria'}
+async function get(url){const r=await fetch(url);if(!r.ok)throw new Error('No pudimos actualizar el panel. Reintentaremos automáticamente.');return r.json()}
+function Stat({label,value,note,tone=''}){return <article className={'admin-stat '+tone}><span>{label}</span><strong>{value}</strong><small>{note}</small></article>}
+export default function LiveAdminDashboard(){
+ const [tab,setTab]=useState('overview'),[overview,setOverview]=useState(null),[conversations,setConversations]=useState([]),[predictions,setPredictions]=useState({total:0,rows:[]})
+ const [error,setError]=useState(''),[updated,setUpdated]=useState(null),[search,setSearch]=useState(''),[offset,setOffset]=useState(0),[selected,setSelected]=useState(null)
+ useEffect(()=>{let cancelled=false,running=false;const refresh=async()=>{if(running)return;running=true;try{const [o,c]=await Promise.all([get('/api/admin/overview'),get('/api/admin/conversations')]);if(!cancelled){setOverview(o);setConversations(c);setUpdated(new Date());setError('')}}catch(e){if(!cancelled)setError(e.message)}finally{running=false}};refresh();const timer=setInterval(refresh,7000);return()=>{cancelled=true;clearInterval(timer)}},[])
+ useEffect(()=>{let cancelled=false;const timer=setTimeout(()=>get('/api/admin/predictions?q='+encodeURIComponent(search)+'&offset='+offset).then(p=>!cancelled&&setPredictions(p)).catch(e=>!cancelled&&setError(e.message)),200);return()=>{cancelled=true;clearTimeout(timer)}},[search,offset])
+ const current=conversations.find(c=>c.id===selected)||conversations[0]
+ const exportConversation=()=>{const blob=new Blob([JSON.stringify(current,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='conversacion-'+current.id+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+ const s=overview?.summary,b=overview?.benchmarks,a=overview?.activity
+ return <div className="admin-app"><header className="admin-header"><a href="/" className="admin-brand"><span className="admin-mark"><i/><i/><i/></span><span>BA A Tiempo<small>Administración</small></span></a><div className="admin-header-right"><span className="admin-badge">Datos sintéticos</span><a href="/">Ir a la app ↗</a></div></header>
+ <main className="admin-main"><div className="admin-heading"><div><span className="admin-eyebrow">ACOMPAÑAMIENTO PREVENTIVO</span><h1>Una mirada a tiempo</h1><p>Comprende el riesgo y acompaña cada conversación.</p></div><div className="admin-sync"><i/>{updated?'Actualizado '+updated.toLocaleTimeString('es-SV'):'Conectando…'}<small>Actualización automática</small></div></div>
+ <nav className="admin-tabs" aria-label="Secciones del panel">{[['overview','Resumen'],['predictions','Predicciones'],['conversations','Conversaciones y llamadas'],['models','Modelos']].map(([id,label])=><button key={id} aria-current={tab===id?'page':undefined} className={tab===id?'active':''} onClick={()=>setTab(id)}>{label}</button>)}</nav>
+ {error&&<p className="admin-error" role="alert">{error}</p>}
+ {!overview?<div className="admin-empty">Calculando las predicciones de la base sintética…</div>:<>
+ {tab==='overview'&&<><div className="admin-stats"><Stat label="Clientes analizados" value={number(s.customers)} note={number(s.credits)+' créditos en la base'}/><Stat label="Posible pago tardío" value={number(s.predicted_late)} note="Probabilidad de atraso ≥ 50%" tone="yellow"/><Stat label="Cuotas en este grupo" value={money(s.at_risk_installments)} note="Exposición estimada; no pérdida real"/><Stat label="Acuerdos registrados" value={number(a.agreements)} note="Operaciones de demostración" tone="mint"/></div>
+ <div className="admin-grid"><section className="admin-card"><div className="admin-card-heading"><div><h2>Distribución del riesgo</h2><p>Score combinado de riesgo y anomalías</p></div><span className="admin-badge">3 niveles</span></div><div className="risk-bar">{Object.entries(overview.distribution).map(([k,v])=><div title={level[k]+': '+v} key={k} className={k.toLowerCase()} style={{width:v/s.credits*100+'%'}}/>)}</div><div className="risk-legend">{Object.entries(overview.distribution).map(([k,v])=><div key={k}><i className={k.toLowerCase()}/><span>{level[k]}</span><strong>{number(v)}</strong><small>{percent(v/s.credits)}</small></div>)}</div><p className="admin-footnote">Bajo &lt; 0.35 · Medio &lt; 0.65 · Alto ≥ 0.65. Este score combina 60% regresión logística y 40% anomalía; no es una probabilidad calibrada.</p></section>
+ <section className="admin-card"><h2>Escuchar también cuenta</h2><p>Actividad guardada en esta demostración</p><div className="activity-list"><div><span>Conversaciones</span><strong>{number(a.conversations)}</strong></div><div><span>Llamadas iniciadas</span><strong>{number(a.calls)}</strong></div><div><span>Respuesta del motor · promedio</span><strong>{a.average_response_ms?number(a.average_response_ms/1000)+' s':'Sin muestra'}</strong></div></div><button className="admin-button" onClick={()=>setTab('conversations')}>Revisar conversaciones →</button></section></div>
+ <section className="admin-card admin-insight"><span className="insight-icon">↗</span><div><h2>Predicción, no certeza</h2><p>La suma de probabilidades estima <strong>{number(s.expected_late)} pagos tardíos</strong>. La etiqueta sintética contiene {number(s.synthetic_late)} casos. Son conceptos distintos: la predicción se obtiene del modelo, la etiqueta pertenece a los datos de prueba.</p><small>Snapshot: {s.snapshot} · No representa cartera real de Bancoagrícola.</small></div></section></>}
+ {tab==='predictions'&&<section className="admin-card"><div className="admin-card-heading"><div><h2>Predicciones por cliente</h2><p>Ordenadas por probabilidad de pago tardío. Inferencia real sobre datos sintéticos.</p></div><input className="admin-search" aria-label="Buscar predicciones" value={search} onChange={e=>{setSearch(e.target.value);setOffset(0)}} placeholder="Buscar nombre, cliente o producto"/></div><div className="admin-table-scroll"><table><thead><tr><th>Cliente</th><th>Crédito</th><th>Cuota</th><th>Prob. de atraso</th><th>Riesgo combinado</th><th>Etiqueta sintética</th></tr></thead><tbody>{predictions.rows.map(r=><tr key={r.customer_id}><td><strong>{r.name}</strong><small>{r.customer_id}</small></td><td>{products[r.product]||r.product}</td><td>{money(r.installment)}</td><td><strong>{percent(r.probability)}</strong><div className="prob-meter"><i style={{width:r.probability*100+'%'}}/></div></td><td><span className={'risk-pill '+r.risk_level.toLowerCase()}>{level[r.risk_level]} · {r.risk_score.toFixed(2)}</span></td><td>{r.synthetic_label?'Pago tardío':'Pago al día'}</td></tr>)}</tbody></table>{!predictions.rows.length&&<p className="admin-empty">No hay perfiles que coincidan con tu búsqueda.</p>}</div><div className="admin-pagination"><span>{predictions.total?offset+1:0}–{Math.min(offset+25,predictions.total)} de {number(predictions.total)}</span><div><button disabled={!offset} onClick={()=>setOffset(offset-25)}>← Anterior</button><button disabled={offset+25>=predictions.total} onClick={()=>setOffset(offset+25)}>Siguiente →</button></div></div></section>}
+ {tab==='conversations'&&<div className="admin-conversations"><aside className="admin-card conversation-list"><h2>Conversaciones guardadas</h2><p>Últimas 200 sesiones con actividad</p>{conversations.map(c=><button className={current?.id===c.id?'selected':''} key={c.id} onClick={()=>setSelected(c.id)}><strong>{c.name}</strong><span>{c.product}</span><small>{c.calls.length?'☎ '+c.calls.length+' llamada(s) · ':''}{c.status}</small><time>{time(c.updated_at)}</time></button>)}{!conversations.length&&<p className="admin-empty">Las conversaciones aparecerán aquí cuando uses el chat o una llamada.</p>}</aside><section className="admin-card transcript">{current?<><div className="admin-card-heading"><div><h2>{current.name}</h2><p>{current.customer_id} · {current.product}</p></div><button className="admin-button secondary" onClick={exportConversation}>Descargar registro</button></div>
+ {current.calls.length>0&&<div className="recordings"><h3>Grabaciones de llamada</h3>{current.calls.map(c=><div key={c.id}><span>{time(c.started_at)} · {c.ended_at?'Finalizada':'En curso o pendiente de cierre'}</span>{c.audio_url?<audio controls preload="none" src={c.audio_url}/>:<small>{c.ended_at?'Sin audio guardado':'La grabación estará disponible al colgar.'}</small>}</div>)}</div>}
+ <div className="transcript-messages">{current.messages.map(m=><article key={m.id} className={m.role}><span>{m.role==='assistant'?'BA A Tiempo':current.name.split(' ')[0]} · {m.call_id?'Llamada':'Chat'}</span><p>{m.content}</p><time>{time(m.at)}</time></article>)}</div><details><summary>Acuerdos y acciones verificables</summary>{current.events.filter(e=>!['MODEL_RESPONSE','BARRIER_CLASSIFIED'].includes(e.type)).map((e,i)=><div className="admin-event" key={i}><strong>{e.title||e.type}</strong><p>{e.id} {e.date&&'· '+e.date} {e.amount!=null&&'· '+money(e.amount)}</p></div>)}</details></>:<div className="admin-empty">Selecciona una conversación para revisarla.</div>}</section></div>}
+ {tab==='models'&&<><div className="admin-stats"><Stat label="Riesgo · AUC de evaluación" value={b.risk.LogisticRegression.auc.toFixed(4)} note="Regresión logística" tone="yellow"/><Stat label="Anomalías · AUC S0 vs S3" value={b.anomaly.IsolationForest.auc_s0_vs_s3.toFixed(4)} note="Isolation Forest"/><Stat label="Canal · AUC de evaluación" value={b.channel_timing.channel_model_auc.toFixed(4)} note="Capacidad predictiva limitada"/><Stat label="Inferencia de cartera" value={number(s.inference_ms)+' ms'} note="Tiempo medido en esta ejecución" tone="mint"/></div><section className="admin-card"><h2>Desempeño de los modelos de riesgo</h2><p>Resultados guardados del benchmark sobre el conjunto de evaluación sintético.</p><div className="admin-table-scroll"><table><thead><tr><th>Modelo</th><th>AUC ↑</th><th>Brier ↓</th><th>Calibración MAE ↓</th><th>Latencia p95</th><th>Uso</th></tr></thead><tbody>{Object.entries(b.risk).map(([name,m])=><tr key={name}><td><strong>{name}</strong></td><td>{m.auc}</td><td>{m.brier_score}</td><td>{m.calibration_mae}</td><td>{m.latency_p95_ms} ms</td><td><span className={'admin-badge '+(name==='LogisticRegression'?'mint':'')}>{name==='LogisticRegression'?'En uso':'Comparación'}</span></td></tr>)}</tbody></table></div><p className="admin-footnote">AUC mide discriminación, no porcentaje de aciertos. Brier y MAE menores son mejores. Estos valores históricos no son una validación con clientes reales ni métricas calculadas sobre toda la cartera actual.</p></section><div className="admin-grid"><section className="admin-card"><h2>Conversación y voz</h2><p>Llama 3.1 8B local interpreta el contexto; las condiciones y operaciones las controla el motor de políticas.</p><ul><li>Voz neural: Lorena · español de El Salvador.</li><li>Transcripción local: Faster Whisper Base.</li><li>Audio del cliente y asistente guardado por llamada.</li><li>Sin benchmark de calidad conversacional aún; no se muestran porcentajes inventados.</li></ul></section><section className="admin-card"><h2>Un dato para mejorar</h2><p>El modelo de canal tiene AUC {b.channel_timing.channel_model_auc}: su capacidad de discriminación es cercana al azar. Conviene ampliar la evidencia antes de automatizar decisiones reales.</p><p>El horario y la elegibilidad incluyen reglas deterministas. Los recordatorios y las operaciones de esta app son simulados.</p><small>Fuentes: research/ba_a_tiempo/outputs/*_benchmark.json y artefactos src/ml/models.</small></section></div></>}
+ </>}</main><footer className="admin-footer">BA A Tiempo · Prototipo de acompañamiento preventivo · Sin operaciones bancarias reales</footer></div>
 }
