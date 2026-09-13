@@ -156,6 +156,11 @@ function ScoredCustomersTable({ rows }) {
         { key: 'should_contact', label: '¿Contactar?', render: (r) => (r.nba.should_contact ? 'Sí' : 'No') },
         { key: 'action', label: 'Acción', render: (r) => r.nba.recommended_action },
         { key: 'channel', label: 'Canal', render: (r) => r.channel.channel_used },
+        { key: 'credit_product', label: 'Producto', render: (r) => r.profile.credit_product },
+        {
+          key: 'digital_capability', label: 'Cap. digital',
+          render: (r) => <span className={`pill pill-${r.profile.digital_capability === 'D3' ? 'serious' : 'good'}`}>{r.profile.digital_capability}</span>,
+        },
       ]}
     />
   )
@@ -214,6 +219,28 @@ export default function App() {
           <DistributionCard title="Distribución de risk_level" distribution={data.portfolio.risk_level_distribution} statusMap={STATUS_COLOR} />
           <CountsCard title="Acción recomendada (NBA)" counts={data.portfolio.recommended_action_distribution} />
           <DistributionCard title="Origen del canal elegido" distribution={data.portfolio.channel_source_distribution} />
+        </div>
+      </section>
+
+      <section>
+        <h2>Vista 1b — Arquetipos de 3 capas (producto + capacidad digital)</h2>
+        <p className="section-note">
+          Cada cliente combina situación financiera + producto crediticio + capacidad digital --
+          p. ej. "crédito de vehículo + desfase de fecha + capacidad digital D1". Ninguna de las
+          dos dimensiones nuevas entra a los modelos de riesgo (solo enrutamiento de NBA/Policy Engine).
+        </p>
+        <div className="stat-row">
+          <StatTile label="Necesitan guía paso a paso en la app (D3)" value={`${data.portfolio.pct_needs_guided_help}%`}
+                    sub="GUIDED_APP_HELP" />
+          <StatTile label="Casos complejos (escalan a humano)" value={`${data.portfolio.pct_complex_case}%`}
+                    sub="Producto sensible o severidad alta" />
+        </div>
+        <div className="card-grid">
+          <CountsCard title="Producto crediticio" counts={data.portfolio.credit_product_distribution
+            ? Object.fromEntries(Object.entries(data.portfolio.credit_product_distribution).map(([k, v]) => [k, Math.round(v * data.portfolio.n_sampled)]))
+            : {}} />
+          <DistributionCard title="Capacidad digital" distribution={data.portfolio.digital_capability_distribution}
+                            statusMap={{ D1: 'good', D2: 'warning', D3: 'serious' }} />
         </div>
       </section>
 

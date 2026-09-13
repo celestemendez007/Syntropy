@@ -14,6 +14,12 @@ _GOLDEN_PATH = os.path.join(_BASE_DIR, "..", "..", "data", "synthetic", "golden_
 # para poder calcular ALT-AUTOSAVE-PCT sin bloquear la Fase 5; no confundir con un dato real.
 ASSUMED_REMAINING_INSTALLMENTS = 12
 
+# Arquetipos de 3 capas (post-Fase 8): producto crediticio como contexto de elegibilidad,
+# no solo `situation_hint`. Mismas listas que config.py de research/ y nba_engine.py
+# (duplicadas a propósito, producción no importa desde research/).
+SENSITIVE_CREDIT_PRODUCTS = {"PERSONAL_LOAN_MORTGAGE_BACKED", "HOME_LOAN", "VEHICLE_LOAN"}
+REVOLVING_CREDIT_PRODUCTS = {"CREDICHEQUE", "OVERDRAFT_ELITE", "EXTRA_FINANCING", "SALARY_ADVANCE"}
+
 _dataset_cache = None
 _golden_cache = None
 
@@ -157,6 +163,11 @@ def _eligible_autosave(ctx: dict, policies: dict) -> dict | None:
         return None
     if ctx["income_hist_avg"] - ctx["expenses_hist_avg"] <= 0:
         return None
+    if ctx.get("credit_product") in REVOLVING_CREDIT_PRODUCTS and ctx["situation_hint"] == "S3":
+        # No comprometer más ingreso futuro (apartar %) si el cliente ya usa un producto
+        # rotativo/liquidez-puente y está en presión de liquidez -- evita el ciclo
+        # deuda-sobre-deuda (Arquetipo 5: "no empujar más deuda como solución automática").
+        return None
     months_left = max(ASSUMED_REMAINING_INSTALLMENTS, 1)
     pct = min(0.15, ctx["installment_amount"] / (ctx["income_hist_avg"] * months_left))
     pct = round(max(pct, 0.0), 4)
@@ -167,7 +178,11 @@ def _eligible_autosave(ctx: dict, policies: dict) -> dict | None:
 def _eligible_payment_plan(ctx: dict, policies: dict) -> dict | None:
     if ctx["situation_hint"] != "S3":
         return None
-    if ctx["balance_ratio"] < 0.3 or ctx.get("income_variation", 0) < -0.4:
+    credit_product = ctx.get("credit_product")
+    revolving_under_pressure = credit_product in REVOLVING_CREDIT_PRODUCTS
+    sensitive_moderate = credit_product in SENSITIVE_CREDIT_PRODUCTS and ctx["balance_ratio"] < 0.5
+    if (ctx["balance_ratio"] < 0.3 or ctx.get("income_variation", 0) < -0.4
+            or revolving_under_pressure or sensitive_moderate):
         return {"alt_id": "ALT-PAYMENT-PLAN", "type": "HUMAN_RESTRUCTURING", "human_only": True}
     return None
 
@@ -221,6 +236,7 @@ def get_eligible_alternatives(customer_id: str, risk_profile: dict) -> list:
         "income_variation": float(row.get("income_variation", 0)),
         "failed_payment_attempts_30d": int(row.get("failed_payment_attempts_30d", 0)),
         "next_due_date": next_due_date,
+        "credit_product": row.get("credit_product", "PERSONAL_LOAN_PAYROLL_DEDUCTION"),
     }
 
     eligible = [alt for rule in _ELIGIBILITY_RULES if (alt := rule(ctx, policies)) is not None]

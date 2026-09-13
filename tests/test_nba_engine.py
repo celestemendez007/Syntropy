@@ -73,3 +73,52 @@ def test_unknown_customer_does_not_crash():
 def test_intervene_customer_always_has_a_real_channel():
     _, nba = _nba_for("GOLD-G07")
     assert nba["channel"] in {"APP_PUSH", "SMS", "WHATSAPP", "CALL"}
+
+
+# --- Arquetipos de 3 capas: producto crediticio + capacidad digital ---
+
+def test_golden_g13_low_digital_capability_gets_guided_help():
+    """G13 (capacidad digital D3): debe recibir ayuda guiada paso a paso, no solo
+    un cambio de canal -- son necesidades distintas (no sabe usar la app vs. no
+    responde por el canal habitual)."""
+    _, nba = _nba_for("GOLD-G13")
+    assert nba["intervene"] is True
+    assert nba["action"] == "GUIDED_APP_HELP"
+    assert nba["needs_guided_help"] is True
+
+
+def test_golden_g14_sensitive_product_escalates_at_lower_threshold():
+    """G14: crédito con garantía hipotecaria + balance_ratio 0.45 -- NO escalaría
+    con el umbral genérico (0.3), pero sí debe escalar porque el producto es
+    sensible (umbral más bajo a propósito)."""
+    _, nba = _nba_for("GOLD-G14")
+    assert nba["intervene"] is True
+    assert nba["action"] == "HUMAN_ESCALATION"
+    assert nba["complex_case"] is True
+    assert nba["human_support_recommended"] is True
+
+
+def test_same_severity_does_not_escalate_on_non_sensitive_product():
+    """Regresión de diseño: G07 tiene balance_ratio 0.4 (similar a G14) pero un
+    producto NO sensible -- no debe escalar por el umbral bajo de G14."""
+    _, nba = _nba_for("GOLD-G07")
+    assert nba["action"] != "HUMAN_ESCALATION"
+
+
+def test_every_customer_carries_credit_product_and_digital_capability():
+    for gid in ["GOLD-G01", "GOLD-G13", "GOLD-G14"]:
+        _, nba = _nba_for(gid)
+        assert nba["credit_product"]
+        assert nba["digital_capability"] in {"D1", "D2", "D3"}
+
+
+def test_needs_guided_help_reflects_true_capability_even_when_blocked():
+    """Regresión: `needs_guided_help` describe al cliente (su capacidad digital),
+    no la decisión de contactarlo -- no debe quedar en False solo porque una
+    compuerta (ej. fuera de la ventana de intervención) bloqueó el contacto."""
+    from risk_engine import load_dataset
+    df = load_dataset()
+    d3_customer = df[df["digital_capability"] == "D3"].iloc[0]
+    profile, nba = _nba_for(d3_customer["customer_id"])
+    assert nba["digital_capability"] == "D3"
+    assert nba["needs_guided_help"] is True  # sin importar si intervene es True o False

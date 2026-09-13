@@ -17,7 +17,7 @@ def test_golden_customers_lookup_works():
     """Regresión: los golden viven en un CSV aparte (prefijo GOLD-); si el lookup
     solo mira dataset.csv, caen todos al fallback por defecto sin dar error."""
     golden = load_golden()
-    assert len(golden) == 12
+    assert len(golden) == 14
     profile = get_risk_profile("GOLD-G01")
     assert "_warning" not in profile, "el golden no se encontró y cayó al fallback silencioso"
 
@@ -45,8 +45,11 @@ def test_risk_score_combines_lr_and_anomaly():
     profile = get_risk_profile(df["customer_id"].iloc[0])
     assert "_pending" not in profile
     assert 0 <= profile["risk_prob_lr"] <= 1
+    # tolerancia de 1e-4: risk_score interno se calcula con los valores SIN redondear
+    # de risk_prob_lr/anomaly_score, mientras que aquí solo tenemos las versiones ya
+    # redondeadas del profile -- pueden diferir en el último dígito por orden de redondeo.
     expected = round(0.6 * profile["risk_prob_lr"] + 0.4 * profile["anomaly_score"], 4)
-    assert profile["risk_score"] == expected
+    assert abs(profile["risk_score"] - expected) <= 1e-4
 
 
 def test_golden_g02_benign_anomaly_not_misclassified_as_liquidity_crisis():

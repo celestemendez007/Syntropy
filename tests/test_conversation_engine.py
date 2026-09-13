@@ -86,3 +86,30 @@ def test_call_llm_returns_only_closed_categories():
     result = call_llm("system prompt", "este mes no puedo completar", DEMO_ALTS)
     assert result["barrier_detected"] in BARRIER_CATEGORIES
     assert result["tone_overall"] in TONE_CATEGORIES
+
+
+# --- Arquetipos de 3 capas: capacidad digital en el prompt ---
+
+def test_prompt_includes_guided_help_block_when_needed():
+    score = {"situation": {"situation_hint": "S1", "low_digital_response": False, "flags": []},
+             "channel": {"channel_pref_model": "CALL"},
+             "profile": {"credit_product": "HOME_LOAN", "digital_capability": "D3", "needs_guided_help": True}}
+    prompt = build_system_prompt(score, DEMO_ALTS)
+    assert "guía paso a paso" in prompt.lower() or "guia paso a paso" in prompt.lower()
+    assert "NO debe: recuperar credenciales" in prompt
+    assert "HOME_LOAN" in prompt
+
+
+def test_prompt_omits_guided_help_block_for_autonomous_customer():
+    score = {"situation": {"situation_hint": "S1", "low_digital_response": False, "flags": []},
+             "channel": {"channel_pref_model": "CALL"},
+             "profile": {"credit_product": "VEHICLE_LOAN", "digital_capability": "D1", "needs_guided_help": False}}
+    prompt = build_system_prompt(score, DEMO_ALTS)
+    assert "recuperar credenciales" not in prompt
+
+
+def test_prompt_always_forbids_pushing_more_revolving_credit():
+    """Regla #8 debe estar en TODOS los prompts, sin importar el arquetipo -- es
+    una regla de seguridad general, no condicional."""
+    prompt = build_system_prompt(DEMO_SCORE, DEMO_ALTS)
+    assert "sobregiro" in prompt.lower()

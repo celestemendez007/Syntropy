@@ -47,7 +47,7 @@ def test_golden_customers_excluded_from_benchmark(bench):
     """Los golden tienen etiqueta fija (0) por construcción; si se colaran al benchmark
     inflarían artificialmente la clase negativa."""
     snap = RB.load_data()
-    assert "is_golden" not in snap.columns or snap["is_golden"].fillna(False).sum() == 12
+    assert "is_golden" not in snap.columns or snap["is_golden"].fillna(False).sum() == 14
 
 
 def test_models_persisted_and_reloadable():

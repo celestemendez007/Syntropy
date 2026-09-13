@@ -8,9 +8,9 @@ Nota de calibración de la demo: el diseño esperaba AUC ~0.75–0.85 (`syntheti
 
 | model              |    auc |   brier_score |   calibration_mae |   fit_time_s |   latency_p50_ms |   latency_p95_ms |   model_size_kb |   positive_rate_train |   positive_rate_test |
 |:-------------------|-------:|--------------:|------------------:|-------------:|-----------------:|-----------------:|----------------:|----------------------:|---------------------:|
-| LogisticRegression | 0.7369 |        0.213  |            0.1575 |        0.004 |            0.369 |            0.641 |             1.4 |                  0.35 |                0.345 |
-| RandomForest       | 0.7214 |        0.216  |            0.1444 |        0.302 |           26.068 |           28.224 |          2224   |                  0.35 |                0.345 |
-| LightGBM           | 0.6681 |        0.2248 |            0.1009 |        2.169 |            0.791 |            1.126 |           623.9 |                  0.35 |                0.345 |
+| LogisticRegression | 0.7369 |        0.213  |            0.1575 |        0.011 |            1.196 |            1.523 |             1.4 |                  0.35 |                0.345 |
+| RandomForest       | 0.7214 |        0.216  |            0.1444 |        0.898 |           73.165 |           94.032 |          2224   |                  0.35 |                0.345 |
+| LightGBM           | 0.6681 |        0.2248 |            0.1009 |        4.766 |            1.462 |            1.653 |           623.9 |                  0.35 |                0.345 |
 
 `calibration_mae`: error absoluto medio entre la probabilidad predicha y la frecuencia observada por bin (10 bins por cuantiles) — mide si `risk_prob_lr` se puede leer como una probabilidad real ('de cada 10 clientes con 0.7, ¿pagan tarde 7?'), no solo si ordena bien a los clientes (eso lo mide el AUC).
 
@@ -19,7 +19,7 @@ Nota de calibración de la demo: el diseño esperaba AUC ~0.75–0.85 (`syntheti
 - **Mejor AUC:** `LogisticRegression` (0.7369).
 - **Mejor calibración (menor `calibration_mae`):** `LightGBM` (0.1009).
 - **Menor Brier score:** `LogisticRegression` (0.213).
-- **Menor latencia p95:** `LogisticRegression` (0.641 ms).
+- **Menor latencia p95:** `LogisticRegression` (1.523 ms).
 - **Modelo más pequeño:** `LogisticRegression` (1.4 KB).
 
 **AUC vs. calibración no coinciden:** `LogisticRegression` separa mejor a los clientes que sí pagarán tarde de los que no (AUC), pero `LightGBM` es más confiable si el negocio necesita leer `risk_prob_lr` como una probabilidad literal (p. ej. para decidir un umbral de descuento proporcional al riesgo, no solo un ranking). Para el contrato v2, donde `risk_score` combina `risk_prob_lr` con `anomaly_score` en una fórmula lineal (§7 del diseño), la calibración importa tanto como el AUC: una probabilidad mal calibrada distorsiona esa combinación.

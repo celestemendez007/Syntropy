@@ -90,9 +90,19 @@ negociando.
 verificará el pago.
 7. Si la fecha de ingreso del cliente es desconocida (ver contexto), PREGUNTA cuándo cobra en \
 vez de asumir una fecha.
+8. Si el cliente ya usa un producto de liquidez rotativa (Credicheque, Sobregiro, Extrafinanciamiento, \
+Adelanto de Salario) y está en presión de liquidez, NUNCA sugieras "sacar otro adelanto" o "usar el \
+sobregiro" como solución -- solo lo que aparezca en ALTERNATIVAS AUTORIZADAS, y si no hay ninguna \
+buena, ofrece hablar con un asesor.
+9. Si el cliente no puede iniciar sesión, recuperar su contraseña, o el problema es de acceso/seguridad \
+a la cuenta, NO intentes resolverlo tú: nunca pidas ni proceses credenciales, y ofrece de inmediato \
+conectarlo con un asesor.
+{digital_capability_block}
 
 ## Contexto del cliente (ya calculado por el sistema, no lo cuestiones ni lo recalcules)
 - Situación: {situation_hint} (ver nota interna, no se la reveles al cliente con este código)
+- Producto crediticio: {credit_product}
+- Capacidad digital estimada: {digital_capability}
 - Cliente conocido por baja respuesta digital: {low_digital_response}
 - Canal de este contacto: {channel}
 {extra_context}
@@ -102,6 +112,25 @@ vez de asumir una fecha.
 
 Responde siempre en español, en tono cercano y respetuoso, en turnos cortos.
 """
+
+DIGITAL_CAPABILITY_GUIDANCE = """
+## Este cliente necesita guía paso a paso dentro de la app (capacidad digital D3)
+La IA SÍ puede: dar instrucciones paso a paso, explicar dónde entrar en la app, indicar cómo \
+ver saldo/cuota/historial, repetir instrucciones de forma simple, usar lenguaje sencillo, y \
+ofrecer conectar con un asesor en cualquier momento.
+La IA NO debe: recuperar credenciales, saltarse autenticación, asumir control de la cuenta, \
+ejecutar operaciones sin confirmación clara, ni diagnosticar problemas técnicos o disputas \
+complejas -- eso siempre es para un asesor humano.
+Ejemplo de respuesta válida: "Le puedo guiar paso a paso dentro de la app. Primero entre a la \
+sección de créditos, luego seleccione su producto y después toque 'Historial'. Si prefiere, \
+también puedo ayudarle a solicitar apoyo de un asesor."
+Si tras dos intentos de guía el cliente sigue sin lograrlo, o no puede iniciar sesión, ofrece \
+inmediatamente: "Puedo conectarle con un asesor para que le ayude directamente."
+"""
+
+
+def _digital_capability_block(needs_guided_help: bool) -> str:
+    return DIGITAL_CAPABILITY_GUIDANCE if needs_guided_help else ""
 
 
 def _format_alternatives_block(eligible_alternatives: list) -> str:
@@ -122,6 +151,7 @@ def build_system_prompt(score_result: dict, eligible_alternatives: list) -> str:
     (`score_customer`) y la lista ya resuelta del Policy Engine. No incluye el
     catálogo completo ni las condiciones de elegibilidad -- solo lo ya autorizado."""
     situation = score_result.get("situation", {})
+    profile = score_result.get("profile", {})
     extra_context = ""
     if "income_date_unknown" in situation.get("flags", []):
         extra_context = "- Nota: no se conoce la fecha de ingreso de este cliente; pregúntasela.\n"
@@ -132,6 +162,9 @@ def build_system_prompt(score_result: dict, eligible_alternatives: list) -> str:
         situation_hint=situation.get("situation_hint", "S0"),
         low_digital_response=situation.get("low_digital_response", False),
         channel=score_result.get("channel", {}).get("channel_pref_model", "UNDETERMINED"),
+        credit_product=profile.get("credit_product", "N/D"),
+        digital_capability=profile.get("digital_capability", "D1"),
+        digital_capability_block=_digital_capability_block(profile.get("needs_guided_help", False)),
         extra_context=extra_context,
         alternatives_block=_format_alternatives_block(eligible_alternatives),
     )
