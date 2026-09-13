@@ -106,11 +106,12 @@ def chat(req: ChatRequest):
         # Fallback to local mock LLM
         from src.backend.conversation_engine import call_llm
         last_msg = req.history[-1].content if req.history else ""
-        if len(req.history) <= 1 and last_msg.strip().lower() in ["hola", "buenos dias", "alo", "¿sí?", "si", "buenas"]:
-            reply = "(Modo Simulación) ¡Hola! Te saluda el asistente virtual de Bancoagrícola. Te contacto por un aviso preventivo de tu pago. ¿Has tenido algún inconveniente este mes?"
+        if len(req.history) <= 1:
+            reply = f"(Modo Simulación) ¡Hola, muy buenos días! ¿Hablo con el titular de la cuenta? ... ¡Qué tal! Te saluda el asistente virtual de Bancoagrícola. Te contacto rapidito porque noté en el sistema que en 5 días vence tu cuota de $124.50 de tu {req.force_product or 'crédito'}. Como vemos que eres un excelente cliente, solo queríamos darte este recordatorio amistoso. ¿Todo bien para este mes o te puedo ayudar con alguna opción para que estés más tranquilo?"
         else:
             mock_res = call_llm(system_prompt, last_msg, alts)
-            reply = f"(Modo Simulación) Te entiendo. Según lo que dices, detecto que tu problema es: {mock_res['barrier_detected']}. El sistema te recomienda las siguientes opciones: {alts[0]['alt_id'] if alts else 'Hablar con un asesor'}."
+            alt_name = alts[0]['alt_id'] if alts else 'Hablar con un asesor'
+            reply = f"(Modo Simulación) Entiendo perfectamente la situación, esas cosas pasan y no te preocupes. Justamente para apoyarte en este momento, el banco me autoriza a ofrecerte esta solución: {alt_name}. Así podemos arreglarlo hoy mismo sin afectar tu récord. ¿Te parece bien si lo dejamos programado así?"
         hallucination_check = check_hallucination(reply, alts)
         return {
             "reply": reply,
