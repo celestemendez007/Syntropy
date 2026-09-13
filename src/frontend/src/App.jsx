@@ -186,7 +186,7 @@ export default function App() {
             <ul style={{ paddingLeft: '20px', color: '#94a3b8', lineHeight: '1.6', fontSize: '0.95rem' }}>
               <li>Detectar señales de incumplimiento (Riesgo).</li>
               <li>Medir la Capacidad Digital (¿Sabe usar la app?).</li>
-              <li>Decidir el mejor canal (WhatsApp o Llamada) y la mejor hora para intervenir.</li>
+              <li><strong>Decidir el canal y el Timing exacto:</strong> Elige entre WhatsApp o Llamada, calcula exactamente <em>cuántos días antes de la fecha de pago</em> es ideal enviar el mensaje, y en qué ventana de horas (por ejemplo, aprovechando los horarios de almuerzo que estadísticamente tienen mayor tasa de respuesta).</li>
             </ul>
           </div>
           <div className="card">
