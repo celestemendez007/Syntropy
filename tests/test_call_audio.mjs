@@ -20,8 +20,11 @@ test('sustained user speech interrupts playback but a transient click does not',
  let time=100;const original=globalThis.performance
  Object.defineProperty(globalThis,'performance',{value:{now:()=>time},configurable:true})
  try{const a=new CallAudio('test',{});a.callId='test';a.context={sampleRate:16000};let stopped=0
+  // Barge-in needs sustained speech: short bursts are background noise, and
+  // reacting to them used to cut the assistant off mid-sentence.
   a.speaking=true;a.source={stop:()=>stopped++};a.frame(new Float32Array(1600).fill(.1));assert.equal(stopped,0)
-  time+=200;a.frame(new Float32Array(1600).fill(.1));assert.equal(stopped,1)
+  time+=200;a.frame(new Float32Array(1600).fill(.1));assert.equal(stopped,0,'a brief noise must not interrupt')
+  time+=400;a.frame(new Float32Array(1600).fill(.1));assert.equal(stopped,1,'sustained speech interrupts')
  }finally{Object.defineProperty(globalThis,'performance',{value:original,configurable:true})}
 })
 test('muted microphone cannot dispatch audio for transcription',()=>{

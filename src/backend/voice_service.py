@@ -20,7 +20,8 @@ def transcribe(data):
             _model = WhisperModel(os.getenv('WHISPER_MODEL', 'base'), device='cpu', compute_type='int8',
                                   cpu_threads=4, download_root=str(ROOT / '.runtime' / 'whisper'))
         segments, _ = _model.transcribe(io.BytesIO(data), language='es', beam_size=3,
-                                       vad_filter=True, condition_on_previous_text=False)
+                                       vad_filter=True, condition_on_previous_text=False,
+                                       initial_prompt='Bueno, dime. Sí, claro. Asistencia de Bancoagrícola.')
         text = ' '.join(s.text.strip() for s in segments if s.no_speech_prob < .6).strip()
     return {'text': text, 'latency_ms': round((time.perf_counter() - started) * 1000)}
 
@@ -48,7 +49,7 @@ async def synthesize(text):
     import edge_tts
     voice = os.getenv('BA_VOICE', 'es-SV-LorenaNeural')
     audio = bytearray()
-    async for chunk in edge_tts.Communicate(speakable(text), voice, rate=os.getenv('BA_VOICE_RATE', '+18%')).stream():
+    async for chunk in edge_tts.Communicate(speakable(text), voice, rate=os.getenv('BA_VOICE_RATE', '+15%')).stream():
         if chunk['type'] == 'audio':
             audio.extend(chunk['data'])
     if not audio:
