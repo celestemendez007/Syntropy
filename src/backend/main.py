@@ -108,7 +108,7 @@ def chat(req: ChatRequest):
         last_msg = req.history[-1].content.lower() if req.history else ""
         
         if len(req.history) == 1:
-            reply = "¡Hola! Muy buenos días. ¿Hablo con el titular de la cuenta?"
+            reply = "¡Hola! Muy buenos días. ¿Hablo con Carlos?"
             
         elif any(w in last_msg for w in ["quien", "quién", "de donde", "info", "información", "titular", "no entiendo", "que pasa", "cual"]):
             reply = f"Disculpe la confusión. Le llamo de Bancoagrícola por un aviso preventivo de su {req.force_product or 'crédito'}. ¿Me permite un minutito para darle la información?"
