@@ -325,3 +325,54 @@ Orden sugerido: (1) generador de snapshot + IF + LR (v1) → (2) `contacts_log` 
 
 ## 14. SUPUESTOS DE DEMO añadidos en v2
 Canal por defecto CALL cuando `confidence < 0.5` · 10 % de exploración de canal · franjas poblacionales por tipo de ingreso · anticipación poblacional de 5 días · condiciones de elegibilidad del catálogo · porcentaje de ahorro `min(0.15, cuota/(ingreso × meses))` · proporciones de tono y aceptación del generador de conversaciones · suavizado bayesiano `(n+1)/(N+2)` en la tabla de prioridades · escalamiento por tono HOSTILE.
+
+---
+
+## 15. Especificaciones de Conversación y Telemetría
+
+### 1. Parámetros de Contexto y Telemetría (Antes de marcar)
+
+Una llamada de excelencia nunca empieza a ciegas. El sistema debe inyectar el contexto completo en la pantalla del operador (o en el *prompt* del modelo) antes del primer repique.
+
+* **Regla de Omnicanalidad Estricta:** Prohibido preguntar qué pasó si el sistema ya lo sabe. Si el usuario intentó pagar en la app y falló, la llamada debe iniciar reconociendo ese esfuerzo: *"Vimos que intentaste realizar tu pago ayer a las 3:00 PM y hubo un error en la plataforma..."*.
+* **Segmentación del Tono (Tone Matching):** El tono de la voz se ajusta al Arquetipo. Para un cliente A1 (Estable), el tono es de "conserjería VIP" (asistencia). Para un A4 (Presión de liquidez), el tono es "clínico y resolutivo" (cero juicios, 100% enfocado en soluciones).
+* **Regla de Hora Óptima (Time-to-Call):** La llamada debe ejecutarse exclusivamente en la ventana de mayor probabilidad de contacto del usuario, calculada mediante su historial de uso de la app o transacciones con tarjeta.
+
+---
+
+### 2. Reglas de Apertura y Anclaje Psicológico (Los primeros 15 segundos)
+
+El objetivo de los primeros segundos es desactivar el sistema de defensa natural del cerebro humano ante una llamada de cobro.
+
+* **Regla de Identificación Positiva Ágil:** Validar la identidad sin que suene a interrogatorio policial. En lugar de pedir número de documento y fecha de nacimiento de golpe, usar validaciones cruzadas suaves: *"Hola, ¿hablo con [Nombre]? Te llamo de tu banca personal por tu producto terminado en 4321..."*
+* **Técnica del "Asesor Aliado" (Reencuadre):** El lenguaje nunca debe culpar.
+* *Incorrecto:* "Llamo para cobrarle su cuota atrasada".
+* *Correcto:* "Te llamo porque notamos una anomalía; normalmente tu cuenta está al día y queremos evitar que el sistema te genere cargos por mora de forma automática".
+
+
+* **Regla del Silencio Activo:** Inmediatamente después de presentar el motivo de la llamada de forma empática, el emisor debe guardar silencio. Forzar una pausa de 3 a 5 segundos obliga al cliente a llenar el vacío, revelando la verdadera objeción (olvido, falta de dinero, queja del banco).
+
+---
+
+### 3. Árbol de Negociación y Despliegue de Soluciones
+
+El sistema no despliega todas las ayudas a la vez; sigue una lógica de escalonamiento basada en la capacidad de liquidez que el usuario revele durante la llamada.
+
+* **Regla de la Escalera de Flexibilidad:**
+1. **Nivel 1 (Pago Inmediato):** Si fue olvido, enviar enlace de pago *One-Click* por SMS/WhatsApp durante la llamada y esperar en línea a que confirme.
+2. **Nivel 2 (Promesa Corta):** Si el dinero entra en un par de días, fijar fecha exacta y hora.
+3. **Nivel 3 (Pago Parcial):** Si hay presión de liquidez, habilitar el pago de un porcentaje para proteger el historial.
+
+
+* **Prohibición de Promesas Abiertas:** El sistema no acepta respuestas como "yo pago la otra semana". La regla exige extraer tres variables absolutas: **Monto exacto**, **Fecha exacta** y **Canal de pago** (App, ventanilla, corresponsal).
+* **Regla de Aislamiento del Problema:** Si el usuario está molesto por un cargo extra o una falla del banco, el operador debe resolver o registrar esa queja primero. Un cliente no se compromete a pagar si siente que su queja técnica no fue validada.
+
+---
+
+### 4. Protocolo de Cierre y Trazabilidad
+
+El cierre garantiza que el modelo informático asimile el resultado de la llamada para decidir el siguiente paso.
+
+* **Cierre de Recapitulación Activa:** El operador no resume el acuerdo, hace que el cliente lo confirme. *"Entonces, para asegurarme de que dejé todo bien configurado en el sistema, ¿el pago por $150 queda programado para este viernes desde la app, correcto?"*
+* **Clasificación de Probabilidad (Scoring post-llamada):** Al colgar, el sistema requiere que se califique la intención real de pago (Alta, Media, Baja). Si un cliente promete pagar, pero su tono fue evasivo y cortante, se etiqueta como "Promesa de Alto Riesgo" para activar recordatorios digitales un día antes de la fecha acordada.
+* **Regla de Pausa de Contacto (Cool-down period):** Si se logra un acuerdo, el sistema bloquea inmediatamente cualquier SMS, email o automatización de cobranza hasta la fecha límite negociada. Seguir cobrando tras un acuerdo destruye la confianza.
