@@ -176,6 +176,43 @@ export default function App() {
       </section>
 
       <section>
+        <h2>Arquitectura del Sistema (Cerebro Matemático vs IA Conversacional)</h2>
+        <div className="card-grid">
+          <div className="card">
+            <h3 style={{ color: '#10b981', marginBottom: '10px' }}>1. Cerebro Matemático (Machine Learning Predictivo)</h3>
+            <p style={{ color: '#94a3b8', lineHeight: '1.6', fontSize: '0.95rem' }}>
+              <strong>100% Matemático y determinista (Cero azar).</strong> Se ejecuta <em>antes</em> de que el cliente reciba cualquier mensaje. Lee la base de datos financiera para:
+            </p>
+            <ul style={{ paddingLeft: '20px', color: '#94a3b8', lineHeight: '1.6', fontSize: '0.95rem' }}>
+              <li>Detectar señales de incumplimiento (Riesgo).</li>
+              <li>Medir la Capacidad Digital (¿Sabe usar la app?).</li>
+              <li>Decidir el mejor canal (WhatsApp o Llamada) y la mejor hora para intervenir.</li>
+            </ul>
+          </div>
+          <div className="card">
+            <h3 style={{ color: '#3b82f6', marginBottom: '10px' }}>2. Motor de Políticas (Reglas del Banco)</h3>
+            <p style={{ color: '#94a3b8', lineHeight: '1.6', fontSize: '0.95rem' }}>
+              Cruza los datos del modelo de ML con las reglas de negocio del banco para clasificar la situación.
+            </p>
+            <ul style={{ paddingLeft: '20px', color: '#94a3b8', lineHeight: '1.6', fontSize: '0.95rem' }}>
+              <li>Clasifica al cliente en un <strong>Arquetipo (A1-A8)</strong>.</li>
+              <li>Extrae exactamente <strong>qué alternativas de pago</strong> están autorizadas para ese producto y perfil.</li>
+            </ul>
+          </div>
+          <div className="card">
+            <h3 style={{ color: '#a855f7', marginBottom: '10px' }}>3. IA Conversacional (LLM Groq) + Seguridad</h3>
+            <p style={{ color: '#94a3b8', lineHeight: '1.6', fontSize: '0.95rem' }}>
+              Es la cara visible. Recibe el contexto estructurado y su única misión es negociar empáticamente.
+            </p>
+            <ul style={{ paddingLeft: '20px', color: '#94a3b8', lineHeight: '1.6', fontSize: '0.95rem' }}>
+              <li><strong>Comunica y Recomienda:</strong> Adapta su lenguaje, explica la deuda y ofrece solo las alternativas dictadas por el Motor de Políticas.</li>
+              <li><strong>Guardrails (Escalamiento):</strong> Si detecta hostilidad, fraude, problemas técnicos en la app, o alucina una opción prohibida, bloquea el chat y escala a un humano.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
         <h2>Lógica de Decisión del Agente (Reglas de Negocio)</h2>
         <div className="card-grid">
           <div className="card">
