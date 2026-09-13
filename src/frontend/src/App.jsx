@@ -172,6 +172,34 @@ export default function App() {
       </section>
 
       <section>
+        <h2>Lógica de Decisión del Agente (Reglas de Negocio)</h2>
+        <div className="card-grid">
+          <div className="card">
+            <h3 style={{ color: '#818cf8', marginBottom: '10px' }}>Tipos de Clasificaciones (Lo que la IA escucha)</h3>
+            <ul style={{ paddingLeft: '20px', color: '#94a3b8', lineHeight: '1.6', fontSize: '0.95rem' }}>
+              <li><strong>Barreras del Cliente:</strong> Olvido de fecha (FORGOT), Desfase de quincena (DATE_MISMATCH), Falta de liquidez temporal (LIQUIDITY), Falla de la app bancaria (TECHNICAL), Fraude o queja (DISPUTE).</li>
+              <li><strong>Tonos Emocionales:</strong> COOPERATIVE (Amable), NEUTRAL (Seco), TENSE (Preocupado), HOSTILE (Agresivo).</li>
+            </ul>
+          </div>
+          <div className="card">
+            <h3 style={{ color: '#818cf8', marginBottom: '10px' }}>Recomendaciones al Cliente (Soluciones)</h3>
+            <ul style={{ paddingLeft: '20px', color: '#94a3b8', lineHeight: '1.6', fontSize: '0.95rem' }}>
+              <li><strong>Pago Parcial:</strong> Permite abonar una fracción sin manchar severamente el historial.</li>
+              <li><strong>Plan de Pagos (Calendario):</strong> Ajusta la fecha de corte para coincidir con el día de pago de nómina del cliente.</li>
+              <li><strong>Ahorro Automático:</strong> Domicilia micropagos diarios/semanales.</li>
+            </ul>
+          </div>
+          <div className="card">
+            <h3 style={{ color: '#818cf8', marginBottom: '10px' }}>Medidas que toma la IA (Guardrails)</h3>
+            <ul style={{ paddingLeft: '20px', color: '#94a3b8', lineHeight: '1.6', fontSize: '0.95rem' }}>
+              <li><strong>Negociación Autónoma:</strong> Si el tono es Cooperativo y el problema es netamente financiero, la IA cierra el trato sola.</li>
+              <li><strong>Transferencia a Humano:</strong> Si detecta un tono <strong style={{color: '#ff6b6b'}}>HOSTILE</strong>, o problemas como <strong>DISPUTE/TECHNICAL</strong>, la IA finaliza amablemente y transfiere a un asesor real.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
         <h2>Historia de Llamadas y Mensajes</h2>
         <div className="stat-row" style={{ marginBottom: '20px' }}>
           <StatTile label="Llamadas y Mensajes Totales" value={data.conversation_metrics.n_conversations + data.golden_conversations.length} />
