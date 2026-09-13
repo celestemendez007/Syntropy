@@ -273,6 +273,7 @@ class BankingService:
         # history and agreements when the next command persists the state.
         if 'products' not in state:
             state['product'].setdefault('product_seq', 1)
+            state['product'].setdefault('id', f"{state['customer_id']}:{state['product']['product_seq']}")
             state['product']['_score'] = state['score']
             state['product']['_receipt'] = state.get('receipt')
             state['product']['_support'] = state.get('support')

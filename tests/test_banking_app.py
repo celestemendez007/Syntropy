@@ -106,6 +106,21 @@ def test_human_review_idempotent_and_never_restructures(service):
     assert s['support']['id']==ref and s['product']==old
     assert len(s['events'])==1 and not s['offers']
 
+def test_legacy_session_missing_products_and_product_id_still_works(service):
+    """Sessions saved before `products`/`product.id` existed are still sitting in
+    real demo databases. _read()'s upgrade path must backfill product.id too, or
+    every message/call on an old session 500s (state['product']['id'] KeyError)."""
+    import json
+    s=service.create('GOLD-G05')
+    with service.connect() as db:
+        state=json.loads(db.execute('SELECT state FROM sessions WHERE id=?',(s['id'],)).fetchone()[0])
+        del state['products']; del state['product']['id']; del state['product']['product_seq']
+        db.execute('UPDATE sessions SET state=? WHERE id=?',(json.dumps(state),s['id']))
+    s=cmd(service,s,'message',text='no puedo pagarlo')
+    assert s['product']['id']==f"GOLD-G05:1" and len(s['products'])==1
+    result=service.start_call(s['id'])
+    assert result['call_id']
+
 def test_two_credit_products_score_independently_and_persist(service):
     s=service.create('GOLD-G15')
     assert len(s['products'])==2
