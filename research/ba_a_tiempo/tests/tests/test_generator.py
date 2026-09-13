@@ -62,7 +62,7 @@ def test_generator_state_not_in_snapshot(data):
 
 def test_golden_customers_count_and_situations(data):
     golden = data["golden"]
-    assert len(golden) == 14
+    assert len(golden) == 16  # 14 golden + GOLD-G15 con 2 créditos (product_seq 1 y 2)
     counts = golden["golden_expected_situation"].value_counts()
     for sit in ["S0", "S1", "S2", "S3"]:
         assert counts.get(sit, 0) >= 2, f"faltan casos de {sit}"

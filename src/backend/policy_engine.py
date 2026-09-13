@@ -37,20 +37,47 @@ def load_alternatives_catalog():
         return json.load(f)
 
 
-def _load_customer_row(customer_id: str):
+def _load_customer_row(customer_id: str, product_seq: int | None = None):
+    # Un customer_id puede tener más de una fila (más de un crédito activo, ej.
+    # GOLD-G15); product_seq elige cuál. Sin especificar, se toma la primera --
+    # igual que el comportamiento previo de un solo crédito por cliente.
     global _dataset_cache, _golden_cache
     if _dataset_cache is None:
         _dataset_cache = pd.read_csv(_DATASET_PATH)
     match = _dataset_cache[_dataset_cache["customer_id"] == customer_id]
-    if not match.empty:
-        return match.iloc[0]
-    if _golden_cache is None:
-        _golden_cache = pd.read_csv(_GOLDEN_PATH) if os.path.exists(_GOLDEN_PATH) else pd.DataFrame()
-    if not _golden_cache.empty:
-        match = _golden_cache[_golden_cache["customer_id"] == customer_id]
-        if not match.empty:
-            return match.iloc[0]
-    return None
+    if match.empty:
+        if _golden_cache is None:
+            _golden_cache = pd.read_csv(_GOLDEN_PATH) if os.path.exists(_GOLDEN_PATH) else pd.DataFrame()
+        if not _golden_cache.empty:
+            match = _golden_cache[_golden_cache["customer_id"] == customer_id]
+    if match.empty:
+        return None
+    if product_seq is not None and "product_seq" in match.columns:
+        scoped = match[match["product_seq"] == product_seq]
+        if not scoped.empty:
+            match = scoped
+    return match.iloc[0]
+
+
+def list_customer_products(customer_id: str) -> list:
+    """Créditos activos de un cliente (uno o más). Cada entrada es lo mínimo que
+    la app necesita para armar un selector: product_seq + credit_product."""
+    global _dataset_cache, _golden_cache
+    if _dataset_cache is None:
+        _dataset_cache = pd.read_csv(_DATASET_PATH)
+    match = _dataset_cache[_dataset_cache["customer_id"] == customer_id]
+    if match.empty:
+        if _golden_cache is None:
+            _golden_cache = pd.read_csv(_GOLDEN_PATH) if os.path.exists(_GOLDEN_PATH) else pd.DataFrame()
+        if not _golden_cache.empty:
+            match = _golden_cache[_golden_cache["customer_id"] == customer_id]
+    if match.empty:
+        return []
+    if "product_seq" not in match.columns:
+        return [{"product_seq": 1, "credit_product": match.iloc[0].get("credit_product")}]
+    match = match.sort_values("product_seq")
+    return [{"product_seq": int(r["product_seq"]), "credit_product": r.get("credit_product")}
+            for _, r in match.iterrows()]
 
 def get_allowed_offers(customer_id: str, risk_profile: dict) -> list:
     """
@@ -204,7 +231,7 @@ _ELIGIBILITY_RULES = [
 ]
 
 
-def get_eligible_alternatives(customer_id: str, risk_profile: dict) -> list:
+def get_eligible_alternatives(customer_id: str, risk_profile: dict, product_seq: int | None = None) -> list:
     """Resuelve la lista de `alt_id` elegibles con parámetros concretos (fechas,
     porcentajes, montos) para un cliente, según `situation_hint` y su contexto
     financiero. Es la fuente de verdad para `policy_context.eligible_alternatives_hint`
@@ -214,7 +241,7 @@ def get_eligible_alternatives(customer_id: str, risk_profile: dict) -> list:
     Siempre incluye ALT-NONE si `situation_hint == S0` y ninguna otra alternativa
     aplicó (nada que ofrecer a un cliente estable).
     """
-    row = _load_customer_row(customer_id)
+    row = _load_customer_row(customer_id, product_seq)
     if row is None:
         return []
 

@@ -23,16 +23,18 @@ class SessionRequest(BaseModel):
 
 class Command(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    action: Literal["message", "select", "confirm", "cancel", "callback", "seen", "snooze", "reminder", "channel"]
+    action: Literal["message", "select", "confirm", "cancel", "callback", "seen", "snooze", "reminder", "channel", "select_product"]
     version: int = Field(ge=0)
     text: str | None = Field(default=None, min_length=1, max_length=1500)
     offer_id: str | None = Field(default=None, max_length=80)
     token: str | None = Field(default=None, max_length=80)
     channel: Literal["WHATSAPP", "CALL", "APP_PUSH", "SMS"] | None = None
+    product_id: str | None = Field(default=None, max_length=80)
 
     @model_validator(mode="after")
     def required_fields(self):
-        field = {"message": "text", "select": "offer_id", "confirm": "token", "channel": "channel"}.get(self.action)
+        field = {"message": "text", "select": "offer_id", "confirm": "token", "channel": "channel",
+                  "select_product": "product_id"}.get(self.action)
         if field and not getattr(self, field):
             raise ValueError(f"Falta {field}")
         if self.text is not None:

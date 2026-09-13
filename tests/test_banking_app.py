@@ -106,6 +106,23 @@ def test_human_review_idempotent_and_never_restructures(service):
     assert s['support']['id']==ref and s['product']==old
     assert len(s['events'])==1 and not s['offers']
 
+def test_two_credit_products_score_independently_and_persist(service):
+    s=service.create('GOLD-G15')
+    assert len(s['products'])==2
+    assert not any('_score' in p for p in s['products']) and '_score' not in s['product']
+    at_risk=s['product']['id']
+    healthy=next(p['id'] for p in s['products'] if p['id']!=at_risk)
+    assert s['product']['status']=='UPCOMING' and s['intervention']['show']
+    other=next(p for p in s['products'] if p['id']==healthy)
+    assert other['status']=='PAID'
+    s=cmd(service,s,'select',offer_id='PAY_NOW')
+    s=cmd(service,s,'confirm',token=s['pending_offer']['token'])
+    assert s['product']['status']=='PAID' and s['product']['remaining']==0
+    s=cmd(service,s,'select_product',product_id=healthy)
+    assert s['product']['id']==healthy and s['product']['status']=='PAID'
+    paid_now=next(p for p in s['products'] if p['id']==at_risk)
+    assert paid_now['status']=='PAID' and paid_now['remaining']==0  # persisted across the focus switch
+
 def test_technical_guidance_and_context_continue(service):
     s=service.create('GOLD-G13')
     s=cmd(service,s,'message',text='No sé usar la app')

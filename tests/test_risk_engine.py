@@ -17,7 +17,7 @@ def test_golden_customers_lookup_works():
     """Regresión: los golden viven en un CSV aparte (prefijo GOLD-); si el lookup
     solo mira dataset.csv, caen todos al fallback por defecto sin dar error."""
     golden = load_golden()
-    assert len(golden) == 14
+    assert len(golden) == 16  # 14 golden + GOLD-G15 con 2 créditos (product_seq 1 y 2)
     profile = get_risk_profile("GOLD-G01")
     assert "_warning" not in profile, "el golden no se encontró y cayó al fallback silencioso"
 

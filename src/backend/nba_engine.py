@@ -103,17 +103,25 @@ def _load_contacts():
     return _contacts_cache
 
 
-def _find_customer_row(customer_id: str):
+def _find_customer_row(customer_id: str, product_seq: int | None = None):
+    # Un customer_id puede tener más de una fila (más de un crédito activo, ej.
+    # GOLD-G15); product_seq elige cuál. Sin especificar, se toma la primera --
+    # igual que el comportamiento previo de un solo crédito por cliente. El cupo
+    # de contacto (_contacts_last_7d) sigue por customer_id, ver limitación
+    # documentada en channel_timing_engine.py.
     dataset = _load_dataset()
     match = dataset[dataset["customer_id"] == customer_id]
-    if not match.empty:
-        return match.iloc[0]
-    golden = _load_golden()
-    if not golden.empty:
-        match = golden[golden["customer_id"] == customer_id]
-        if not match.empty:
-            return match.iloc[0]
-    return None
+    if match.empty:
+        golden = _load_golden()
+        if not golden.empty:
+            match = golden[golden["customer_id"] == customer_id]
+    if match.empty:
+        return None
+    if product_seq is not None and "product_seq" in match.columns:
+        scoped = match[match["product_seq"] == product_seq]
+        if not scoped.empty:
+            match = scoped
+    return match.iloc[0]
 
 
 def _contacts_last_7d(customer_id: str, snapshot_date: str) -> int:
@@ -198,7 +206,7 @@ def _nba_reason(top_factors: list, situation_hint: str, action: str) -> str:
     return "Se observa que " + "; y ".join(phrases) + "."
 
 
-def get_next_best_action(customer_id: str, risk_profile: dict) -> dict:
+def get_next_best_action(customer_id: str, risk_profile: dict, product_seq: int | None = None) -> dict:
     """
     Decide la intervención completa para un cliente: compuertas, acción, canal y
     momento (delegado a channel_timing_engine), y una razón legible.
@@ -206,7 +214,7 @@ def get_next_best_action(customer_id: str, risk_profile: dict) -> dict:
     `risk_profile` es la salida de `risk_engine.get_risk_profile` (Fases 2-3);
     este motor no vuelve a calcular riesgo, solo decide qué hacer con él.
     """
-    row = _find_customer_row(customer_id)
+    row = _find_customer_row(customer_id, product_seq)
     if row is None:
         return {**_DEFAULT_ARCHETYPE_FIELDS, "intervene": False, "channel": "NONE", "action": "NO_CONTACT",
                 "reason": "CUSTOMER_NOT_FOUND", "nba_reason": "Cliente no encontrado."}
@@ -236,7 +244,7 @@ def get_next_best_action(customer_id: str, risk_profile: dict) -> dict:
     human_support_recommended = complex_case or (needs_guided_help and situation_hint == "S3")
     avoid_more_credit = credit_product in REVOLVING_CREDIT_PRODUCTS and situation_hint in ("S3",)
 
-    channel_timing = get_channel_and_timing(customer_id)
+    channel_timing = get_channel_and_timing(customer_id, product_seq)
 
     days_to_due = row.get("days_to_due", 7)
     scheduled_for = None

@@ -44,37 +44,46 @@ _dataset_cache = None
 _golden_cache = None
 
 
-def _find_customer_row(customer_id: str):
+def _find_customer_row(customer_id: str, product_seq: int | None = None):
+    # Un customer_id puede tener más de una fila (más de un crédito activo, ej.
+    # GOLD-G15); product_seq elige cuál. Sin especificar, se toma la primera --
+    # igual que el comportamiento previo de un solo crédito por cliente.
     global _dataset_cache, _golden_cache
     if _dataset_cache is None:
         _dataset_cache = pd.read_csv(_DATASET_PATH)
     match = _dataset_cache[_dataset_cache["customer_id"] == customer_id]
-    if not match.empty:
-        return match.iloc[0]
-    if _golden_cache is None:
-        _golden_cache = pd.read_csv(_GOLDEN_PATH) if os.path.exists(_GOLDEN_PATH) else pd.DataFrame()
-    if not _golden_cache.empty:
-        match = _golden_cache[_golden_cache["customer_id"] == customer_id]
-        if not match.empty:
-            return match.iloc[0]
-    return None
+    if match.empty:
+        if _golden_cache is None:
+            _golden_cache = pd.read_csv(_GOLDEN_PATH) if os.path.exists(_GOLDEN_PATH) else pd.DataFrame()
+        if not _golden_cache.empty:
+            match = _golden_cache[_golden_cache["customer_id"] == customer_id]
+    if match.empty:
+        return None
+    if product_seq is not None and "product_seq" in match.columns:
+        scoped = match[match["product_seq"] == product_seq]
+        if not scoped.empty:
+            match = scoped
+    return match.iloc[0]
 
 
 def _quality_flags(row: pd.Series) -> list:
     return [col for col in _QUALITY_FLAG_COLUMNS if bool(row.get(col, 0))]
 
 
-def score_customer(customer_id: str) -> dict:
+def score_customer(customer_id: str, product_seq: int | None = None) -> dict:
     """Contrato v2 completo para un cliente. Es la única función que Camila
-    (frontend/dashboard) y el LLM (Fase 6) deberían necesitar llamar."""
-    row = _find_customer_row(customer_id)
+    (frontend/dashboard) y el LLM (Fase 6) deberían necesitar llamar.
+
+    `product_seq` distingue entre créditos cuando un cliente tiene más de uno
+    activo (ej. GOLD-G15); sin especificar, se evalúa el primero."""
+    row = _find_customer_row(customer_id, product_seq)
     if row is None:
         return {"customer_id": customer_id, "error": "CUSTOMER_NOT_FOUND"}
 
-    risk_profile = get_risk_profile(customer_id)
-    channel_timing = get_channel_and_timing(customer_id)
-    nba = get_next_best_action(customer_id, risk_profile)
-    eligible_alternatives = get_eligible_alternatives(customer_id, risk_profile)
+    risk_profile = get_risk_profile(customer_id, product_seq)
+    channel_timing = get_channel_and_timing(customer_id, product_seq)
+    nba = get_next_best_action(customer_id, risk_profile, product_seq)
+    eligible_alternatives = get_eligible_alternatives(customer_id, risk_profile, product_seq)
     eligible_alternatives = rank_alternatives(eligible_alternatives, risk_profile["situation_hint"],
                                                nba["channel"])
 
@@ -83,6 +92,7 @@ def score_customer(customer_id: str) -> dict:
 
     return {
         "customer_id": customer_id,
+        "product_seq": int(row.get("product_seq", 1)) if pd.notna(row.get("product_seq", 1)) else 1,
         "snapshot_date": snapshot_date,
         "days_to_due": int(days_to_due) if pd.notna(days_to_due) else None,
         "gates": {

@@ -62,10 +62,22 @@ def test_generator_state_not_in_snapshot(data):
 
 def test_golden_customers_count_and_situations(data):
     golden = data["golden"]
-    assert len(golden) == 14
+    assert len(golden) == 16  # 14 golden + GOLD-G15 con 2 créditos (product_seq 1 y 2)
     counts = golden["golden_expected_situation"].value_counts()
     for sit in ["S0", "S1", "S2", "S3"]:
         assert counts.get(sit, 0) >= 2, f"faltan casos de {sit}"
+
+
+def test_golden_g15_has_two_credit_products(data):
+    g15 = data["golden"][data["golden"]["customer_id"] == "GOLD-G15"].sort_values("product_seq")
+    assert len(g15) == 2
+    assert g15["product_seq"].tolist() == [1, 2]
+    assert g15["credit_product"].nunique() == 2
+    assert g15["full_name_mock"].nunique() == 1  # mismo cliente, misma identidad
+    healthy, at_risk = g15.iloc[0], g15.iloc[1]
+    assert bool(healthy["current_cycle_paid"]) is True
+    assert bool(at_risk["current_cycle_paid"]) is False
+    assert data["snapshot"]["product_seq"].eq(1).all()  # población general: sin cambio
 
 
 def test_golden_g02_looks_anomalous_but_should_not_contact(data):

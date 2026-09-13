@@ -221,6 +221,11 @@ def build_customers_snapshot(state: pd.DataFrame, panel: pd.DataFrame, rng: np.r
     df["credit_product"] = rng.choice(list(C.CREDIT_PRODUCTS), size=n, p=list(C.CREDIT_PRODUCTS.values()))
     df["digital_capability"] = rng.choice(list(C.DIGITAL_CAPABILITY_MIX), size=n,
                                            p=list(C.DIGITAL_CAPABILITY_MIX.values()))
+    # Cada fila es un crédito, no una persona. En la población con seed fija, un
+    # cliente siempre tiene exactamente un crédito (product_seq=1). Solo los golden
+    # customers (ver build_golden_customers) pueden repetir customer_id con
+    # product_seq distinto para modelar más de un crédito activo por cliente.
+    df["product_seq"] = 1
 
     # flags de calidad y demográficos ficticios
     df["has_missing_core"] = 0
@@ -318,6 +323,19 @@ GOLDEN_SPECS = [
         balance_ratio=0.45, income_variation=-0.35, failed_payment_attempts_30d=1,
         credit_product="PERSONAL_LOAN_MORTGAGE_BACKED", digital_capability="D1",
         expected_intervene=True, expected_escalation=True, expected_complex_case=True)),
+    # G15 son DOS filas del MISMO cliente (customer_id compartido, product_seq
+    # distinto): un vehicular ya al día y un personal en mora real. Sirve para
+    # probar que el motor evalúa cada crédito por separado en vez de asumir uno solo.
+    dict(id="G15", scenario="S0_segundo_credito_sano", situation="S0",
+         customer_id="GOLD-G15", product_seq=1, overrides=dict(
+        credit_product="VEHICLE_LOAN", digital_capability="D1", installment_amount=180.0,
+        balance_ratio=3.0, balance_vs_historical=1.05, payment_punctuality=1.0,
+        current_cycle_paid=True, expected_intervene=False)),
+    dict(id="G15B", scenario="S3_segundo_credito_en_mora", situation="S3",
+         customer_id="GOLD-G15", product_seq=2, overrides=dict(
+        credit_product="PERSONAL_LOAN_ACCOUNT_DEBIT", digital_capability="D1", installment_amount=220.0,
+        income_variation=-0.4, balance_ratio=0.4, balance_vs_historical=0.35, recent_balance_drop=0.5,
+        payment_punctuality=0.85, current_cycle_paid=False, expected_intervene=True)),
 ]
 
 
@@ -348,9 +366,14 @@ def build_golden_customers(snapshot_columns: list[str]) -> pd.DataFrame:
     rows = []
     for spec in GOLDEN_SPECS:
         row = dict(base_defaults)
-        row["customer_id"] = f"GOLD-{spec['id']}"
-        row["full_name_mock"] = f"Golden {spec['id']}"
-        row["dui_mock"] = f"DUI-DEMO-GOLD-{spec['id']}"
+        # customer_id/product_seq son overridables para modelar dos créditos del
+        # mismo cliente (ver G15/G15B): comparten customer_id y, por lo tanto,
+        # full_name_mock/dui_mock (misma persona), pero difieren en product_seq.
+        cust_id = spec.get("customer_id", f"GOLD-{spec['id']}")
+        row["customer_id"] = cust_id
+        row["product_seq"] = spec.get("product_seq", 1)
+        row["full_name_mock"] = f"Golden {cust_id.removeprefix('GOLD-')}"
+        row["dui_mock"] = f"DUI-DEMO-{cust_id}"
         row[C.LABEL] = 0
         for k, v in spec["overrides"].items():
             row[k] = v

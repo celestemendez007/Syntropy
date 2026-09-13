@@ -94,7 +94,11 @@ def _golden_customers_validation():
     rows = []
     for _, g in golden.iterrows():
         cid = g["customer_id"]
-        profile = get_risk_profile(cid)
+        # GOLD-G15 tiene 2 filas (2 créditos activos, ver generator.py); sin
+        # product_seq, get_risk_profile() siempre tomaría la primera fila para
+        # ambas y "validaría" la segunda contra los datos equivocados.
+        product_seq = int(g["product_seq"]) if pd.notna(g.get("product_seq")) else None
+        profile = get_risk_profile(cid, product_seq)
         note = None
         if cid in _S4_GOLDEN_IDS:
             passed = bool(profile["low_digital_response"]) == bool(g["golden_expected_situation"] == "S4")

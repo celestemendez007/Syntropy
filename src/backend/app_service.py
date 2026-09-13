@@ -16,7 +16,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from uuid import uuid4
 
-from policy_engine import get_eligible_alternatives, _load_customer_row
+from policy_engine import get_eligible_alternatives, _load_customer_row, list_customer_products
 from score_customer import score_customer
 from nba_priority import rank_alternatives
 
@@ -35,6 +35,7 @@ SCENARIOS = [
     ("A3", "Mi ingreso llega después", "GOLD-G05"), ("A4", "Pago parcial", "GOLD-G07"),
     ("A5", "Cuidar mi liquidez", "C00252"), ("A6", "Otro canal de contacto", "GOLD-G09"),
     ("A7", "Ayuda paso a paso", "GOLD-G13"), ("A8", "Atención personalizada", "GOLD-G14"),
+    ("A9", "Dos créditos activos", "GOLD-G15"),
 ]
 LABELS = {
     "ALT-DATE-SHIFT": ("Usar una nueva fecha", "calendar"),
@@ -112,22 +113,44 @@ class BankingService:
         finally:
             db.close()
 
-    def create(self, customer_id="GOLD-G05"):
-        score = score_customer(customer_id)
+    def _build_product(self, customer_id, product_seq):
+        """Arma el score + la tarjeta de un crédito puntual. Un cliente puede tener
+        más de uno (ver GOLD-G15); cada entrada de state["products"] guarda su
+        propio score bajo "_score" (oculto al cliente por public()) para que
+        cambiar el foco no tenga que recalcular nada."""
+        score = score_customer(customer_id, product_seq)
         if "error" in score:
-            raise DemoError("No encontramos este perfil de demostración.", 404)
-        row = _load_customer_row(customer_id)
+            return None
+        row = _load_customer_row(customer_id, product_seq)
         amount = round(float(row["installment_amount"]), 2)
         due = date.today() + timedelta(days=max(int(score.get("days_to_due") or 7), 1))
+        return {
+            "id": f"{customer_id}:{product_seq}", "product_seq": product_seq,
+            "name": PRODUCTS.get(score["profile"]["credit_product"], "Crédito Personal"),
+            "number": f"301234567{product_seq}", "code": score["profile"]["credit_product"],
+            "installment": amount, "remaining": amount, "due_date": due.isoformat(),
+            "original_due_date": due.isoformat(), "outstanding": round(amount * 24, 2),
+            "status": "PAID" if score["gates"]["current_cycle_paid"] else "UPCOMING",
+            "_score": score,
+        }
+
+    def create(self, customer_id="GOLD-G05"):
+        products_meta = list_customer_products(customer_id)
+        if not products_meta:
+            raise DemoError("No encontramos este perfil de demostración.", 404)
+        products = [self._build_product(customer_id, p["product_seq"]) for p in products_meta]
+        if any(p is None for p in products):
+            raise DemoError("No encontramos este perfil de demostración.", 404)
+        # El crédito enfocado por defecto es el primero que necesita atención
+        # (no pagado); si todos están al día, se enfoca el primero.
+        focus = next((p for p in products if p["status"] != "PAID"), products[0])
+        score = focus["_score"]
+        row = _load_customer_row(customer_id, focus["product_seq"])
         scenario = next((a for a in SCENARIOS if a[2] == customer_id), ("", "Perfil de demostración", customer_id))
         state = {
             "id": str(uuid4()), "customer_id": customer_id, "version": 0,
             "name": "Keylen", "scenario": scenario[1], "created_at": now(),
-            "product": {"name": PRODUCTS.get(score["profile"]["credit_product"], "Crédito Personal"),
-                        "number": "3012345678", "code": score["profile"]["credit_product"],
-                        "installment": amount, "remaining": amount, "due_date": due.isoformat(),
-                        "original_due_date": due.isoformat(), "outstanding": round(amount * 24, 2),
-                        "status": "PAID" if score["gates"]["current_cycle_paid"] else "UPCOMING"},
+            "products": products, "product": focus,
             "accounts": [{"id": "savings", "name": "Cuenta de ahorro", "number": "•• 4821", "balance": round(float(row["current_balance"]), 2)},
                          {"id": "digital", "name": "Cuenta de ahorro", "number": "•• 9034", "balance": 0}],
             "score": score, "barrier": None, "messages": [], "events": [], "offers": [],
@@ -139,6 +162,18 @@ class BankingService:
         with self.connect() as db:
             db.execute("INSERT INTO sessions VALUES (?, ?)", (state["id"], json.dumps(state)))
         return self.public(state)
+
+    def select_product(self, state, product_id):
+        match = next((p for p in state["products"] if p["id"] == product_id), None)
+        if not match:
+            raise DemoError("Ese crédito no está disponible en esta sesión.", 409)
+        # Reenfoca sobre la MISMA entrada (no una copia nueva) para que cualquier
+        # pago/reprogramación previa sobre este crédito se conserve.
+        state["product"] = match
+        state["score"] = match["_score"]
+        state["barrier"] = None
+        state["pending_offer"] = None
+        self.refresh_offers(state)
 
     def _read(self, db, sid):
         record = db.execute("SELECT state FROM sessions WHERE id=?", (sid,)).fetchone()
@@ -153,6 +188,9 @@ class BankingService:
     def public(self, state):
         result = copy.deepcopy(state)
         score = result.pop("score")
+        result.get("product", {}).pop("_score", None)
+        for p in result.get("products", []):
+            p.pop("_score", None)
         result["intervention"] = {
             "show": bool(score["nba"]["should_contact"] and not state["opt_out"] and not state["snoozed"] and state["product"]["status"] == "UPCOMING"),
             "guided": score["profile"]["needs_guided_help"],
@@ -167,9 +205,9 @@ class BankingService:
             state["offers"] = []
             return
         risk = {**state["score"]["risk"], **state["score"]["situation"]}
-        raw = get_eligible_alternatives(state["customer_id"], risk)
+        raw = get_eligible_alternatives(state["customer_id"], risk, state["product"]["product_seq"])
         raw = rank_alternatives(raw, risk["situation_hint"], state["channel"], state["barrier"])
-        row = _load_customer_row(state["customer_id"])
+        row = _load_customer_row(state["customer_id"], state["product"]["product_seq"])
         # Policy dates use the synthetic next_due_date (or snapshot fallback).
         reference = row.get("next_due_date")
         if not isinstance(reference, str) or not reference:
@@ -360,8 +398,19 @@ class BankingService:
             elif action == "channel":
                 state["channel"] = command["channel"]
                 state["events"].append({"type": "CHANNEL_CHANGED", "at": now(), "channel": state["channel"], "title": "Preferencia de contacto actualizada"})
+            elif action == "select_product":
+                self.select_product(state, command["product_id"])
             else:
                 raise DemoError("Acción no reconocida.")
+            # state["product"] is the live, mutable focus; state["products"] is a
+            # separate JSON-persisted copy (SQLite round-trips through json.dumps/
+            # loads, so Python object aliasing between the two does not survive
+            # across commands). Re-sync explicitly so a payment/reschedule on the
+            # focused credit is reflected the next time the products list is read.
+            for i, p in enumerate(state.get("products", [])):
+                if p.get("id") == state["product"].get("id"):
+                    state["products"][i] = state["product"]
+                    break
             state["version"] += 1
             db.execute("UPDATE sessions SET state=? WHERE id=?", (json.dumps(state), sid))
         return self.public(state)

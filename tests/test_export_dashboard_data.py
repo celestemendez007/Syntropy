@@ -23,8 +23,9 @@ def test_all_fourteen_golden_customers_present_and_pass(data):
     income_date_unknown desactiva la regla S2), los 14 golden deben pasar --
     si esto falla, alguien cambió una regla de situation_hint sin actualizar la
     excepción documentada aquí y en el diseño. G13/G14 son los arquetipos nuevos
-    (capacidad digital D3 y producto sensible)."""
-    assert len(data["golden_customers"]) == 14
+    (capacidad digital D3 y producto sensible). G15/G15B son un mismo cliente con
+    2 créditos activos (uno sano, uno en mora), 16 filas en total."""
+    assert len(data["golden_customers"]) == 16
     failed = [g["customer_id"] for g in data["golden_customers"] if not g["passed"]]
     assert failed == [], f"golden customers fallando: {failed}"
 

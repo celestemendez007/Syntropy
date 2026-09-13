@@ -71,17 +71,26 @@ def load_golden() -> pd.DataFrame:
     return _golden_cache
 
 
-def _find_customer_row(customer_id: str):
+def _find_customer_row(customer_id: str, product_seq: int | None = None):
+    # Un customer_id puede tener más de una fila (más de un crédito activo, ej.
+    # GOLD-G15); product_seq elige cuál. Sin especificar, se toma la primera --
+    # igual que el comportamiento previo de un solo crédito por cliente.
+    # NOTA: contacts_log sigue indexado solo por customer_id (líneas más abajo),
+    # así que el historial de contacto/canal se comparte entre los créditos de
+    # un mismo cliente -- limitación conocida, no resuelta aquí.
     dataset = load_dataset()
     match = dataset[dataset["customer_id"] == customer_id]
-    if not match.empty:
-        return match.iloc[0]
-    golden = load_golden()
-    if not golden.empty:
-        match = golden[golden["customer_id"] == customer_id]
-        if not match.empty:
-            return match.iloc[0]
-    return None
+    if match.empty:
+        golden = load_golden()
+        if not golden.empty:
+            match = golden[golden["customer_id"] == customer_id]
+    if match.empty:
+        return None
+    if product_seq is not None and "product_seq" in match.columns:
+        scoped = match[match["product_seq"] == product_seq]
+        if not scoped.empty:
+            match = scoped
+    return match.iloc[0]
 
 
 def _load_channel_model():
@@ -143,12 +152,12 @@ def _level1_channel_preference(customer_id: str, contacts: pd.DataFrame):
     return best_channel, float(best_rate)
 
 
-def get_channel_preference(customer_id: str) -> dict:
+def get_channel_preference(customer_id: str, product_seq: int | None = None) -> dict:
     """`channel_pref_model` / `channel_pref_confidence` / `channel_used` / `channel_source`
     del contrato v2 (docs/contracts.md). `channel_used` SIEMPRE es un canal real
     (nunca UNDETERMINED): si la confianza es baja, cae a CALL."""
     contacts = load_contacts()
-    customer_row = _find_customer_row(customer_id)
+    customer_row = _find_customer_row(customer_id, product_seq)
 
     level1 = _level1_channel_preference(customer_id, contacts)
     if level1 is not None:
@@ -183,10 +192,10 @@ def _days_bucket(days: float):
     return None
 
 
-def get_timing(customer_id: str) -> dict:
+def get_timing(customer_id: str, product_seq: int | None = None) -> dict:
     """`best_hour_window` / `best_days_before_due` / `timing_confidence` del contrato v2."""
     contacts = load_contacts()
-    customer_row = _find_customer_row(customer_id)
+    customer_row = _find_customer_row(customer_id, product_seq)
     income_type = customer_row.get("income_type", "UNKNOWN") if customer_row is not None else "UNKNOWN"
 
     hist = contacts[contacts["customer_id"] == customer_id].copy()
@@ -215,9 +224,9 @@ def get_timing(customer_id: str) -> dict:
             "timing_confidence": round(timing_confidence, 4)}
 
 
-def get_channel_and_timing(customer_id: str) -> dict:
+def get_channel_and_timing(customer_id: str, product_seq: int | None = None) -> dict:
     """Combina ambos para el contrato v2 (`channel` + `timing`, ver docs/contracts.md)."""
-    return {**get_channel_preference(customer_id), **get_timing(customer_id)}
+    return {**get_channel_preference(customer_id, product_seq), **get_timing(customer_id, product_seq)}
 
 
 if __name__ == "__main__":

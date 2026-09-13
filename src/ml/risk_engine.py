@@ -81,19 +81,25 @@ def load_golden() -> pd.DataFrame:
     return _golden_cache
 
 
-def _find_customer_row(customer_id: str):
+def _find_customer_row(customer_id: str, product_seq: int | None = None):
     """Busca en el dataset principal y, si no aparece, en los golden customers
-    (viven en un archivo separado con prefijo GOLD-)."""
+    (viven en un archivo separado con prefijo GOLD-). Un customer_id puede tener
+    más de una fila (más de un crédito activo, ej. GOLD-G15); product_seq elige
+    cuál. Sin especificar, se toma la primera -- igual que el comportamiento
+    previo de un solo crédito por cliente."""
     dataset = load_dataset()
     match = dataset[dataset["customer_id"] == customer_id]
-    if not match.empty:
-        return match.iloc[0]
-    golden = load_golden()
-    if not golden.empty:
-        match = golden[golden["customer_id"] == customer_id]
-        if not match.empty:
-            return match.iloc[0]
-    return None
+    if match.empty:
+        golden = load_golden()
+        if not golden.empty:
+            match = golden[golden["customer_id"] == customer_id]
+    if match.empty:
+        return None
+    if product_seq is not None and "product_seq" in match.columns:
+        scoped = match[match["product_seq"] == product_seq]
+        if not scoped.empty:
+            match = scoped
+    return match.iloc[0]
 
 
 def _load_model_and_scaler():
@@ -214,7 +220,7 @@ def _situation_hint(row: pd.Series):
     return situation, low_digital_response
 
 
-def get_risk_profile(customer_id: str) -> dict:
+def get_risk_profile(customer_id: str, product_seq: int | None = None) -> dict:
     """
     Perfil de riesgo real para un cliente. Reemplaza el mock anterior.
 
@@ -224,7 +230,7 @@ def get_risk_profile(customer_id: str) -> dict:
     y research/ba_a_tiempo/outputs/risk_benchmark_report.md para por qué se eligió LR).
     """
     dataset = load_dataset()
-    row = _find_customer_row(customer_id)
+    row = _find_customer_row(customer_id, product_seq)
     if row is None:
         return {
             "customer_id": customer_id, "risk_level": "MEDIUM", "risk_score": 0.5,
