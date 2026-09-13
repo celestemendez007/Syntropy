@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react'
 export default function Simulator() {
   const [customers, setCustomers] = useState([])
   const [selectedCustomer, setSelectedCustomer] = useState('')
+  const [randomProfile, setRandomProfile] = useState(null)
   const [history, setHistory] = useState([])
   const [inputText, setInputText] = useState('')
   const [loading, setLoading] = useState(false)
@@ -65,6 +66,18 @@ export default function Simulator() {
     }
   }
 
+  const generateRandomProfile = () => {
+    const archetypes = ['A1', 'A2', 'A3', 'A4', 'A5', 'A6', 'A7', 'A8']
+    const products = ['Personal', 'Credicheque', 'Vehículo / Estudio', 'Garantía Hipotecaria / Vivienda', 'Adelanto / Sobregiro / Extra']
+    
+    const randomArch = archetypes[Math.floor(Math.random() * archetypes.length)]
+    const randomProd = products[Math.floor(Math.random() * products.length)]
+    
+    setSelectedCustomer('RANDOM')
+    setRandomProfile({ archetype: randomArch, product: randomProd })
+    setHistory([])
+  }
+
   const sendMessage = async () => {
     if (!inputText.trim()) return
     const userMsg = { role: 'user', content: inputText.trim() }
@@ -75,13 +88,19 @@ export default function Simulator() {
     setError(null)
 
     try {
+      const payload = {
+        customer_id: selectedCustomer,
+        history: newHistory
+      }
+      if (selectedCustomer === 'RANDOM' && randomProfile) {
+        payload.force_archetype = randomProfile.archetype
+        payload.force_product = randomProfile.product
+      }
+
       const res = await fetch('http://localhost:8000/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customer_id: selectedCustomer,
-          history: newHistory
-        })
+        body: JSON.stringify(payload)
       })
 
       if (!res.ok) {
@@ -118,6 +137,7 @@ export default function Simulator() {
           value={selectedCustomer} 
           onChange={e => {
             setSelectedCustomer(e.target.value)
+            setRandomProfile(null)
             setHistory([]) // clear history on change
           }}
         >
@@ -126,9 +146,17 @@ export default function Simulator() {
               {c.customer_id} - {c.scenario}
             </option>
           ))}
+          <option value="RANDOM">-- Perfil Aleatorio --</option>
         </select>
+        <button onClick={generateRandomProfile} className="btn-secondary" style={{ background: '#8b5cf6', color: 'white', borderColor: '#8b5cf6' }}>Generar Perfil Aleatorio 🎲</button>
         <button onClick={() => setHistory([])} className="btn-secondary">Reiniciar Chat</button>
       </div>
+      
+      {selectedCustomer === 'RANDOM' && randomProfile && (
+        <div style={{ padding: '10px', background: '#1e293b', borderLeft: '4px solid #8b5cf6', marginBottom: '20px', borderRadius: '4px' }}>
+          <strong>Contexto del Agente:</strong> Estás hablando con un <strong>{randomProfile.archetype}</strong> que tiene un crédito de tipo <strong>{randomProfile.product}</strong>.
+        </div>
+      )}
 
       <div className="chat-window">
         {history.length === 0 && <div className="chat-empty">Escribe o habla para empezar la negociación...</div>}

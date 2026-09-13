@@ -33,6 +33,8 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     customer_id: str
     history: list[ChatMessage]
+    force_archetype: str | None = None
+    force_product: str | None = None
 
 # Load models and data at startup
 golden_customers_df = None
@@ -56,12 +58,46 @@ def get_customers():
 def chat(req: ChatRequest):
     groq_api_key = os.environ.get("GROQ_API_KEY")
     
-    # 1. Run the banking logic for this specific customer
-    try:
-        score = score_customer(req.customer_id)
-        alts = get_eligible_alternatives(score["risk"], score["profile"])
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    # 1. Run the banking logic or use forced random profile
+    if req.force_archetype and req.force_product:
+        config_path = os.path.join(os.path.dirname(__file__), "archetypes_config.json")
+        with open(config_path, "r", encoding="utf-8") as f:
+            archetypes = json.load(f)
+            
+        target_arch = next((a for a in archetypes if a["id"] == req.force_archetype), archetypes[0])
+        situation = target_arch["match"]["situations"][0] if target_arch["match"]["situations"] else "S0"
+        digital_cap = target_arch["match"]["digital_capabilities"][0] if target_arch["match"]["digital_capabilities"] else "D1"
+        
+        score = {
+            "profile": {
+                "credit_product": req.force_product,
+                "digital_capability": digital_cap
+            },
+            "situation": {
+                "situation_hint": situation
+            }
+        }
+        
+        # Extract alternatives for guardrails
+        alts_text = ""
+        for line in target_arch.get("useful_alternatives", []):
+            if req.force_product in line:
+                if ":" in line:
+                    alts_text = line.split(":", 1)[1]
+                else:
+                    alts_text = line
+                break
+                
+        if not alts_text and target_arch.get("useful_alternatives"):
+            alts_text = target_arch["useful_alternatives"][0].split(":", 1)[1] if ":" in target_arch["useful_alternatives"][0] else target_arch["useful_alternatives"][0]
+            
+        alts = [{"alt_id": alt.strip()} for alt in alts_text.split(",") if alt.strip()]
+    else:
+        try:
+            score = score_customer(req.customer_id)
+            alts = get_eligible_alternatives(score["risk"], score["profile"])
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=str(e))
     
     # 2. Build the strict guardrail prompt
     system_prompt = build_system_prompt(score, alts)
