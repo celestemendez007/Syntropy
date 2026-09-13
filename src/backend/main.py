@@ -106,8 +106,11 @@ def chat(req: ChatRequest):
         # Fallback to local mock LLM
         from src.backend.conversation_engine import call_llm
         last_msg = req.history[-1].content if req.history else ""
-        mock_res = call_llm(system_prompt, last_msg, alts)
-        reply = f"(Modo Automático - Sin API Key Groq) Te entiendo. Según lo que dices, detecto que tu problema es: {mock_res['barrier_detected']}. El sistema te recomienda las siguientes opciones: {alts[0]['alt_id'] if alts else 'Hablar con un asesor'}."
+        if len(req.history) <= 1 and last_msg.strip().lower() in ["hola", "buenos dias", "alo", "¿sí?", "si", "buenas"]:
+            reply = "(Modo Simulación) ¡Hola! Te saluda el asistente virtual de Bancoagrícola. Te contacto por un aviso preventivo de tu pago. ¿Has tenido algún inconveniente este mes?"
+        else:
+            mock_res = call_llm(system_prompt, last_msg, alts)
+            reply = f"(Modo Simulación) Te entiendo. Según lo que dices, detecto que tu problema es: {mock_res['barrier_detected']}. El sistema te recomienda las siguientes opciones: {alts[0]['alt_id'] if alts else 'Hablar con un asesor'}."
         hallucination_check = check_hallucination(reply, alts)
         return {
             "reply": reply,

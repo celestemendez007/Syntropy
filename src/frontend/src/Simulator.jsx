@@ -32,7 +32,15 @@ export default function Simulator() {
 
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript
-        setInputText(prev => prev + " " + transcript)
+        setInputText(prev => {
+          const newText = prev + " " + transcript;
+          // Auto send after a short delay to allow state update
+          setTimeout(() => {
+            const btn = document.getElementById('hidden-send-btn');
+            if(btn) btn.click();
+          }, 100);
+          return newText.trim();
+        });
       }
       recognition.onend = () => {
         setIsListening(false)
@@ -194,7 +202,7 @@ export default function Simulator() {
           onKeyDown={e => e.key === 'Enter' && sendMessage()}
           placeholder="Escribe tu mensaje como cliente..."
         />
-        <button onClick={sendMessage} disabled={loading || !inputText.trim()}>
+        <button id="hidden-send-btn" onClick={sendMessage} disabled={loading || !inputText.trim()} style={{ display: 'none' }}>
           Enviar
         </button>
       </div>
