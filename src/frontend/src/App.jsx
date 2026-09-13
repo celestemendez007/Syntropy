@@ -3,6 +3,7 @@ import './App.css'
 import AdminTab from './AdminTab'
 import WhatsAppDemo from './WhatsAppDemo'
 import CallDemo from './CallDemo'
+import BaATiempoApp from './ba-a-tiempo/BaATiempoApp'
 
 const STATUS_COLOR = {
   LOW: 'good', MEDIUM: 'warning', HIGH: 'critical',
@@ -196,7 +197,7 @@ function TechnicalTab() {
 export default function App() {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
-  const [activeTab, setActiveTab] = useState('whatsapp')
+  const [activeTab, setActiveTab] = useState('ba_a_tiempo')
 
   useEffect(() => {
     fetch('/data/dashboard_data.json')
@@ -223,6 +224,7 @@ export default function App() {
   return (
     <div className="app-container">
       <nav className="top-nav">
+        <button className={activeTab === 'ba_a_tiempo' ? 'active' : ''} onClick={() => setActiveTab('ba_a_tiempo')}>📱 App Bancoagrícola (BA A Tiempo)</button>
         <button className={activeTab === 'whatsapp' ? 'active' : ''} onClick={() => setActiveTab('whatsapp')}>WhatsApp</button>
         <button className={activeTab === 'call' ? 'active' : ''} onClick={() => setActiveTab('call')}>Llamada</button>
         <button className={activeTab === 'history' ? 'active' : ''} onClick={() => setActiveTab('history')}>Registro Histórico</button>
@@ -230,7 +232,9 @@ export default function App() {
         <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>Arquetipos (Admin)</button>
       </nav>
 
-      {activeTab === 'whatsapp' ? (
+      {activeTab === 'ba_a_tiempo' ? (
+        <BaATiempoApp />
+      ) : activeTab === 'whatsapp' ? (
         <WhatsAppDemo />
       ) : activeTab === 'call' ? (
         <CallDemo />

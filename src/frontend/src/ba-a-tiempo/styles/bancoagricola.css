@@ -1,0 +1,1053 @@
+/* ==========================================================================
+   Bancoagrícola App Base Styles & Design Tokens
+   feat/ba-a-tiempo-app-step-by-step
+   ========================================================================== */
+
+:root {
+  /* Brand Color Palette */
+  --ba-yellow: #ffcc00;
+  --ba-yellow-hover: #f5c400;
+  --ba-yellow-light: #fffdf0;
+  --ba-yellow-badge: #fef08a;
+  --ba-yellow-pill-bg: #fff9db;
+  --ba-yellow-circle: #eab308;
+  
+  --ba-navy: #004b87;
+  --ba-bg: #f8fafc;
+  --ba-card-bg: #ffffff;
+  --ba-text-primary: #111827;
+  --ba-text-secondary: #4b5563;
+  --ba-text-muted: #9ca3af;
+  --ba-border: #e5e7eb;
+  --ba-border-subtle: #f3f4f6;
+  
+  /* Accents */
+  --ba-cyan-bar: #38bdf8;
+  --ba-red-badge: #ef4444;
+  --ba-purple-user: #8b5cf6;
+  
+  /* Pastel Categories */
+  --ba-pastel-pink: #fce7f3;
+  --ba-pastel-pink-icon: #db2777;
+  --ba-pastel-mint: #d1fae5;
+  --ba-pastel-mint-icon: #059669;
+  --ba-pastel-yellow: #fef3c7;
+  --ba-pastel-yellow-icon: #d97706;
+  --ba-pastel-blue: #e0f2fe;
+  --ba-pastel-blue-icon: #0284c7;
+
+  /* Radii & Shadows */
+  --ba-radius-sm: 8px;
+  --ba-radius-md: 12px;
+  --ba-radius-lg: 16px;
+  --ba-radius-xl: 24px;
+  --ba-radius-pill: 9999px;
+  --ba-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --ba-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Simulator Container Layout */
+.ba-app-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 60px);
+  background: #0f172a;
+  padding: 16px;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: var(--ba-text-primary);
+}
+
+/* Reset specific to Bancoagricola phone frame */
+.ba-app-wrapper * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: inherit;
+}
+
+/* Phone Viewport Frame */
+.ba-phone-container {
+  width: 100%;
+  max-width: 390px;
+  height: 844px;
+  background-color: #f8fafc;
+  border-radius: 44px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 10px #1e293b;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Phone Top Status Bar */
+.ba-phone-status-bar {
+  height: 32px;
+  background-color: #ffffff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 22px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #111827;
+  z-index: 40;
+  user-select: none;
+}
+
+.ba-status-notch-pill {
+  width: 86px;
+  height: 12px;
+  background-color: #0f172a;
+  border-radius: var(--ba-radius-pill);
+}
+
+/* Bancoagrícola Header */
+.ba-top-header {
+  background-color: #ffffff;
+  padding: 10px 18px 6px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 30;
+}
+
+.ba-logo-svg-group {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.ba-top-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ba-top-action-btn {
+  background: none !important;
+  border: none !important;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  position: relative;
+  color: #111827 !important;
+  padding: 0 !important;
+}
+
+.ba-top-action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ba-top-action-label {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--ba-text-secondary);
+}
+
+.ba-badge-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background-color: var(--ba-red-badge);
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: var(--ba-radius-pill);
+  line-height: 1.2;
+}
+
+/* User Greeting Header (Inicio) */
+.ba-user-greeting-row {
+  background-color: #ffffff;
+  padding: 4px 18px 14px 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ba-user-greeting-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: var(--ba-text-primary);
+  cursor: pointer;
+}
+
+.ba-user-avatar-purple {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--ba-purple-user);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ba-purple-user);
+}
+
+.ba-user-last-visit {
+  font-size: 0.72rem;
+  color: var(--ba-text-muted);
+  margin-top: 2px;
+  margin-left: 36px;
+}
+
+/* Content Scrollable Area */
+.ba-screen-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px 80px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ba-screen-content.no-header {
+  padding: 0 0 80px 0;
+  gap: 0;
+}
+
+.ba-screen-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Mis Cuentas Carousel */
+.ba-section-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.ba-section-title-bold {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--ba-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ba-link-ver-todas {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ba-text-primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ba-accounts-scroll-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.ba-account-card-small {
+  min-width: 160px;
+  flex: 1;
+  background-color: #ffffff;
+  border-radius: var(--ba-radius-lg);
+  padding: 14px;
+  border: 1px solid var(--ba-border);
+  box-shadow: var(--ba-shadow-xs);
+  position: relative;
+  overflow: hidden;
+}
+
+.ba-account-card-small::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  background-color: var(--ba-cyan-bar);
+}
+
+.ba-account-card-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ba-account-card-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ba-text-primary);
+}
+
+.ba-account-card-sub {
+  font-size: 0.65rem;
+  color: var(--ba-text-muted);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.ba-account-card-balance {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--ba-text-primary);
+  display: flex;
+  align-items: baseline;
+}
+
+.ba-cents-sup {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.ba-account-card-label {
+  font-size: 0.68rem;
+  color: var(--ba-text-muted);
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   BA A TIEMPO PREVENTIVE BANNER CARD (Exact to Reference Image 1)
+   ========================================================================== */
+.ba-tiempo-banner-card {
+  background: #fffdf0;
+  border: 1.5px solid #fef08a;
+  border-radius: var(--ba-radius-lg);
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(254, 240, 138, 0.2);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.ba-tiempo-pill-badge {
+  align-self: flex-end;
+  background-color: #fef9c3;
+  color: #854d0e;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--ba-radius-pill);
+  margin-bottom: 4px;
+}
+
+.ba-tiempo-header-content {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.ba-tiempo-calendar-icon {
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  background-color: #fef08a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.ba-tiempo-exclamation-dot {
+  position: absolute;
+  bottom: 0px;
+  right: 0px;
+  width: 16px;
+  height: 16px;
+  background-color: var(--ba-yellow);
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #111827;
+}
+
+.ba-tiempo-text-block h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--ba-text-primary);
+}
+
+.ba-tiempo-text-block h4 {
+  margin: 2px 0 4px 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ba-text-primary);
+}
+
+.ba-tiempo-text-block p {
+  font-size: 0.8rem;
+  color: var(--ba-text-secondary);
+  line-height: 1.35;
+}
+
+.ba-tiempo-button-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* Yellow Primary Button */
+.ba-btn-yellow-pill {
+  background-color: var(--ba-yellow) !important;
+  color: #111827 !important;
+  border: none !important;
+  border-radius: var(--ba-radius-pill) !important;
+  padding: 11px 18px !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  box-shadow: var(--ba-shadow-xs);
+  width: 100% !important;
+  text-align: center;
+}
+
+.ba-btn-yellow-pill:hover {
+  background-color: var(--ba-yellow-hover) !important;
+  transform: translateY(-1px);
+}
+
+/* White Outlined Button */
+.ba-btn-white-pill {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border: 1.5px solid var(--ba-border) !important;
+  border-radius: var(--ba-radius-pill) !important;
+  padding: 10px 18px !important;
+  font-size: 0.86rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  width: 100% !important;
+  text-align: center;
+}
+
+.ba-btn-white-pill:hover {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Quick Actions Grid */
+.ba-quick-actions-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ba-quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.ba-pastel-action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  cursor: pointer;
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.ba-pastel-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+}
+
+.ba-pastel-pink { background-color: var(--ba-pastel-pink); color: var(--ba-pastel-pink-icon); }
+.ba-pastel-mint { background-color: var(--ba-pastel-mint); color: var(--ba-pastel-mint-icon); }
+.ba-pastel-yellow { background-color: var(--ba-pastel-yellow); color: var(--ba-pastel-yellow-icon); }
+.ba-pastel-blue { background-color: var(--ba-pastel-blue); color: var(--ba-pastel-blue-icon); }
+
+.ba-pastel-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--ba-text-primary);
+  line-height: 1.2;
+}
+
+/* ==========================================================================
+   OPTIONS SCREEN - ¿Qué sucede con este pago? (Exact to Reference Image 3)
+   ========================================================================== */
+.ba-options-screen-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.ba-options-top-header {
+  background-color: #ffffff;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.ba-back-arrow-btn {
+  background: none !important;
+  border: none !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px !important;
+  color: #111827 !important;
+}
+
+.ba-options-screen-title {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: var(--ba-text-primary);
+}
+
+/* Product Summary Card on Image 3 */
+.ba-product-summary-card {
+  background-color: #ffffff;
+  border-radius: var(--ba-radius-lg);
+  padding: 14px 16px;
+  border: 1px solid var(--ba-border);
+  box-shadow: var(--ba-shadow-xs);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.ba-summary-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ba-summary-icon-circle {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  background-color: #fef08a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ba-summary-name {
+  font-size: 0.96rem;
+  font-weight: 800;
+  color: var(--ba-text-primary);
+}
+
+.ba-summary-type {
+  font-size: 0.78rem;
+  color: var(--ba-text-secondary);
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+.ba-summary-right {
+  border-left: 1px solid var(--ba-border);
+  padding-left: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ba-summary-due-label {
+  font-size: 0.68rem;
+  color: var(--ba-text-secondary);
+  font-weight: 500;
+}
+
+.ba-summary-amount {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--ba-text-primary);
+  margin: 1px 0;
+}
+
+.ba-summary-due-date {
+  font-size: 0.7rem;
+  color: var(--ba-text-secondary);
+}
+
+/* Section Heading */
+.ba-options-heading-group h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--ba-text-primary);
+  margin-top: 4px;
+  letter-spacing: -0.01em;
+}
+
+.ba-options-heading-group p {
+  font-size: 0.84rem;
+  color: var(--ba-text-secondary);
+  margin-top: 3px;
+}
+
+/* Options Cards List */
+.ba-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ba-option-card-row {
+  background-color: #ffffff !important;
+  border: 1px solid var(--ba-border) !important;
+  border-radius: var(--ba-radius-lg) !important;
+  padding: 12px 14px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  cursor: pointer;
+  box-shadow: var(--ba-shadow-xs);
+  transition: all 0.15s ease-in-out;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+.ba-option-card-row:hover {
+  transform: translateY(-1px);
+  border-color: #cbd5e1 !important;
+  box-shadow: var(--ba-shadow-sm);
+}
+
+.ba-option-icon-circle {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ba-option-mint { background-color: #d1fae5; color: #059669; }
+.ba-option-yellow { background-color: #fef3c7; color: #d97706; }
+.ba-option-pink { background-color: #fce7f3; color: #db2777; }
+.ba-option-blue { background-color: #e0f2fe; color: #0284c7; }
+.ba-option-purple { background-color: #f3e8ff; color: #9333ea; }
+
+.ba-option-text-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ba-option-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ba-text-primary);
+}
+
+.ba-option-subtitle {
+  font-size: 0.74rem;
+  color: var(--ba-text-secondary);
+  font-weight: 400;
+}
+
+.ba-option-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Custom Textarea Box */
+.ba-custom-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.ba-custom-input-label {
+  font-size: 0.76rem;
+  color: var(--ba-text-secondary);
+  font-weight: 500;
+}
+
+.ba-textarea-container {
+  background-color: #ffffff;
+  border: 1px solid var(--ba-border);
+  border-radius: var(--ba-radius-md);
+  padding: 10px 12px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.ba-custom-textarea {
+  width: 100%;
+  border: none !important;
+  outline: none !important;
+  resize: none;
+  font-size: 0.84rem;
+  color: var(--ba-text-primary);
+  background: transparent !important;
+  line-height: 1.4;
+  padding: 0 !important;
+}
+
+.ba-custom-textarea::placeholder {
+  color: var(--ba-text-muted);
+}
+
+.ba-char-counter {
+  align-self: flex-end;
+  font-size: 0.68rem;
+  color: var(--ba-text-muted);
+  margin-top: 4px;
+}
+
+.ba-promos-banner-row {
+  background-color: #ffffff;
+  border-radius: var(--ba-radius-lg);
+  padding: 14px 16px;
+  border: 1px solid var(--ba-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--ba-shadow-xs);
+  cursor: pointer;
+}
+
+.ba-promos-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ba-text-primary);
+}
+
+.ba-floating-qr-btn {
+  position: absolute;
+  bottom: 74px;
+  right: 18px;
+  width: 48px;
+  height: 48px;
+  background-color: var(--ba-yellow) !important;
+  border: 3px solid #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #111827 !important;
+  cursor: pointer;
+  z-index: 50;
+  padding: 0 !important;
+}
+
+/* ==========================================================================
+   MIS PRODUCTOS SCREEN (Exact to Reference Image 2)
+   ========================================================================== */
+.ba-products-header-section {
+  padding-bottom: 4px;
+}
+
+.ba-products-header-section h2 {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--ba-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.ba-products-header-section p {
+  margin-top: 4px;
+  font-size: 0.85rem;
+  color: var(--ba-text-secondary);
+}
+
+/* Category Tabs (Cuentas, Tarjetas, Créditos) */
+.ba-product-category-tabs {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1.5px solid var(--ba-border);
+  margin-top: 4px;
+  margin-bottom: 6px;
+}
+
+.ba-cat-tab-btn {
+  background: none !important;
+  border: none !important;
+  padding: 10px 16px !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  color: var(--ba-text-secondary) !important;
+  cursor: pointer;
+  position: relative;
+  flex: 1;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.ba-cat-tab-btn.active {
+  color: var(--ba-text-primary) !important;
+  font-weight: 800 !important;
+}
+
+.ba-cat-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1.5px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: var(--ba-yellow);
+  border-radius: 2px;
+}
+
+/* Product Card - Crédito para Vehículo */
+.ba-credit-product-card {
+  background-color: #ffffff;
+  border-radius: var(--ba-radius-lg);
+  padding: 16px;
+  border: 1px solid var(--ba-border);
+  box-shadow: var(--ba-shadow-xs);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ba-credit-product-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: var(--ba-cyan-bar);
+}
+
+.ba-credit-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.ba-credit-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ba-car-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ba-credit-name-text {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--ba-text-primary);
+}
+
+.ba-credit-sub-text {
+  font-size: 0.68rem;
+  color: var(--ba-text-muted);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  margin-top: 1px;
+}
+
+.ba-credit-num-text {
+  font-size: 0.74rem;
+  color: var(--ba-text-secondary);
+  font-weight: 500;
+  margin-top: 1px;
+}
+
+.ba-badge-warning-pill {
+  background-color: #fef9c3;
+  color: #854d0e;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 10px 3px 6px;
+  border-radius: var(--ba-radius-pill);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.ba-badge-warning-circle {
+  width: 16px;
+  height: 16px;
+  background-color: var(--ba-yellow);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #111827;
+  font-weight: 900;
+  font-size: 0.68rem;
+}
+
+/* 3 Column Data Metrics Grid */
+.ba-credit-data-3col {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1.1fr;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--ba-border-subtle);
+}
+
+.ba-3col-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.ba-border-col {
+  border-left: 1px solid var(--ba-border-subtle);
+  padding-left: 8px;
+}
+
+.ba-3col-label {
+  font-size: 0.68rem;
+  color: var(--ba-text-secondary);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.ba-3col-value {
+  font-size: 0.98rem;
+  font-weight: 800;
+  color: var(--ba-text-primary);
+  margin-top: 4px;
+}
+
+.ba-date-val {
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+}
+
+.ba-sup-cents {
+  font-size: 0.7rem;
+  font-weight: 700;
+  top: -0.4em;
+}
+
+/* In-Product BA A Tiempo Card (Mis Productos) */
+.ba-tiempo-product-subcard {
+  background: #fffdf0;
+  border: 1.5px solid #fef08a;
+  border-radius: var(--ba-radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ba-inner-white-2col {
+  background-color: #ffffff;
+  border-radius: var(--ba-radius-md);
+  padding: 12px 16px;
+  border: 1px solid #fef08a;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 10px 0 14px 0;
+}
+
+.ba-white-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.ba-history-link-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ba-text-primary);
+  cursor: pointer;
+  padding: 6px 4px;
+}
+
+.ba-history-link-row:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   FIXED BOTTOM NAVIGATION BAR (Exact to Reference Images)
+   ========================================================================== */
+.ba-app-bottom-navbar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 64px;
+  background-color: #ffffff;
+  border-top: 1px solid var(--ba-border);
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  z-index: 40;
+}
+
+.ba-bottom-tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: none !important;
+  border: none !important;
+  color: var(--ba-text-secondary) !important;
+  font-size: 0.68rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0 !important;
+}
+
+.ba-bottom-tab-svg {
+  stroke: currentColor;
+}
+
+.ba-bottom-tab-item.active {
+  background-color: var(--ba-yellow) !important;
+  color: #111827 !important;
+  font-weight: 800 !important;
+}
+
+.ba-bottom-tab-item.active .ba-bottom-tab-svg {
+  stroke: #111827;
+}
