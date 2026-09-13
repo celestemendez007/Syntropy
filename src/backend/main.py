@@ -1,107 +1,130 @@
+"""HTTP and WebSocket transport for the integrated BA A Tiempo demo."""
+import asyncio
 import os
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-import groq
+from collections import defaultdict
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Literal
+from uuid import UUID
+
 from dotenv import load_dotenv
-import pandas as pd
-import json
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "src", "backend"))
+load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+from app_service import BankingService, DemoError, SCENARIOS
 
-from score_customer import score_customer
-from policy_engine import get_eligible_alternatives
-from conversation_engine import build_system_prompt, check_hallucination
+class SessionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    customer_id: str = Field(default="GOLD-G05", pattern=r"^(GOLD-G\d{2}|C\d{5})$")
 
-load_dotenv()
+class Command(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    action: Literal["message", "select", "confirm", "cancel", "callback", "seen", "snooze", "reminder", "channel"]
+    version: int = Field(ge=0)
+    text: str | None = Field(default=None, min_length=1, max_length=1500)
+    offer_id: str | None = Field(default=None, max_length=80)
+    token: str | None = Field(default=None, max_length=80)
+    channel: Literal["WHATSAPP", "CALL", "APP_PUSH", "SMS"] | None = None
 
-app = FastAPI(title="Syntropy Simulator API")
+    @model_validator(mode="after")
+    def required_fields(self):
+        field = {"message": "text", "select": "offer_id", "confirm": "token", "channel": "channel"}.get(self.action)
+        if field and not getattr(self, field):
+            raise ValueError(f"Falta {field}")
+        if self.text is not None:
+            self.text = self.text.strip()
+            if not self.text:
+                raise ValueError("El mensaje está vacío")
+        return self
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # For local Vite dev
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+@asynccontextmanager
+async def lifespan(app):
+    app.state.service = BankingService()
+    app.state.peers = defaultdict(set)
+    yield
 
-class ChatMessage(BaseModel):
-    role: str
-    content: str
+app = FastAPI(title="BA A Tiempo", version="1.0.0", lifespan=lifespan)
 
-class ChatRequest(BaseModel):
-    customer_id: str
-    history: list[ChatMessage]
+@app.exception_handler(DemoError)
+async def demo_error(request, exc):
+    return JSONResponse(status_code=exc.status, content={"detail": exc.message})
 
-# Load models and data at startup
-golden_customers_df = None
+@app.get("/api/health")
+def health():
+    return {"status": "ok", "mode": "synthetic-demo", "conversation": "groq-with-local-fallback" if os.getenv("GROQ_API_KEY") else "local", "websocket": True}
 
-@app.on_event("startup")
-def startup_event():
-    global golden_customers_df
-    try:
-        golden_customers_df = pd.read_csv("data/synthetic/golden_customers.csv")
-    except Exception as e:
-        print("Error loading golden customers:", e)
-        golden_customers_df = pd.DataFrame()
+@app.get("/api/scenarios")
+def scenarios():
+    return [{"id": a, "label": label, "customer_id": cid} for a, label, cid in SCENARIOS]
 
 @app.get("/api/customers")
-def get_customers():
-    if golden_customers_df.empty:
-        return []
-    return golden_customers_df[['customer_id', 'scenario']].to_dict(orient="records")
+def customers():
+    return [{"customer_id": cid, "scenario": label} for _, label, cid in SCENARIOS]
 
-@app.post("/api/chat")
-def chat(req: ChatRequest):
-    groq_api_key = os.environ.get("GROQ_API_KEY")
-    
-    # 1. Run the banking logic for this specific customer
+@app.post("/api/sessions", status_code=201)
+def create_session(request: SessionRequest):
+    return app.state.service.create(request.customer_id)
+
+@app.get("/api/sessions/{sid}")
+def get_session(sid: UUID):
+    return app.state.service.get(str(sid))
+
+async def broadcast(sid, state):
+    peers = list(app.state.peers.get(sid, ()))
+    async def send(peer):
+        try:
+            await asyncio.wait_for(peer.send_json({"type": "state", "state": state}), timeout=3)
+        except Exception:
+            app.state.peers[sid].discard(peer)
+    await asyncio.gather(*(send(peer) for peer in peers))
+
+@app.post("/api/sessions/{sid}/commands")
+async def command(sid: UUID, request: Command):
+    state = await run_in_threadpool(app.state.service.command, str(sid), request.model_dump())
+    await broadcast(str(sid), state)
+    return state
+
+@app.websocket("/api/sessions/{sid}/live")
+async def live(websocket: WebSocket, sid: UUID):
+    origin = websocket.headers.get("origin")
+    host = websocket.headers.get("host")
+    if origin and origin.split("://", 1)[-1] != host:
+        await websocket.close(code=1008)
+        return
+    sid = str(sid)
     try:
-        score = score_customer(req.customer_id)
-        alts = get_eligible_alternatives(score["risk"], score["profile"])
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    
-    # 2. Build the strict guardrail prompt
-    system_prompt = build_system_prompt(score, alts)
-    
-    if not groq_api_key:
-        # Fallback to local mock LLM
-        from src.backend.conversation_engine import call_llm
-        last_msg = req.history[-1].content if req.history else ""
-        mock_res = call_llm(system_prompt, last_msg, alts)
-        reply = f"(Modo Automático - Sin API Key Groq) Te entiendo. Según lo que dices, detecto que tu problema es: {mock_res['barrier_detected']}. El sistema te recomienda las siguientes opciones: {alts[0]['alt_id'] if alts else 'Hablar con un asesor'}."
-        hallucination_check = check_hallucination(reply, alts)
-        return {
-            "reply": reply,
-            "hallucination_flagged": hallucination_check["llm_hallucination_flag"],
-            "unauthorized_mentions": hallucination_check["unauthorized_mentions"]
-        }
-
-    client = groq.Groq(api_key=groq_api_key)
-    
-    messages = [{"role": "system", "content": system_prompt}]
-    for msg in req.history:
-        messages.append({"role": msg.role, "content": msg.content})
-
-    # 3. Call the LLM
+        state = await run_in_threadpool(app.state.service.get, sid)
+    except DemoError:
+        await websocket.close(code=1008)
+        return
+    await websocket.accept()
+    app.state.peers[sid].add(websocket)
     try:
-        chat_completion = client.chat.completions.create(
-            messages=messages,
-            model="llama-3.1-8b-instant",  # Extremely fast, free tier
-            temperature=0,  # Enforce determinism and banking strictness
-            max_tokens=400,
-        )
-        reply = chat_completion.choices[0].message.content
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"LLM Error: {str(e)}")
+        await websocket.send_json({"type": "state", "state": state})
+        while True:
+            payload = await websocket.receive_json()
+            if payload.get("type") == "ping":
+                await websocket.send_json({"type": "pong"})
+                continue
+            try:
+                request = Command.model_validate(payload)
+                state = await run_in_threadpool(app.state.service.command, sid, request.model_dump())
+                await broadcast(sid, state)
+            except DemoError as exc:
+                await websocket.send_json({"type": "error", "detail": exc.message})
+            except ValueError:
+                await websocket.send_json({"type": "error", "detail": "Solicitud inválida."})
+    except (WebSocketDisconnect, RuntimeError):
+        pass
+    finally:
+        app.state.peers[sid].discard(websocket)
+        if not app.state.peers[sid]:
+            app.state.peers.pop(sid, None)
 
-    # 4. Run the guardrails on the LLM's response before sending it back
-    hallucination_check = check_hallucination(reply, alts)
-
-    return {
-        "reply": reply,
-        "hallucination_flagged": hallucination_check["llm_hallucination_flag"],
-        "unauthorized_mentions": hallucination_check["unauthorized_mentions"]
-    }
+dist = Path(__file__).resolve().parents[1] / "frontend" / "dist"
+if dist.is_dir():
+    app.mount("/", StaticFiles(directory=dist, html=True), name="app")

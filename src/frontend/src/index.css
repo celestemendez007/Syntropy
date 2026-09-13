@@ -1,22 +1,2 @@
-:root {
-  color-scheme: light dark;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-}
-
-#root {
-  min-height: 100svh;
-}
-
-code {
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 0.85em;
-}
+/* Global styles are owned by the integrated banking application. */
+body { margin: 0; }

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-13T01:46:34.511221+00:00",
+  "generated_at": "2026-09-13T06:15:01.185139+00:00",
   "models": {
     "anomaly_detection": {
       "candidates": {
@@ -470,69 +470,62 @@
     }
   ],
   "portfolio": {
-    "n_sampled": 1800,
-    "pct_no_contact": 87.0,
+    "n_sampled": 100,
+    "pct_no_contact": 85.0,
     "situation_hint_distribution": {
-      "S0": 0.5978,
-      "S1": 0.3778,
-      "S3": 0.0244
+      "S0": 0.55,
+      "S1": 0.42,
+      "S3": 0.03
     },
     "risk_level_distribution": {
-      "MEDIUM": 0.665,
-      "HIGH": 0.335
+      "MEDIUM": 0.61,
+      "HIGH": 0.39
     },
     "recommended_action_distribution": {
-      "SIMPLE_REMINDER": 128,
-      "CHANNEL_SWITCH": 61,
-      "GUIDED_APP_HELP": 35,
-      "EMPATHETIC_CONVERSATION": 6,
-      "HUMAN_ESCALATION": 4
+      "SIMPLE_REMINDER": 9,
+      "CHANNEL_SWITCH": 4,
+      "GUIDED_APP_HELP": 2
     },
     "channel_source_distribution": {
-      "FALLBACK_CALL": 0.8675,
-      "MODEL_LEVEL1": 0.1325
+      "FALLBACK_CALL": 0.8667,
+      "MODEL_LEVEL1": 0.1333
     },
     "credit_product_distribution": {
-      "PERSONAL_LOAN_PAYROLL_DEDUCTION": 0.2006,
-      "PERSONAL_LOAN_ACCOUNT_DEBIT": 0.1478,
-      "VEHICLE_LOAN": 0.1233,
-      "CREDICHEQUE": 0.0978,
-      "HOME_LOAN": 0.0939,
-      "STUDENT_LOAN": 0.0783,
-      "OVERDRAFT_ELITE": 0.0694,
-      "SALARY_ADVANCE": 0.0694,
-      "EXTRA_FINANCING": 0.0639,
-      "PERSONAL_LOAN_MORTGAGE_BACKED": 0.0556
+      "PERSONAL_LOAN_PAYROLL_DEDUCTION": 0.28,
+      "PERSONAL_LOAN_ACCOUNT_DEBIT": 0.13,
+      "VEHICLE_LOAN": 0.09,
+      "HOME_LOAN": 0.09,
+      "SALARY_ADVANCE": 0.08,
+      "STUDENT_LOAN": 0.08,
+      "PERSONAL_LOAN_MORTGAGE_BACKED": 0.07,
+      "CREDICHEQUE": 0.07,
+      "OVERDRAFT_ELITE": 0.07,
+      "EXTRA_FINANCING": 0.04
     },
     "digital_capability_distribution": {
-      "D1": 0.665,
-      "D2": 0.2467,
-      "D3": 0.0883
+      "D1": 0.57,
+      "D2": 0.32,
+      "D3": 0.11
     },
-    "pct_needs_guided_help": 8.8,
-    "pct_complex_case": 0.2
+    "pct_needs_guided_help": 11.0,
+    "pct_complex_case": 0.0
   },
   "conversation_metrics": {
-    "n_conversations": 234,
+    "n_conversations": 15,
     "tone_distribution": {
-      "COOPERATIVE": 0.4915,
-      "NEUTRAL": 0.3504,
-      "TENSE": 0.1197,
-      "HOSTILE": 0.0385
+      "COOPERATIVE": 0.6,
+      "NEUTRAL": 0.3333,
+      "HOSTILE": 0.0667
     },
     "barrier_distribution": {
-      "FORGOT": 0.5128,
-      "LIQUIDITY": 0.1154,
-      "ALREADY_PAID": 0.0812,
-      "REFUSAL": 0.0684,
-      "DATE_MISMATCH": 0.0641,
-      "TECHNICAL": 0.0556,
-      "OTHER": 0.0556,
-      "DISPUTE": 0.047
+      "FORGOT": 0.6667,
+      "LIQUIDITY": 0.1333,
+      "REFUSAL": 0.1333,
+      "OTHER": 0.0667
     },
-    "barrier_vs_situation_match_rate": 0.5299,
-    "escalation_rate": 0.0427,
-    "acceptance_rate": 0.6624
+    "barrier_vs_situation_match_rate": 0.6667,
+    "escalation_rate": 0.0667,
+    "acceptance_rate": 0.7333
   },
   "nba_priority_table_top": [
     {
@@ -733,85 +726,26 @@
   ],
   "sample_scored_customers": [
     {
-      "customer_id": "C02091",
+      "customer_id": "C02140",
       "snapshot_date": "2026-09-12",
-      "days_to_due": 28,
+      "days_to_due": 13,
       "gates": {
         "current_cycle_paid": false,
         "opt_out_flag": false
       },
       "risk": {
-        "risk_score": 0.4828,
-        "risk_level": "MEDIUM",
-        "anomaly_score": 0.742,
+        "risk_score": 0.7028,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.9429,
         "anomaly_flag": true,
-        "risk_prob_lr": 0.31
-      },
-      "situation": {
-        "situation_hint": "S0",
-        "low_digital_response": false,
-        "top_factors": [],
-        "flags": []
-      },
-      "profile": {
-        "credit_product": "OVERDRAFT_ELITE",
-        "digital_capability": "D1",
-        "needs_guided_help": false,
-        "human_support_recommended": false,
-        "complex_case": false,
-        "avoid_more_credit": false
-      },
-      "channel": {
-        "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0045,
-        "channel_source": "FALLBACK_CALL",
-        "channel_used": "NONE"
-      },
-      "timing": {
-        "best_hour_window": "12:00-13:30",
-        "best_days_before_due": 5,
-        "timing_confidence": 0.3
-      },
-      "nba": {
-        "should_contact": false,
-        "recommended_action": "NO_CONTACT",
-        "scheduled_for": null,
-        "nba_reason": "No se cumplen las condiciones para intervenir.",
-        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
-      },
-      "policy_context": {
-        "balance_ratio": 1.5692238826139446,
-        "income_due_gap": -15.0,
-        "projected_coverage": 4.413570896716142,
-        "remaining_installments_assumed": 12,
-        "eligible_alternatives_hint": [
-          "ALT-NONE"
-        ]
-      },
-      "meta": {
-        "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:36.120056+00:00"
-      }
-    },
-    {
-      "customer_id": "C00620",
-      "snapshot_date": "2026-09-12",
-      "days_to_due": 3,
-      "gates": {
-        "current_cycle_paid": false,
-        "opt_out_flag": false
-      },
-      "risk": {
-        "risk_score": 0.5335,
-        "risk_level": "MEDIUM",
-        "anomaly_score": 0.8111,
-        "anomaly_flag": true,
-        "risk_prob_lr": 0.3484
+        "risk_prob_lr": 0.5428
       },
       "situation": {
         "situation_hint": "S0",
         "low_digital_response": false,
         "top_factors": [
+          "failed_payment_attempts_30d",
+          "failed_attempts_deviation",
           "spending_velocity_7d"
         ],
         "flags": [
@@ -819,9 +753,9 @@
         ]
       },
       "profile": {
-        "credit_product": "SALARY_ADVANCE",
-        "digital_capability": "D1",
-        "needs_guided_help": false,
+        "credit_product": "PERSONAL_LOAN_MORTGAGE_BACKED",
+        "digital_capability": "D3",
+        "needs_guided_help": true,
         "human_support_recommended": false,
         "complex_case": false,
         "avoid_more_credit": false
@@ -833,52 +767,53 @@
         "channel_used": "CALL"
       },
       "timing": {
-        "best_hour_window": "18:00-19:30",
+        "best_hour_window": "12:00-13:30",
         "best_days_before_due": 5,
         "timing_confidence": 0.1
       },
       "nba": {
-        "should_contact": false,
-        "recommended_action": "NO_CONTACT",
-        "scheduled_for": "2026-09-12T18:00",
-        "nba_reason": "Se observa que el ritmo de gasto de la última semana se aceleró.",
-        "block_reason": "S0"
+        "should_contact": true,
+        "recommended_action": "GUIDED_APP_HELP",
+        "scheduled_for": "2026-09-21T12:00",
+        "nba_reason": "Puedo ayudarle a revisar su crédito, entender sus opciones y guiarle paso a paso dentro de la app. Si su caso necesita revisión especial o apoyo técnico más directo, puedo conectarle con un asesor para continuar.",
+        "block_reason": null
       },
       "policy_context": {
-        "balance_ratio": 2.408534909838625,
-        "income_due_gap": 1.0,
-        "projected_coverage": 2.408534909838625,
+        "balance_ratio": 2.574618698831752,
+        "income_due_gap": -15.0,
+        "projected_coverage": 5.814214368891012,
         "remaining_installments_assumed": 12,
         "eligible_alternatives_hint": [
-          "ALT-NONE"
-        ]
+          "ALT-CHANNEL-SUPPORT"
+        ],
+        "customer_display_name": "Cliente Demo 02140",
+        "installment_amount": 150.88145085138265
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:36.282007+00:00"
+        "scored_at": "2026-09-13T06:15:02.517625+00:00"
       }
     },
     {
-      "customer_id": "C00472",
+      "customer_id": "C01850",
       "snapshot_date": "2026-09-12",
-      "days_to_due": 16,
+      "days_to_due": 8,
       "gates": {
         "current_cycle_paid": false,
         "opt_out_flag": false
       },
       "risk": {
-        "risk_score": 0.5234,
+        "risk_score": 0.5336,
         "risk_level": "MEDIUM",
-        "anomaly_score": 0.8286,
+        "anomaly_score": 0.7731,
         "anomaly_flag": true,
-        "risk_prob_lr": 0.3199
+        "risk_prob_lr": 0.374
       },
       "situation": {
         "situation_hint": "S0",
-        "low_digital_response": true,
+        "low_digital_response": false,
         "top_factors": [
-          "min_balance_ratio_30d",
-          "balance_ratio"
+          "recent_balance_drop"
         ],
         "flags": []
       },
@@ -894,102 +829,38 @@
         "channel_pref_model": "UNDETERMINED",
         "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
-        "channel_used": "NONE"
-      },
-      "timing": {
-        "best_hour_window": "12:00-13:30",
-        "best_days_before_due": 5,
-        "timing_confidence": 0.3
-      },
-      "nba": {
-        "should_contact": false,
-        "recommended_action": "NO_CONTACT",
-        "scheduled_for": null,
-        "nba_reason": "No se cumplen las condiciones para intervenir.",
-        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
-      },
-      "policy_context": {
-        "balance_ratio": 5.847189009288819,
-        "income_due_gap": -1.0,
-        "projected_coverage": 10.0,
-        "remaining_installments_assumed": 12,
-        "eligible_alternatives_hint": [
-          "ALT-NONE"
-        ]
-      },
-      "meta": {
-        "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:36.415243+00:00"
-      }
-    },
-    {
-      "customer_id": "C02767",
-      "snapshot_date": "2026-09-12",
-      "days_to_due": 8,
-      "gates": {
-        "current_cycle_paid": false,
-        "opt_out_flag": false
-      },
-      "risk": {
-        "risk_score": 0.7004,
-        "risk_level": "HIGH",
-        "anomaly_score": 0.8115,
-        "anomaly_flag": true,
-        "risk_prob_lr": 0.6263
-      },
-      "situation": {
-        "situation_hint": "S0",
-        "low_digital_response": false,
-        "top_factors": [
-          "balance_vs_historical",
-          "income_variation"
-        ],
-        "flags": [
-          "contact_history_insufficient"
-        ]
-      },
-      "profile": {
-        "credit_product": "HOME_LOAN",
-        "digital_capability": "D2",
-        "needs_guided_help": false,
-        "human_support_recommended": false,
-        "complex_case": false,
-        "avoid_more_credit": false
-      },
-      "channel": {
-        "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0045,
-        "channel_source": "FALLBACK_CALL",
         "channel_used": "CALL"
       },
       "timing": {
         "best_hour_window": "12:00-13:30",
         "best_days_before_due": 5,
-        "timing_confidence": 0.1
+        "timing_confidence": 0.2
       },
       "nba": {
         "should_contact": false,
         "recommended_action": "NO_CONTACT",
-        "scheduled_for": "2026-09-15T12:00",
-        "nba_reason": "Se observa que el saldo está muy por debajo de su propio histórico; y el ingreso reciente se desvía de su promedio histórico.",
+        "scheduled_for": "2026-09-16T12:00",
+        "nba_reason": "Se observa que el saldo cayó rápido en las últimas dos semanas.",
         "block_reason": "S0"
       },
       "policy_context": {
-        "balance_ratio": 0.9037346084627752,
-        "income_due_gap": -15.0,
-        "projected_coverage": 4.452937528712423,
+        "balance_ratio": 3.244831959682321,
+        "income_due_gap": -9.0,
+        "projected_coverage": 9.3047894361161,
         "remaining_installments_assumed": 12,
         "eligible_alternatives_hint": [
           "ALT-NONE"
-        ]
+        ],
+        "customer_display_name": "Cliente Demo 01850",
+        "installment_amount": 245.2813221956824
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:36.579483+00:00"
+        "scored_at": "2026-09-13T06:15:02.647783+00:00"
       }
     },
     {
-      "customer_id": "C01614",
+      "customer_id": "C00363",
       "snapshot_date": "2026-09-12",
       "days_to_due": 3,
       "gates": {
@@ -997,87 +868,23 @@
         "opt_out_flag": false
       },
       "risk": {
-        "risk_score": 0.7101,
-        "risk_level": "HIGH",
-        "anomaly_score": 0.7848,
+        "risk_score": 0.5261,
+        "risk_level": "MEDIUM",
+        "anomaly_score": 0.814,
         "anomaly_flag": true,
-        "risk_prob_lr": 0.6603
+        "risk_prob_lr": 0.3342
       },
       "situation": {
         "situation_hint": "S0",
         "low_digital_response": false,
         "top_factors": [
-          "recent_balance_drop"
-        ],
-        "flags": [
-          "contact_history_insufficient"
-        ]
-      },
-      "profile": {
-        "credit_product": "VEHICLE_LOAN",
-        "digital_capability": "D1",
-        "needs_guided_help": false,
-        "human_support_recommended": false,
-        "complex_case": false,
-        "avoid_more_credit": false
-      },
-      "channel": {
-        "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0045,
-        "channel_source": "FALLBACK_CALL",
-        "channel_used": "CALL"
-      },
-      "timing": {
-        "best_hour_window": "12:00-13:30",
-        "best_days_before_due": 5,
-        "timing_confidence": 0.1
-      },
-      "nba": {
-        "should_contact": false,
-        "recommended_action": "NO_CONTACT",
-        "scheduled_for": "2026-09-12T12:00",
-        "nba_reason": "Se observa que el saldo cayó rápido en las últimas dos semanas.",
-        "block_reason": "S0"
-      },
-      "policy_context": {
-        "balance_ratio": 1.1873542047411794,
-        "income_due_gap": 10.0,
-        "projected_coverage": 1.1873542047411794,
-        "remaining_installments_assumed": 12,
-        "eligible_alternatives_hint": [
-          "ALT-NONE"
-        ]
-      },
-      "meta": {
-        "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:36.741596+00:00"
-      }
-    },
-    {
-      "customer_id": "C00178",
-      "snapshot_date": "2026-09-12",
-      "days_to_due": 8,
-      "gates": {
-        "current_cycle_paid": false,
-        "opt_out_flag": false
-      },
-      "risk": {
-        "risk_score": 0.5958,
-        "risk_level": "MEDIUM",
-        "anomaly_score": 0.7329,
-        "anomaly_flag": true,
-        "risk_prob_lr": 0.5045
-      },
-      "situation": {
-        "situation_hint": "S1",
-        "low_digital_response": true,
-        "top_factors": [
-          "last_payment_delay_deviation"
+          "recent_balance_drop",
+          "min_balance_ratio_30d"
         ],
         "flags": []
       },
       "profile": {
-        "credit_product": "EXTRA_FINANCING",
+        "credit_product": "SALARY_ADVANCE",
         "digital_capability": "D1",
         "needs_guided_help": false,
         "human_support_recommended": false,
@@ -1086,127 +893,58 @@
       },
       "channel": {
         "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0045,
+        "channel_pref_confidence": 0.4,
         "channel_source": "FALLBACK_CALL",
         "channel_used": "CALL"
       },
       "timing": {
         "best_hour_window": "12:00-13:30",
         "best_days_before_due": 5,
-        "timing_confidence": 0.3
+        "timing_confidence": 0.5
       },
       "nba": {
-        "should_contact": true,
-        "recommended_action": "CHANNEL_SWITCH",
-        "scheduled_for": "2026-09-15T12:00",
-        "nba_reason": "Se observa que el último pago se retrasó más de lo habitual para este cliente.",
-        "block_reason": null
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": "2026-09-13T12:00",
+        "nba_reason": "Se observa que el saldo cayó rápido en las últimas dos semanas; y tocó fondo en algún momento del último mes.",
+        "block_reason": "S0"
       },
       "policy_context": {
-        "balance_ratio": 1.4540206174729744,
-        "income_due_gap": 2.0,
-        "projected_coverage": 1.4540206174729744,
+        "balance_ratio": 3.1446744686125987,
+        "income_due_gap": -5.0,
+        "projected_coverage": 8.775077822317742,
         "remaining_installments_assumed": 12,
         "eligible_alternatives_hint": [
-          "ALT-REMINDER-PAYLINK",
-          "ALT-GRACE-DAYS",
-          "ALT-AUTOSAVE-PCT"
-        ]
-      },
-      "meta": {
-        "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:36.915312+00:00"
-      }
-    },
-    {
-      "customer_id": "C00692",
-      "snapshot_date": "2026-09-12",
-      "days_to_due": 8,
-      "gates": {
-        "current_cycle_paid": false,
-        "opt_out_flag": false
-      },
-      "risk": {
-        "risk_score": 0.89,
-        "risk_level": "HIGH",
-        "anomaly_score": 0.9904,
-        "anomaly_flag": true,
-        "risk_prob_lr": 0.823
-      },
-      "situation": {
-        "situation_hint": "S1",
-        "low_digital_response": false,
-        "top_factors": [
-          "failed_payment_attempts_30d",
-          "failed_attempts_deviation",
-          "spending_velocity_7d"
+          "ALT-NONE"
         ],
-        "flags": [
-          "contact_history_insufficient"
-        ]
-      },
-      "profile": {
-        "credit_product": "VEHICLE_LOAN",
-        "digital_capability": "D1",
-        "needs_guided_help": false,
-        "human_support_recommended": false,
-        "complex_case": false,
-        "avoid_more_credit": false
-      },
-      "channel": {
-        "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0045,
-        "channel_source": "FALLBACK_CALL",
-        "channel_used": "CALL"
-      },
-      "timing": {
-        "best_hour_window": "12:00-13:30",
-        "best_days_before_due": 5,
-        "timing_confidence": 0.1
-      },
-      "nba": {
-        "should_contact": true,
-        "recommended_action": "SIMPLE_REMINDER",
-        "scheduled_for": "2026-09-15T12:00",
-        "nba_reason": "Se observa que hubo intentos de cobro fallidos este mes; y los intentos fallidos están por encima de su propia norma; y el ritmo de gasto de la última semana se aceleró.",
-        "block_reason": null
-      },
-      "policy_context": {
-        "balance_ratio": 1.1993971653560966,
-        "income_due_gap": -4.0,
-        "projected_coverage": 4.519788362535813,
-        "remaining_installments_assumed": 12,
-        "eligible_alternatives_hint": [
-          "ALT-REMINDER-PAYLINK",
-          "ALT-CHANNEL-SUPPORT",
-          "ALT-AUTOSAVE-PCT"
-        ]
+        "customer_display_name": "Cliente Demo 00363",
+        "installment_amount": 416.285112211129
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:37.083826+00:00"
+        "scored_at": "2026-09-13T06:15:02.766228+00:00"
       }
     },
     {
-      "customer_id": "C02193",
+      "customer_id": "C00796",
       "snapshot_date": "2026-09-12",
-      "days_to_due": 16,
+      "days_to_due": 23,
       "gates": {
         "current_cycle_paid": false,
         "opt_out_flag": false
       },
       "risk": {
-        "risk_score": 0.6516,
-        "risk_level": "HIGH",
-        "anomaly_score": 0.7628,
+        "risk_score": 0.4703,
+        "risk_level": "MEDIUM",
+        "anomaly_score": 0.7649,
         "anomaly_flag": true,
-        "risk_prob_lr": 0.5774
+        "risk_prob_lr": 0.2739
       },
       "situation": {
-        "situation_hint": "S1",
+        "situation_hint": "S0",
         "low_digital_response": false,
         "top_factors": [
-          "balance_ratio"
+          "balance_vs_historical"
         ],
         "flags": []
       },
@@ -1227,7 +965,7 @@
       "timing": {
         "best_hour_window": "12:00-13:30",
         "best_days_before_due": 5,
-        "timing_confidence": 0.3
+        "timing_confidence": 0.2
       },
       "nba": {
         "should_contact": false,
@@ -1237,90 +975,23 @@
         "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
       },
       "policy_context": {
-        "balance_ratio": 4.31532072359576,
+        "balance_ratio": 1.797330825706868,
         "income_due_gap": -15.0,
-        "projected_coverage": 10.0,
+        "projected_coverage": 4.7395472775006615,
         "remaining_installments_assumed": 12,
         "eligible_alternatives_hint": [
-          "ALT-REMINDER-PAYLINK",
-          "ALT-AUTOSAVE-PCT"
-        ]
-      },
-      "meta": {
-        "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:37.223735+00:00"
-      }
-    },
-    {
-      "customer_id": "C01438",
-      "snapshot_date": "2026-09-12",
-      "days_to_due": 3,
-      "gates": {
-        "current_cycle_paid": false,
-        "opt_out_flag": false
-      },
-      "risk": {
-        "risk_score": 0.8089,
-        "risk_level": "HIGH",
-        "anomaly_score": 0.8338,
-        "anomaly_flag": true,
-        "risk_prob_lr": 0.7922
-      },
-      "situation": {
-        "situation_hint": "S1",
-        "low_digital_response": false,
-        "top_factors": [
-          "failed_payment_attempts_30d",
-          "failed_attempts_deviation",
-          "last_payment_delay_deviation"
+          "ALT-NONE"
         ],
-        "flags": [
-          "contact_history_insufficient"
-        ]
-      },
-      "profile": {
-        "credit_product": "SALARY_ADVANCE",
-        "digital_capability": "D1",
-        "needs_guided_help": false,
-        "human_support_recommended": false,
-        "complex_case": false,
-        "avoid_more_credit": false
-      },
-      "channel": {
-        "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0045,
-        "channel_source": "FALLBACK_CALL",
-        "channel_used": "CALL"
-      },
-      "timing": {
-        "best_hour_window": "12:00-13:30",
-        "best_days_before_due": 5,
-        "timing_confidence": 0.1
-      },
-      "nba": {
-        "should_contact": true,
-        "recommended_action": "SIMPLE_REMINDER",
-        "scheduled_for": "2026-09-12T12:00",
-        "nba_reason": "Se observa que hubo intentos de cobro fallidos este mes; y los intentos fallidos están por encima de su propia norma; y el último pago se retrasó más de lo habitual para este cliente.",
-        "block_reason": null
-      },
-      "policy_context": {
-        "balance_ratio": 1.7093603577729168,
-        "income_due_gap": 13.0,
-        "projected_coverage": 1.7093603577729168,
-        "remaining_installments_assumed": 12,
-        "eligible_alternatives_hint": [
-          "ALT-REMINDER-PAYLINK",
-          "ALT-AUTOSAVE-PCT"
-        ]
+        "customer_display_name": "Cliente Demo 00796",
+        "installment_amount": 336.1373671183192
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:37.377266+00:00"
+        "scored_at": "2026-09-13T06:15:02.885841+00:00"
       }
     },
     {
-      "customer_id": "C01168",
+      "customer_id": "C02257",
       "snapshot_date": "2026-09-12",
       "days_to_due": 13,
       "gates": {
@@ -1328,153 +999,89 @@
         "opt_out_flag": false
       },
       "risk": {
-        "risk_score": 0.7061,
-        "risk_level": "HIGH",
-        "anomaly_score": 0.8342,
+        "risk_score": 0.6418,
+        "risk_level": "MEDIUM",
+        "anomaly_score": 0.8546,
         "anomaly_flag": true,
-        "risk_prob_lr": 0.6207
+        "risk_prob_lr": 0.4999
       },
       "situation": {
-        "situation_hint": "S1",
-        "low_digital_response": false,
+        "situation_hint": "S0",
+        "low_digital_response": true,
         "top_factors": [
-          "last_payment_delay_deviation",
-          "balance_vs_historical"
+          "recent_balance_drop",
+          "failed_attempts_deviation"
         ],
         "flags": []
       },
       "profile": {
         "credit_product": "HOME_LOAN",
-        "digital_capability": "D2",
-        "needs_guided_help": false,
+        "digital_capability": "D3",
+        "needs_guided_help": true,
         "human_support_recommended": false,
         "complex_case": false,
         "avoid_more_credit": false
       },
       "channel": {
-        "channel_pref_model": "WHATSAPP",
-        "channel_pref_confidence": 0.5,
-        "channel_source": "MODEL_LEVEL1",
-        "channel_used": "NONE"
-      },
-      "timing": {
-        "best_hour_window": "12:00-13:30",
-        "best_days_before_due": 5,
-        "timing_confidence": 0.4
-      },
-      "nba": {
-        "should_contact": false,
-        "recommended_action": "NO_CONTACT",
-        "scheduled_for": null,
-        "nba_reason": "No se cumplen las condiciones para intervenir.",
-        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
-      },
-      "policy_context": {
-        "balance_ratio": 2.518064254286081,
-        "income_due_gap": -14.0,
-        "projected_coverage": 10.0,
-        "remaining_installments_assumed": 12,
-        "eligible_alternatives_hint": [
-          "ALT-REMINDER-PAYLINK",
-          "ALT-GRACE-DAYS",
-          "ALT-AUTOSAVE-PCT"
-        ]
-      },
-      "meta": {
-        "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:37.503011+00:00"
-      }
-    },
-    {
-      "customer_id": "C01675",
-      "snapshot_date": "2026-09-12",
-      "days_to_due": 3,
-      "gates": {
-        "current_cycle_paid": false,
-        "opt_out_flag": false
-      },
-      "risk": {
-        "risk_score": 0.8862,
-        "risk_level": "HIGH",
-        "anomaly_score": 1.0,
-        "anomaly_flag": true,
-        "risk_prob_lr": 0.8104
-      },
-      "situation": {
-        "situation_hint": "S3",
-        "low_digital_response": false,
-        "top_factors": [],
-        "flags": []
-      },
-      "profile": {
-        "credit_product": "HOME_LOAN",
-        "digital_capability": "D2",
-        "needs_guided_help": false,
-        "human_support_recommended": true,
-        "complex_case": true,
-        "avoid_more_credit": false
-      },
-      "channel": {
-        "channel_pref_model": "CALL",
-        "channel_pref_confidence": 0.5,
-        "channel_source": "MODEL_LEVEL1",
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0045,
+        "channel_source": "FALLBACK_CALL",
         "channel_used": "CALL"
       },
       "timing": {
         "best_hour_window": "12:00-13:30",
-        "best_days_before_due": 7,
+        "best_days_before_due": 4,
         "timing_confidence": 0.6
       },
       "nba": {
         "should_contact": true,
-        "recommended_action": "HUMAN_ESCALATION",
-        "scheduled_for": "2026-09-12T12:00",
-        "nba_reason": "Señal de riesgo sin un factor dominante claro.",
+        "recommended_action": "GUIDED_APP_HELP",
+        "scheduled_for": "2026-09-22T12:00",
+        "nba_reason": "Puedo ayudarle a revisar su crédito, entender sus opciones y guiarle paso a paso dentro de la app. Si su caso necesita revisión especial o apoyo técnico más directo, puedo conectarle con un asesor para continuar.",
         "block_reason": null
       },
       "policy_context": {
-        "balance_ratio": 0.4360769441009282,
-        "income_due_gap": 2.0,
-        "projected_coverage": 0.4360769441009282,
+        "balance_ratio": 1.5299319565634415,
+        "income_due_gap": 1.0,
+        "projected_coverage": 1.5299319565634415,
         "remaining_installments_assumed": 12,
         "eligible_alternatives_hint": [
-          "ALT-PARTIAL",
-          "ALT-PAYMENT-PLAN",
-          "ALT-AUTOSAVE-PCT"
-        ]
+          "ALT-NONE"
+        ],
+        "customer_display_name": "Cliente Demo 02257",
+        "installment_amount": 162.46783423571176
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:37.650685+00:00"
+        "scored_at": "2026-09-13T06:15:03.048220+00:00"
       }
     },
     {
-      "customer_id": "C00045",
+      "customer_id": "C00394",
       "snapshot_date": "2026-09-12",
-      "days_to_due": 28,
+      "days_to_due": 16,
       "gates": {
         "current_cycle_paid": false,
         "opt_out_flag": false
       },
       "risk": {
-        "risk_score": 0.8276,
+        "risk_score": 0.6603,
         "risk_level": "HIGH",
-        "anomaly_score": 0.9305,
+        "anomaly_score": 0.7916,
         "anomaly_flag": true,
-        "risk_prob_lr": 0.759
+        "risk_prob_lr": 0.5727
       },
       "situation": {
-        "situation_hint": "S3",
+        "situation_hint": "S1",
         "low_digital_response": false,
         "top_factors": [
-          "spending_velocity_7d"
+          "balance_vs_historical",
+          "failed_attempts_deviation"
         ],
-        "flags": [
-          "income_date_unknown"
-        ]
+        "flags": []
       },
       "profile": {
-        "credit_product": "SALARY_ADVANCE",
+        "credit_product": "PERSONAL_LOAN_PAYROLL_DEDUCTION",
         "digital_capability": "D1",
         "needs_guided_help": false,
         "human_support_recommended": false,
@@ -1482,15 +1089,15 @@
         "avoid_more_credit": false
       },
       "channel": {
-        "channel_pref_model": "CALL",
-        "channel_pref_confidence": 0.5,
-        "channel_source": "MODEL_LEVEL1",
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0045,
+        "channel_source": "FALLBACK_CALL",
         "channel_used": "NONE"
       },
       "timing": {
         "best_hour_window": "18:00-19:30",
-        "best_days_before_due": 7,
-        "timing_confidence": 0.5
+        "best_days_before_due": 5,
+        "timing_confidence": 0.3
       },
       "nba": {
         "should_contact": false,
@@ -1500,22 +1107,162 @@
         "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
       },
       "policy_context": {
-        "balance_ratio": 0.9141479411579384,
-        "income_due_gap": -15.0,
-        "projected_coverage": 0.9141479411579384,
+        "balance_ratio": 2.2762692087314376,
+        "income_due_gap": -4.0,
+        "projected_coverage": 9.33108030822116,
         "remaining_installments_assumed": 12,
         "eligible_alternatives_hint": [
-          "ALT-PARTIAL",
-          "ALT-PAYMENT-PLAN"
-        ]
+          "ALT-REMINDER-PAYLINK",
+          "ALT-GRACE-DAYS",
+          "ALT-AUTOSAVE-PCT"
+        ],
+        "customer_display_name": "Cliente Demo 00394",
+        "installment_amount": 171.35358376599072
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:37.769891+00:00"
+        "scored_at": "2026-09-13T06:15:03.188928+00:00"
       }
     },
     {
-      "customer_id": "C01021",
+      "customer_id": "C01194",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 3,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.6743,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.7722,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.609
+      },
+      "situation": {
+        "situation_hint": "S1",
+        "low_digital_response": true,
+        "top_factors": [
+          "recent_balance_drop"
+        ],
+        "flags": []
+      },
+      "profile": {
+        "credit_product": "PERSONAL_LOAN_PAYROLL_DEDUCTION",
+        "digital_capability": "D2",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0045,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "CALL"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.5
+      },
+      "nba": {
+        "should_contact": true,
+        "recommended_action": "CHANNEL_SWITCH",
+        "scheduled_for": "2026-09-13T12:00",
+        "nba_reason": "Se observa que el saldo cayó rápido en las últimas dos semanas.",
+        "block_reason": null
+      },
+      "policy_context": {
+        "balance_ratio": 1.8499896964800315,
+        "income_due_gap": 9.0,
+        "projected_coverage": 1.8499896964800315,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-REMINDER-PAYLINK",
+          "ALT-GRACE-DAYS",
+          "ALT-AUTOSAVE-PCT"
+        ],
+        "customer_display_name": "Cliente Demo 01194",
+        "installment_amount": 154.75876685086527
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T06:15:03.336400+00:00"
+      }
+    },
+    {
+      "customer_id": "C00598",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 23,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.7415,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.8354,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.6789
+      },
+      "situation": {
+        "situation_hint": "S1",
+        "low_digital_response": false,
+        "top_factors": [
+          "failed_payment_attempts_30d",
+          "failed_attempts_deviation",
+          "recent_balance_drop"
+        ],
+        "flags": [
+          "income_date_unknown"
+        ]
+      },
+      "profile": {
+        "credit_product": "PERSONAL_LOAN_MORTGAGE_BACKED",
+        "digital_capability": "D1",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0045,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "NONE"
+      },
+      "timing": {
+        "best_hour_window": "18:00-19:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.2
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": null,
+        "nba_reason": "No se cumplen las condiciones para intervenir.",
+        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
+      },
+      "policy_context": {
+        "balance_ratio": 1.835305474320741,
+        "income_due_gap": -15.0,
+        "projected_coverage": 1.835305474320741,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-REMINDER-PAYLINK",
+          "ALT-AUTOSAVE-PCT"
+        ],
+        "customer_display_name": "Cliente Demo 00598",
+        "installment_amount": 163.23668078436438
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T06:15:03.469670+00:00"
+      }
+    },
+    {
+      "customer_id": "C00183",
       "snapshot_date": "2026-09-12",
       "days_to_due": 3,
       "gates": {
@@ -1523,25 +1270,21 @@
         "opt_out_flag": false
       },
       "risk": {
-        "risk_score": 0.8875,
-        "risk_level": "HIGH",
-        "anomaly_score": 0.963,
+        "risk_score": 0.6294,
+        "risk_level": "MEDIUM",
+        "anomaly_score": 0.7836,
         "anomaly_flag": true,
-        "risk_prob_lr": 0.8371
+        "risk_prob_lr": 0.5267
       },
       "situation": {
-        "situation_hint": "S3",
-        "low_digital_response": true,
-        "top_factors": [
-          "balance_vs_historical",
-          "last_payment_delay_deviation",
-          "expense_variation_30d"
-        ],
+        "situation_hint": "S1",
+        "low_digital_response": false,
+        "top_factors": [],
         "flags": []
       },
       "profile": {
-        "credit_product": "EXTRA_FINANCING",
-        "digital_capability": "D1",
+        "credit_product": "VEHICLE_LOAN",
+        "digital_capability": "D2",
         "needs_guided_help": false,
         "human_support_recommended": false,
         "complex_case": false,
@@ -1556,7 +1299,7 @@
       "timing": {
         "best_hour_window": "12:00-13:30",
         "best_days_before_due": 5,
-        "timing_confidence": 0.3
+        "timing_confidence": 0.2
       },
       "nba": {
         "should_contact": false,
@@ -1566,22 +1309,25 @@
         "block_reason": "CURRENT_CYCLE_PAID"
       },
       "policy_context": {
-        "balance_ratio": 0.6671399331643366,
-        "income_due_gap": -3.0,
-        "projected_coverage": 3.343257924494986,
+        "balance_ratio": 3.5470470972387105,
+        "income_due_gap": 1.0,
+        "projected_coverage": 3.5470470972387105,
         "remaining_installments_assumed": 12,
         "eligible_alternatives_hint": [
-          "ALT-PARTIAL",
-          "ALT-PAYMENT-PLAN"
-        ]
+          "ALT-REMINDER-PAYLINK",
+          "ALT-GRACE-DAYS",
+          "ALT-AUTOSAVE-PCT"
+        ],
+        "customer_display_name": "Cliente Demo 00183",
+        "installment_amount": 74.91141922204804
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:37.901227+00:00"
+        "scored_at": "2026-09-13T06:15:03.579899+00:00"
       }
     },
     {
-      "customer_id": "C01739",
+      "customer_id": "C00345",
       "snapshot_date": "2026-09-12",
       "days_to_due": 13,
       "gates": {
@@ -1589,24 +1335,25 @@
         "opt_out_flag": false
       },
       "risk": {
-        "risk_score": 0.8364,
+        "risk_score": 0.8514,
         "risk_level": "HIGH",
-        "anomaly_score": 0.939,
+        "anomaly_score": 0.9174,
         "anomaly_flag": true,
-        "risk_prob_lr": 0.768
+        "risk_prob_lr": 0.8075
       },
       "situation": {
-        "situation_hint": "S3",
+        "situation_hint": "S1",
         "low_digital_response": false,
         "top_factors": [
-          "last_payment_delay_deviation",
-          "failed_payment_attempts_30d",
-          "income_variation"
+          "recent_balance_drop",
+          "expense_variation_30d"
         ],
-        "flags": []
+        "flags": [
+          "contact_history_insufficient"
+        ]
       },
       "profile": {
-        "credit_product": "PERSONAL_LOAN_ACCOUNT_DEBIT",
+        "credit_product": "PERSONAL_LOAN_PAYROLL_DEDUCTION",
         "digital_capability": "D2",
         "needs_guided_help": false,
         "human_support_recommended": false,
@@ -1617,33 +1364,35 @@
         "channel_pref_model": "UNDETERMINED",
         "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
-        "channel_used": "NONE"
+        "channel_used": "CALL"
       },
       "timing": {
         "best_hour_window": "18:00-19:30",
-        "best_days_before_due": 4,
-        "timing_confidence": 0.4
+        "best_days_before_due": 5,
+        "timing_confidence": 0.1
       },
       "nba": {
-        "should_contact": false,
-        "recommended_action": "NO_CONTACT",
-        "scheduled_for": null,
-        "nba_reason": "No se cumplen las condiciones para intervenir.",
-        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
+        "should_contact": true,
+        "recommended_action": "SIMPLE_REMINDER",
+        "scheduled_for": "2026-09-21T18:00",
+        "nba_reason": "Se observa que el saldo cayó rápido en las últimas dos semanas; y el gasto reciente subió respecto a su promedio.",
+        "block_reason": null
       },
       "policy_context": {
-        "balance_ratio": 0.9001762940472617,
+        "balance_ratio": 1.1737583540630063,
         "income_due_gap": -15.0,
-        "projected_coverage": 4.310166051867433,
+        "projected_coverage": 3.752906430091672,
         "remaining_installments_assumed": 12,
         "eligible_alternatives_hint": [
-          "ALT-PARTIAL",
+          "ALT-REMINDER-PAYLINK",
           "ALT-AUTOSAVE-PCT"
-        ]
+        ],
+        "customer_display_name": "Cliente Demo 00345",
+        "installment_amount": 334.27374131603653
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:38.051607+00:00"
+        "scored_at": "2026-09-13T06:15:03.720627+00:00"
       }
     },
     {
@@ -1707,11 +1456,146 @@
         "eligible_alternatives_hint": [
           "ALT-PARTIAL",
           "ALT-AUTOSAVE-PCT"
-        ]
+        ],
+        "customer_display_name": "Cliente Demo 00772",
+        "installment_amount": 267.61633986663435
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T01:46:38.202987+00:00"
+        "scored_at": "2026-09-13T06:15:03.840644+00:00"
+      }
+    },
+    {
+      "customer_id": "C01599",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 3,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.8935,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.9222,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.8743
+      },
+      "situation": {
+        "situation_hint": "S3",
+        "low_digital_response": false,
+        "top_factors": [
+          "last_payment_delay_deviation",
+          "failed_payment_attempts_30d",
+          "balance_vs_historical"
+        ],
+        "flags": []
+      },
+      "profile": {
+        "credit_product": "PERSONAL_LOAN_PAYROLL_DEDUCTION",
+        "digital_capability": "D3",
+        "needs_guided_help": true,
+        "human_support_recommended": true,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.3333,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "CALL"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 2,
+        "timing_confidence": 0.3
+      },
+      "nba": {
+        "should_contact": true,
+        "recommended_action": "GUIDED_APP_HELP",
+        "scheduled_for": "2026-09-14T12:00",
+        "nba_reason": "Puedo ayudarle a revisar su crédito, entender sus opciones y guiarle paso a paso dentro de la app. Si su caso necesita revisión especial o apoyo técnico más directo, puedo conectarle con un asesor para continuar.",
+        "block_reason": null
+      },
+      "policy_context": {
+        "balance_ratio": 0.9675460682368024,
+        "income_due_gap": -6.0,
+        "projected_coverage": 3.5742754964016665,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-AUTOSAVE-PCT"
+        ],
+        "customer_display_name": "Cliente Demo 01599",
+        "installment_amount": 377.9138285745941
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T06:15:03.954387+00:00"
+      }
+    },
+    {
+      "customer_id": "C00750",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 23,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.8649,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.8959,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.8443
+      },
+      "situation": {
+        "situation_hint": "S3",
+        "low_digital_response": false,
+        "top_factors": [],
+        "flags": [
+          "contact_history_insufficient"
+        ]
+      },
+      "profile": {
+        "credit_product": "PERSONAL_LOAN_PAYROLL_DEDUCTION",
+        "digital_capability": "D2",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0045,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "NONE"
+      },
+      "timing": {
+        "best_hour_window": "18:00-19:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.1
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": null,
+        "nba_reason": "No se cumplen las condiciones para intervenir.",
+        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
+      },
+      "policy_context": {
+        "balance_ratio": 0.9713437154255284,
+        "income_due_gap": -15.0,
+        "projected_coverage": 3.3389792487061283,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-PARTIAL",
+          "ALT-AUTOSAVE-PCT"
+        ],
+        "customer_display_name": "Cliente Demo 00750",
+        "installment_amount": 118.42666510850697
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T06:15:04.073449+00:00"
       }
     }
   ]
