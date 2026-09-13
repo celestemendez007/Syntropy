@@ -1,3 +1,8 @@
 pandas
 numpy
 pytest
+fastapi
+uvicorn
+pydantic
+groq
+python-dotenv

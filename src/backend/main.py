@@ -52,7 +52,11 @@ def startup_event():
 def get_customers():
     if golden_customers_df.empty:
         return []
-    return golden_customers_df[['customer_id', 'scenario']].to_dict(orient="records")
+    # La columna real en golden_customers.csv es `golden_scenario`, no `scenario`
+    # -- este endpoint tronaba con KeyError y el dropdown del simulador nunca cargaba.
+    return (golden_customers_df[['customer_id', 'golden_scenario']]
+            .rename(columns={'golden_scenario': 'scenario'})
+            .to_dict(orient="records"))
 
 @app.post("/api/chat")
 def chat(req: ChatRequest):
@@ -95,7 +99,13 @@ def chat(req: ChatRequest):
     else:
         try:
             score = score_customer(req.customer_id)
-            alts = get_eligible_alternatives(score["risk"], score["profile"])
+            # get_eligible_alternatives espera (customer_id, risk_profile) -- risk_profile
+            # necesita "situation_hint" (vive en score["situation"]), no en score["risk"].
+            # La llamada anterior pasaba (score["risk"], score["profile"]), que no es ni
+            # el cliente ni un risk_profile valido: siempre devolvia alternativas vacias
+            # sin avisar, asi que el LLM nunca tenia nada real que ofrecer.
+            risk_profile_for_policy = {**score["situation"], **score["risk"]}
+            alts = get_eligible_alternatives(req.customer_id, risk_profile_for_policy)
         except Exception as e:
             raise HTTPException(status_code=404, detail=str(e))
     
@@ -103,17 +113,31 @@ def chat(req: ChatRequest):
     system_prompt = build_system_prompt(score, alts)
     
     if not groq_api_key:
-        # --- Motor Conversacional Mock (Multi-Fase) ---
+        # --- Motor Conversacional Mock (Multi-Fase), SIN API key de Groq ---
+        #
+        # Antes esto avanzaba contando turnos (n == 1, n == 2...) y saludaba a
+        # "Carlos" siempre, sin importar quién fuera el cliente real -- por eso
+        # se sentía robótico y "perdía el hilo" en cuanto el cliente decía algo
+        # fuera del guion esperado para ese número de turno exacto.
+        #
+        # Ahora la fase se determina leyendo la ÚLTIMA RESPUESTA DEL ASISTENTE
+        # en el historial (no un contador ciego), así que si el cliente contesta
+        # "fuera de orden" la conversación sigue desde donde de verdad se quedó,
+        # no desde donde el contador de turnos asumía que debía estar. Y el
+        # nombre/monto/producto/días son los REALES del cliente (`score`), nunca
+        # inventados -- así nunca chocan con el guardrail `check_hallucination`.
         last_msg = req.history[-1].content.lower().strip() if req.history else ""
-        n = sum(1 for msg in req.history if msg.role == 'user')  # count user turns
-        
-        alt_name  = alts[0]['alt_id']          if alts else "asesoría personalizada"
-        alt_desc  = alts[0].get('description', '') if alts else ""
-        product   = req.force_product or score.get("product_type", "su crédito")
-        amount    = score.get("amount_due", 147.50)
-        days_left = score.get("days_to_due", 5)
+        last_bot_msg = next((m.content for m in reversed(req.history) if m.role == "assistant"), "")
 
-        # --- Intent helpers ---
+        policy_context = score.get("policy_context", {})
+        name = policy_context.get("customer_display_name") or "estimado cliente"
+        product = req.force_product or score.get("profile", {}).get("credit_product", "su crédito")
+        amount = policy_context.get("installment_amount")
+        days_left = score.get("days_to_due")
+        amount_display = f"${amount:.2f}" if amount is not None else "su cuota"
+        days_display = str(days_left) if days_left is not None else "pocos"
+
+        # --- Intent helpers (sobre el ÚLTIMO mensaje del cliente) ---
         def has(words): return any(w in last_msg for w in words)
         is_yes       = has(["si", "sí", "claro", "ok", "bueno", "dale", "correcto", "perfecto", "adelante", "diga", "aha", "aham"])
         is_no_time   = has(["ocupad", "luego", "despues", "después", "ahorita no", "no puedo hablar", "no tengo tiempo"])
@@ -123,61 +147,101 @@ def chat(req: ChatRequest):
         is_angry     = has(["molest", "enfad", "indign", "grosería", "irresponsable", "siempre hacen", "pésimo", "pesimo", "mal servicio"])
         is_agreement = has(["de acuerdo", "acepto", "está bien", "listo", "perfecto", "va", "hecho", "venga"])
         is_question  = has(["cuánto", "cuanto", "cuando", "cuándo", "cómo pago", "donde pago", "por qué", "porque me llaman"])
+        is_reject    = has(["no", "no quiero", "no me sirve", "no puedo con eso", "otra opción", "otra opcion"]) and not is_yes
 
-        # --- Phase machine ---
-        if n == 1:
-            # Opening – identify client by name
-            reply = "¡Hola! Muy buenos días. ¿Hablo con Carlos?"
+        # --- Fase actual: se lee de la última respuesta del asistente, no de un contador ---
+        if not last_bot_msg:
+            phase = "START"
+        elif "¿Hablo con" in last_bot_msg:
+            phase = "GREETING"
+        elif "normalmente usted siempre está al día" in last_bot_msg or "¿Cómo va todo este mes?" in last_bot_msg:
+            phase = "INTRO"
+        elif "a veces los imprevistos" in last_bot_msg or "déjeme registrar su queja" in last_bot_msg:
+            phase = "LISTENING"
+        elif "tengo autorizado ofrecerle" in last_bot_msg:
+            phase = "OFFERING"
+        elif "Para confirmar" in last_bot_msg:
+            phase = "CONFIRMING"
+        else:
+            phase = "OTHER"
 
-        elif n == 2 and is_confused:
+        def offer_text():
+            if not alts:
+                return "conectarle con un asesor para revisar su caso con más detalle"
+            alt = alts[0]
+            parts = [f"**{alt['alt_id']}**"]
+            for key in ("date", "min_amount", "min_percentage", "percentage", "grace_days"):
+                if alt.get(key) is not None:
+                    parts.append(f"{key}={alt[key]}")
+            return " ".join(parts)
+
+        # --- Máquina de estados: (fase_anterior, intención del cliente) -> respuesta ---
+        if phase == "START":
+            reply = f"¡Hola! Muy buenos días. ¿Hablo con {name}?"
+
+        elif phase == "GREETING" and is_confused:
             reply = f"Disculpe, claro. Le habla Sofía, asesora de Bancoagrícola. Le llamo por su {product}. ¿Tiene un minutito?"
 
-        elif n == 2 and is_no_time:
+        elif phase == "GREETING" and is_no_time:
             reply = "Entendido, no hay problema. ¿A qué hora le queda mejor para devolverle la llamada?"
 
-        elif n == 2 and is_yes:
-            # Client confirmed identity – introduce reason, then PAUSE (no data dump)
-            reply = f"Perfecto, Carlos. Gracias. Fíjese que le llamo porque notamos que se acerca su fecha de pago de {product} y normalmente usted siempre está al día. Solo quería asegurarme de que todo estuviera bien de su parte. ¿Cómo va todo este mes?"
+        elif phase == "GREETING":
+            # Cualquier respuesta que no sea "no tengo tiempo" se toma como que sí es la persona
+            reply = (f"Perfecto, {name}. Gracias. Fíjese que le llamo porque notamos que se acerca su fecha "
+                     f"de pago de {product} y normalmente usted siempre está al día. Solo quería asegurarme "
+                     f"de que todo estuviera bien de su parte. ¿Cómo va todo este mes?")
 
-        elif n >= 3 and is_paid:
-            reply = "¡Qué bien, Carlos! Si ya realizó el pago, el sistema se actualizará en las próximas horas. Le agradecemos mucho su puntualidad. ¿Hay algo más en que le podamos ayudar?"
+        elif is_paid:
+            reply = (f"¡Qué bien, {name}! Si ya realizó el pago, el sistema se actualizará en las próximas "
+                     f"horas. Le agradecemos mucho su puntualidad. ¿Hay algo más en que le podamos ayudar?")
 
-        elif n >= 3 and is_angry:
-            reply = "Carlos, tiene toda la razón y entiendo su molestia. Antes de cualquier otra cosa, déjeme registrar su queja para que quede documentada. ¿Me puede contar exactamente qué pasó?"
+        elif is_angry:
+            reply = (f"{name}, tiene toda la razón y entiendo su molestia. Antes de cualquier otra cosa, "
+                     f"déjeme registrar su queja para que quede documentada. ¿Me puede contar exactamente qué pasó?")
 
-        elif n >= 3 and is_problem:
-            # Client revealed a problem – empathize, ask more before offering solution
-            reply = "Entiendo perfectamente, a veces los imprevistos aparecen. No se preocupe, para eso estamos. ¿Es una situación de esta quincena o viene de un poco más atrás?"
+        elif phase == "INTRO" and is_question:
+            reply = (f"Claro que sí. Su cuota es de {amount_display} y su fecha límite es en {days_display} "
+                     f"días. Puede pagar desde la app, en ventanilla o en cualquier corresponsal. "
+                     f"¿Cuál le queda más fácil?")
 
-        elif n >= 3 and is_question:
-            reply = f"Claro que sí. Su cuota es de ${amount:.2f} y su fecha límite es en {days_left} días. Puede pagar desde la app, en ventanilla o en cualquier corresponsal. ¿Cuál le queda más fácil?"
+        elif phase in ("INTRO", "LISTENING") and (is_problem or (phase == "INTRO" and not is_question)):
+            reply = ("Entiendo perfectamente, a veces los imprevistos aparecen. No se preocupe, para eso "
+                     "estamos. ¿Es una situación de esta quincena o viene de un poco más atrás?")
 
-        elif n >= 4 and is_yes and not is_agreement:
-            # Client is engaging, time to offer alternatives
-            alt_text = f"**{alt_name}**" + (f": {alt_desc}" if alt_desc else "")
-            reply = (
-                f"Perfecto Carlos, le cuento. Dado su perfil con nosotros, tengo autorizado ofrecerle una opción que puede ayudarle: {alt_text}. "
-                f"Esto le permitiría estar tranquilo con su historial. ¿Le parece una buena opción o prefiere ver otra alternativa?"
-            )
+        elif phase == "LISTENING":
+            # Ya escuchamos al menos una vez -- pasar a ofrecer, sin importar la palabra exacta
+            reply = (f"Perfecto {name}, le cuento. Dado su perfil con nosotros, tengo autorizado ofrecerle "
+                     f"una opción que puede ayudarle: {offer_text()}. Esto le permitiría estar tranquilo "
+                     f"con su historial. ¿Le parece una buena opción o prefiere ver otra alternativa?")
 
-        elif n >= 4 and is_agreement:
-            reply = (
-                f"Excelente, Carlos. Para confirmar: quedamos en {alt_name} para su {product}. "
-                f"Le llegará un mensaje de texto en los próximos minutos con el resumen. "
-                f"¿El pago lo haría desde la app o prefiere ventanilla?"
-            )
+        elif phase == "OFFERING" and is_reject and len(alts) > 1:
+            reply = f"Entiendo, no hay problema. También tengo disponible: {alts[1]['alt_id']}. ¿Le acomoda más esta?"
 
-        elif n >= 5:
-            # Late stage – close with a specific commitment
-            reply = (
-                f"Perfecto. Entonces, solo para dejarlo bien anotado en el sistema: "
-                f"el arreglo de ${amount:.2f} queda registrado para los próximos {days_left} días. "
-                f"¡Muchas gracias por su tiempo, Carlos! Que tenga un excelente día."
-            )
+        elif phase == "OFFERING" and is_reject:
+            reply = ("Entiendo. Si ninguna de estas opciones le funciona, lo mejor es que hable directo con "
+                     "un asesor humano para revisar su caso con más detalle -- ¿le parece si lo conecto?")
+
+        elif phase == "OFFERING" and has(["app", "ventanilla", "corresponsal", "banca en línea", "banca en linea"]):
+            # El cliente ya adelantó el canal de pago en el mismo mensaje que acepta --
+            # no volver a preguntarlo, es justo el tipo de "no sigue la conversación"
+            # que se sentía roto antes.
+            channel_named = "la app" if "app" in last_msg else ("ventanilla" if "ventanilla" in last_msg else "ese canal")
+            reply = (f"Excelente, {name}, quedamos en {offer_text()} para su {product}, pagando desde "
+                     f"{channel_named}. Le llegará un mensaje de texto en los próximos minutos con el "
+                     f"resumen. ¡Muchas gracias por su tiempo! Que tenga un excelente día.")
+
+        elif phase == "OFFERING":
+            reply = (f"Excelente, {name}. Para confirmar: quedamos en {offer_text()} para su {product}. "
+                     f"Le llegará un mensaje de texto en los próximos minutos con el resumen. "
+                     f"¿El pago lo haría desde la app o prefiere ventanilla?")
+
+        elif phase == "CONFIRMING":
+            reply = (f"Perfecto. Entonces, solo para dejarlo bien anotado en el sistema: el arreglo queda "
+                     f"registrado para los próximos {days_display} días. ¡Muchas gracias por su tiempo, "
+                     f"{name}! Que tenga un excelente día.")
 
         else:
-            # Fallback – keep the conversation going naturally
-            reply = "Cuénteme un poco más para poder orientarle de la mejor manera posible."
+            reply = f"Cuénteme un poco más, {name}, para poder orientarle de la mejor manera posible."
 
         hallucination_check = check_hallucination(reply, alts)
         return {

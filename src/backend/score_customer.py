@@ -134,6 +134,11 @@ def score_customer(customer_id: str) -> dict:
             "projected_coverage": float(row.get("projected_coverage")) if pd.notna(row.get("projected_coverage")) else None,
             "remaining_installments_assumed": ASSUMED_REMAINING_INSTALLMENTS,
             "eligible_alternatives_hint": [a["alt_id"] for a in eligible_alternatives],
+            # Datos reales para que el LLM (Fase 6) salude por nombre y mencione la cuota
+            # real SIN inventar nada -- ver conversation_engine.py, antes el prompt le pedía
+            # "inventa un monto" porque estos dos campos no llegaban al contexto.
+            "customer_display_name": row.get("full_name_mock") if pd.notna(row.get("full_name_mock")) else None,
+            "installment_amount": float(row.get("installment_amount")) if pd.notna(row.get("installment_amount")) else None,
         },
         "meta": {
             "model_version": MODEL_VERSION,

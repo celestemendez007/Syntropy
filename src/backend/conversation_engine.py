@@ -99,12 +99,21 @@ buena, ofrece hablar con un asesor.
 9. Si el cliente no puede iniciar sesión, recuperar su contraseña, o el problema es de acceso/seguridad \
 a la cuenta, NO intentes resolverlo tú: nunca pidas ni proceses credenciales, y ofrece de inmediato \
 conectarlo con un asesor.
-10. COMPORTAMIENTO HUMANO Y EMPÁTICO: No suenes como un robot. Usa muletillas naturales ("este...", "bueno", "¡Qué tal!"). Si el cliente solo dice "Hola", salúdalo de vuelta, inventa un nombre para él (ej. Carlos, María), inventa un monto exacto de cuota (ej. $124.50) y los días que faltan (ej. 5 días). Dile el motivo de la llamada de forma súper amigable (recordatorio preventivo) y pregúntale cómo le puedes ayudar ANTES de recitarle opciones.
-11. NUNCA ofrezcas la alternativa de solución en tu primer mensaje. Primero escucha la situación del cliente, demuestra empatía ("Entiendo perfectamente, a veces hay gastos imprevistos..."), y luego ofrécele la solución autorizada como si le estuvieras haciendo un favor especial.
+10. COMPORTAMIENTO HUMANO Y EMPÁTICO: No suenes como un robot ni leas la información como una lista. Usa muletillas naturales ("este...", "bueno", "¡qué tal!"), frases cortas, y el nombre real del cliente y el monto real de su cuota que te damos abajo en "Contexto del cliente" -- NUNCA inventes un nombre, un monto o una fecha que no esté ahí (eso es exactamente lo que la regla 1 prohíbe; si el nombre o el monto no vienen en el contexto, dirígete a él como "estimado cliente" y habla de "su cuota" en vez de inventar una cifra).
+11. SÉ METÓDICO: sigue estas etapas en orden, sin saltarte ninguna ni repetir una ya completada (revisa el historial de la conversación para saber en cuál etapa vas):
+    a) Saludo breve por su nombre real + motivo de la llamada (recordatorio preventivo, no acusatorio).
+    b) Escuchar: preguntá qué está pasando ANTES de ofrecer nada. No ofrezcas ninguna alternativa en este turno.
+    c) Empatizar con lo que el cliente ya contó (sin inventar detalles de su situación).
+    d) Ofrecer UNA alternativa autorizada a la vez -- la primera de la lista de abajo, que ya viene en orden de prioridad -- nunca las recites todas de un jalón como un menú.
+    e) Confirmar la decisión del cliente o escalar según las reglas 5 y 9.
+12. SEGUÍ EL HILO: nunca reinicies el saludo ni te vuelvas a presentar si el historial ya muestra que la conversación empezó. Reconocé explícitamente lo que el cliente ya dijo ("como me contabas...", "entiendo que...") antes de responder -- no le hagas una pregunta que él ya respondió antes en esta misma conversación.
 
 {archetype_block}
 
 ## Contexto del cliente (ya calculado por el sistema, no lo cuestiones ni lo recalcules)
+- Nombre real: {customer_name}
+- Cuota real: {installment_amount}
+- Días para el vencimiento: {days_to_due}
 - Situación: {situation_hint} (ver nota interna, no se la reveles al cliente con este código)
 - Producto crediticio: {credit_product}
 - Capacidad digital estimada: {digital_capability}
@@ -112,7 +121,7 @@ conectarlo con un asesor.
 - Canal de este contacto: {channel}
 {extra_context}
 
-## ALTERNATIVAS AUTORIZADAS (las únicas que puedes ofrecer, con parámetros ya resueltos)
+## ALTERNATIVAS AUTORIZADAS (las únicas que puedes ofrecer, con parámetros ya resueltos, en orden de prioridad)
 {alternatives_block}
 
 Responde siempre en español, en tono cercano y respetuoso, en turnos cortos.
@@ -172,16 +181,32 @@ def _format_alternatives_block(eligible_alternatives: list) -> str:
 def build_system_prompt(score_result: dict, eligible_alternatives: list) -> str:
     """Arma el prompt del sistema para un cliente puntual, usando el contrato v2
     (`score_customer`) y la lista ya resuelta del Policy Engine. No incluye el
-    catálogo completo ni las condiciones de elegibilidad -- solo lo ya autorizado."""
+    catálogo completo ni las condiciones de elegibilidad -- solo lo ya autorizado.
+
+    `customer_name`/`installment_amount`/`days_to_due` vienen de datos reales
+    (`policy_context` y el nivel raíz de `score_customer`) a propósito: antes el
+    prompt le pedía al LLM "inventar" un nombre y un monto cuando el cliente solo
+    saludaba, lo cual (a) contradice la regla 1 (nunca inventar montos) y (b)
+    dispara el guardrail `check_hallucination` en su propia primera respuesta."""
     situation = score_result.get("situation", {})
     profile = score_result.get("profile", {})
+    policy_context = score_result.get("policy_context", {})
     extra_context = ""
     if "income_date_unknown" in situation.get("flags", []):
         extra_context = "- Nota: no se conoce la fecha de ingreso de este cliente; pregúntasela.\n"
 
+    customer_name = policy_context.get("customer_display_name") or "estimado cliente"
+    installment_amount = policy_context.get("installment_amount")
+    installment_amount_display = f"${installment_amount:.2f}" if installment_amount is not None else "no disponible -- no inventes un monto"
+    days_to_due = score_result.get("days_to_due")
+    days_to_due_display = str(days_to_due) if days_to_due is not None else "no disponible"
+
     return SYSTEM_PROMPT_TEMPLATE.format(
         barrier_list=", ".join(BARRIER_CATEGORIES),
         tone_list=", ".join(TONE_CATEGORIES),
+        customer_name=customer_name,
+        installment_amount=installment_amount_display,
+        days_to_due=days_to_due_display,
         situation_hint=situation.get("situation_hint", "S0"),
         low_digital_response=situation.get("low_digital_response", False),
         channel=score_result.get("channel", {}).get("channel_pref_model", "UNDETERMINED"),
