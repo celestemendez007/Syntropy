@@ -49,6 +49,12 @@ export default function AdminTab() {
     setArchetypes(newArchetypes)
   }
 
+  const handleAlternativeChange = (archIndex, lineIndex, newValue) => {
+    const newArchetypes = [...archetypes]
+    newArchetypes[archIndex].useful_alternatives[lineIndex] = newValue
+    setArchetypes(newArchetypes)
+  }
+
   if (loading) return <div className="dashboard"><p>Cargando configuración...</p></div>
   if (error) return <div className="dashboard"><p className="error">Error: {error}</p></div>
 
@@ -92,12 +98,42 @@ export default function AdminTab() {
             </div>
 
             <div style={{ marginTop: '15px' }}>
-              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px', color: '#94a3b8' }}>Recomendaciones útiles / Alternativas (1 por línea)</label>
-              <textarea 
-                style={{ width: '100%', padding: '10px', background: '#1e293b', color: 'white', border: '1px solid #334155', borderRadius: '4px', minHeight: '100px' }}
-                value={arch.useful_alternatives.join('\n')}
-                onChange={(e) => handleChange(index, 'useful_alternatives', e.target.value)}
-              />
+              <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px', color: '#94a3b8' }}>Recomendaciones útiles / Alternativas (Por Producto)</label>
+              <div style={{ overflowX: 'auto', background: '#1e293b', borderRadius: '4px', border: '1px solid #334155' }}>
+                <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ padding: '12px', borderBottom: '1px solid #334155', width: '30%', color: '#94a3b8' }}>Producto / Plan de Crédito</th>
+                      <th style={{ padding: '12px', borderBottom: '1px solid #334155', color: '#94a3b8' }}>Alternativas Asignadas</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {arch.useful_alternatives.map((altLine, i) => {
+                      let product = altLine;
+                      let alternatives = "";
+                      if (altLine.startsWith("Si es ") && altLine.includes(": ")) {
+                         product = altLine.split(": ")[0].replace("Si es ", "");
+                         alternatives = altLine.substring(altLine.indexOf(": ") + 2);
+                      }
+                      return (
+                        <tr key={i}>
+                          <td style={{ padding: '12px', borderBottom: '1px solid #334155', color: '#cbd5e1', fontWeight: 'bold', verticalAlign: 'top' }}>{product}</td>
+                          <td style={{ padding: '8px', borderBottom: '1px solid #334155', verticalAlign: 'top' }}>
+                            <textarea 
+                              style={{ width: '100%', padding: '8px', background: '#0f172a', color: 'white', border: '1px solid #475569', borderRadius: '4px', minHeight: '60px', resize: 'vertical' }}
+                              value={alternatives || altLine}
+                              onChange={(e) => {
+                                const newVal = product !== altLine ? `Si es ${product}: ${e.target.value}` : e.target.value;
+                                handleAlternativeChange(index, i, newVal)
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div style={{ marginTop: '15px' }}>
