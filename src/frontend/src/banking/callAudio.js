@@ -33,9 +33,9 @@ export class CallAudio {
     if(this.closed||this.muted||this.thinking||!this.callId)return
     const frame=new Float32Array(input),rms=Math.sqrt(frame.reduce((n,s)=>n+s*s,0)/frame.length),time=performance.now()
     this.preRoll.push(frame);if(this.preRoll.length>3)this.preRoll.shift()
-    if(rms>(this.speaking?.025:.010)){
+    if(rms>(this.speaking?.040:.020)){
       if(!this.voicedAt)this.voicedAt=time
-      if(this.speaking&&time-this.voicedAt>170)this.interrupt()
+      if(this.speaking&&time-this.voicedAt>450)this.interrupt()
       this.lastSound=time
       if(!this.parts.length){this.parts=[...this.preRoll];this.began=time}else this.parts.push(frame)
     }else{this.voicedAt=null;if(this.parts.length)this.parts.push(frame)}
