@@ -168,23 +168,26 @@ class BankingService:
             return
         risk = {**state["score"]["risk"], **state["score"]["situation"]}
         raw = get_eligible_alternatives(state["customer_id"], risk)
-        raw = rank_alternatives(raw, risk["situation_hint"], state["channel"])
+        raw = rank_alternatives(raw, risk["situation_hint"], state["channel"], state["barrier"])
         row = _load_customer_row(state["customer_id"])
         # Policy dates use the synthetic next_due_date (or snapshot fallback).
         reference = row.get("next_due_date")
         if not isinstance(reference, str) or not reference:
             reference = str(row["snapshot_date"])
         anchor = date.fromisoformat(reference[:10])
+        eligible = [alt for alt in raw if alt["alt_id"] != "ALT-NONE"
+                    and (not state["score"]["profile"]["complex_case"] or alt.get("human_only"))]
+        # The catalog rarely has an alt tagged for the exact barrier the customer named
+        # (e.g. most non-S2 situations never carry ALT-DATE-SHIFT/ALT-GRACE-DAYS). Prefer
+        # a barrier-matched alt when one exists, but never leave the customer with nothing
+        # when the Policy Engine already authorized other alternatives for their case.
+        barrier_sets = {"DATE_MISMATCH": {"ALT-DATE-SHIFT", "ALT-GRACE-DAYS", "ALT-PAYMENT-PLAN"},
+                         "LIQUIDITY": {"ALT-PARTIAL", "ALT-PAYMENT-PLAN", "ALT-AUTOSAVE-PCT"}}
+        allowed = barrier_sets.get(state["barrier"])
+        if allowed is not None:
+            eligible = [alt for alt in eligible if alt["alt_id"] in allowed] or eligible
         offers = []
-        for alt in raw:
-            if alt["alt_id"] == "ALT-NONE":
-                continue
-            if state["score"]["profile"]["complex_case"] and not alt.get("human_only"):
-                continue
-            if state["barrier"] == "DATE_MISMATCH" and alt["alt_id"] not in {"ALT-DATE-SHIFT", "ALT-GRACE-DAYS", "ALT-PAYMENT-PLAN"}:
-                continue
-            if state["barrier"] == "LIQUIDITY" and alt["alt_id"] not in {"ALT-PARTIAL", "ALT-PAYMENT-PLAN", "ALT-AUTOSAVE-PCT"}:
-                continue
+        for alt in eligible:
             alt = dict(alt)
             if alt.get("date"):
                 delta = (date.fromisoformat(alt["date"]) - anchor).days
