@@ -105,13 +105,30 @@ def chat(req: ChatRequest):
     if not groq_api_key:
         # Fallback to local mock LLM
         from src.backend.conversation_engine import call_llm
-        last_msg = req.history[-1].content if req.history else ""
-        if len(req.history) <= 1:
-            reply = f"(Modo Simulación) ¡Hola, muy buenos días! ¿Hablo con el titular de la cuenta? ... ¡Qué tal! Te saluda el asistente virtual de Bancoagrícola. Te contacto rapidito porque noté en el sistema que en 5 días vence tu cuota de $124.50 de tu {req.force_product or 'crédito'}. Como vemos que eres un excelente cliente, solo queríamos darte este recordatorio amistoso. ¿Todo bien para este mes o te puedo ayudar con alguna opción para que estés más tranquilo?"
+        last_msg = req.history[-1].content.lower() if req.history else ""
+        
+        if len(req.history) == 1:
+            reply = "¡Hola! Muy buenos días. ¿Hablo con el titular de la cuenta?"
+            
+        elif any(w in last_msg for w in ["quien", "quién", "de donde", "info", "información", "titular", "no entiendo", "que pasa", "cual"]):
+            reply = f"Disculpe la confusión. Le llamo de Bancoagrícola por un aviso preventivo de su {req.force_product or 'crédito'}. ¿Me permite un minutito para darle la información?"
+            
+        elif any(w in last_msg for w in ["no", "ocupad", "luego", "despues", "no tengo tiempo"]):
+            reply = "Comprendo totalmente, no se preocupe. Si gusta le devolvemos la llamada en otro momento. ¡Que tenga un excelente día!"
+            
+        elif len(req.history) <= 5 and any(w in last_msg for w in ["si", "sí", "diga", "habla", "ok", "claro", "bueno"]):
+            reply = "Perfecto, gracias. Fíjese que queríamos recordarle que se acerca su fecha de pago. Como siempre ha sido un excelente cliente, solo queríamos confirmar. ¿Todo bien para este mes o ha tenido algún inconveniente?"
+            
         else:
             mock_res = call_llm(system_prompt, last_msg, alts)
             alt_name = alts[0]['alt_id'] if alts else 'Hablar con un asesor'
-            reply = f"(Modo Simulación) Entiendo perfectamente la situación, esas cosas pasan y no te preocupes. Justamente para apoyarte en este momento, el banco me autoriza a ofrecerte esta solución: {alt_name}. Así podemos arreglarlo hoy mismo sin afectar tu récord. ¿Te parece bien si lo dejamos programado así?"
+            
+            if mock_res['barrier_detected'] == 'OTHER' and mock_res['tone_overall'] in ['NEUTRAL', 'COOPERATIVE']:
+                reply = "¿Me podría dar un poquito más de detalle sobre su situación para ver cómo le podemos ayudar?"
+            elif mock_res['barrier_detected'] == 'ALREADY_PAID':
+                reply = "¡Excelente! Si ya realizó el pago, por favor ignore este mensaje. El sistema se actualizará pronto. ¡Muchas gracias por su puntualidad!"
+            else:
+                reply = f"Entiendo perfectamente la situación, a veces hay imprevistos. Justamente para apoyarle, el banco me autoriza a ofrecerle esta opción: {alt_name}. ¿Le parece bien si lo dejamos programado así para que esté tranquilo?"
         hallucination_check = check_hallucination(reply, alts)
         return {
             "reply": reply,
