@@ -143,7 +143,13 @@ function TechnicalTab() {
         <div className="card">
           <p><strong>Algoritmo de Canal:</strong> Modelo Híbrido. Nivel 1 evalúa la tasa de respuesta histórica del propio cliente. Nivel 2 es una Regresión Logística poblacional basada en <code>income_type</code>, <code>app_engagement</code>, y edad en la plataforma. Si ninguno da confianza alta (&gt;0.5), hace <em>Fallback</em> a <strong>Llamada Telefónica</strong> obligatoria.</p>
           <p><strong>Algoritmo de Momento (Hora):</strong> Agrupa (bucketiza) el historial de mensajes del cliente en rangos de 1.5 horas. Calcula promedios históricos. <em>No usa K-Means</em>, usa frecuencias estadísticas puras. Si no hay historial suficiente (menos de 5 mensajes previos), usa promedios poblacionales, por ejemplo, asignando la hora de almuerzo (12:00-13:30) para asalariados (<code>SALARIED</code>), ya que matemáticamente tienen mayor tasa de respuesta en ese horario.</p>
-          <p><strong>Algoritmo de Momento (Días Antes):</strong> Igual que la hora, agrupa envíos previos en buckets (1-2 días, 3-5 días, 6-8 días). Elige el rango donde el cliente tenga mejor tasa histórica de conversión. Por defecto: 5 días antes.</p>
+          <p><strong>Algoritmo de Momento (Días Antes):</strong> Es un <strong>Modelo Heurístico Basado en Frecuencias Estadísticas</strong>. El sistema utiliza "Buckets" (Cestas) que analizan a cada cliente de manera individual:</p>
+          <ul style={{ paddingLeft: '20px', marginTop: '5px' }}>
+            <li>Revisa todo el historial del usuario y agrupa los mensajes enviados en cuatro cestas: <em>1-2 días antes, 3-5 días, 6-8 días, y 9-15 días</em>.</li>
+            <li>Calcula matemáticamente en qué "cesta" ese usuario en particular suele responder más.</li>
+            <li><strong>Depende del usuario:</strong> Si Carlos siempre contesta y paga cuando se le avisa con 15 días de anticipación (apenas le depositan), el sistema automáticamente le asignará su alerta en el bloque de 9-15 días. Si María suele pagar sobre la raya y contesta mejor faltando 2 días, el modelo la mueve a ese bloque.</li>
+            <li>Si un cliente es completamente nuevo y no hay historial suficiente, el sistema usa el promedio poblacional: la alerta estándar <strong>5 días antes</strong> del vencimiento.</li>
+          </ul>
         </div>
       </section>
 
