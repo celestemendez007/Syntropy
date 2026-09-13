@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import Simulator from './Simulator'
 import AdminTab from './AdminTab'
+import WhatsAppDemo from './WhatsAppDemo'
+import CallDemo from './CallDemo'
 
 const STATUS_COLOR = {
   LOW: 'good', MEDIUM: 'warning', HIGH: 'critical',
@@ -195,7 +196,7 @@ function TechnicalTab() {
 export default function App() {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
-  const [activeTab, setActiveTab] = useState('simulator')
+  const [activeTab, setActiveTab] = useState('whatsapp')
 
   useEffect(() => {
     fetch('/data/dashboard_data.json')
@@ -222,14 +223,17 @@ export default function App() {
   return (
     <div className="app-container">
       <nav className="top-nav">
+        <button className={activeTab === 'whatsapp' ? 'active' : ''} onClick={() => setActiveTab('whatsapp')}>WhatsApp</button>
+        <button className={activeTab === 'call' ? 'active' : ''} onClick={() => setActiveTab('call')}>Llamada</button>
         <button className={activeTab === 'history' ? 'active' : ''} onClick={() => setActiveTab('history')}>Registro Histórico</button>
         <button className={activeTab === 'technical' ? 'active' : ''} onClick={() => setActiveTab('technical')}>Algoritmos IA (Docs)</button>
-        <button className={activeTab === 'simulator' ? 'active' : ''} onClick={() => setActiveTab('simulator')}>Simulador de Llamada (Fase 6)</button>
         <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>Arquetipos (Admin)</button>
       </nav>
-      
-      {activeTab === 'simulator' ? (
-        <Simulator />
+
+      {activeTab === 'whatsapp' ? (
+        <WhatsAppDemo />
+      ) : activeTab === 'call' ? (
+        <CallDemo />
       ) : activeTab === 'admin' ? (
         <AdminTab />
       ) : activeTab === 'technical' ? (
