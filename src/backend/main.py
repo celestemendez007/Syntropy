@@ -103,32 +103,82 @@ def chat(req: ChatRequest):
     system_prompt = build_system_prompt(score, alts)
     
     if not groq_api_key:
-        # Fallback to local mock LLM
-        from src.backend.conversation_engine import call_llm
-        last_msg = req.history[-1].content.lower() if req.history else ""
+        # --- Motor Conversacional Mock (Multi-Fase) ---
+        last_msg = req.history[-1].content.lower().strip() if req.history else ""
+        n = len(req.history)  # number of messages in history (user messages)
         
-        if len(req.history) == 1:
+        alt_name  = alts[0]['alt_id']          if alts else "asesoría personalizada"
+        alt_desc  = alts[0].get('description', '') if alts else ""
+        product   = req.force_product or score.get("product_type", "su crédito")
+        amount    = score.get("amount_due", 147.50)
+        days_left = score.get("days_to_due", 5)
+
+        # --- Intent helpers ---
+        def has(words): return any(w in last_msg for w in words)
+        is_yes       = has(["si", "sí", "claro", "ok", "bueno", "dale", "correcto", "perfecto", "adelante", "diga", "aha", "aham"])
+        is_no_time   = has(["ocupad", "luego", "despues", "después", "ahorita no", "no puedo hablar", "no tengo tiempo"])
+        is_confused  = has(["quien", "quién", "de donde", "qué banco", "cuál banco", "no entiendo", "que pasa", "cómo", "como así"])
+        is_paid      = has(["ya pagué", "ya pague", "ya lo hice", "ya realicé", "ya transferí"])
+        is_problem   = has(["malo", "mal", "problema", "error", "falla", "no tengo", "no me alcanza", "quedé corto", "falta", "aprieto", "difícil", "dificil", "complicado", "no cuento"])
+        is_angry     = has(["molest", "enfad", "indign", "grosería", "irresponsable", "siempre hacen", "pésimo", "pesimo", "mal servicio"])
+        is_agreement = has(["de acuerdo", "acepto", "está bien", "listo", "perfecto", "va", "hecho", "venga"])
+        is_question  = has(["cuánto", "cuanto", "cuando", "cuándo", "cómo pago", "donde pago", "por qué", "porque me llaman"])
+
+        # --- Phase machine ---
+        if n == 1:
+            # Opening – identify client by name
             reply = "¡Hola! Muy buenos días. ¿Hablo con Carlos?"
-            
-        elif any(w in last_msg for w in ["quien", "quién", "de donde", "info", "información", "titular", "no entiendo", "que pasa", "cual"]):
-            reply = f"Disculpe la confusión. Le llamo de Bancoagrícola por un aviso preventivo de su {req.force_product or 'crédito'}. ¿Me permite un minutito para darle la información?"
-            
-        elif any(w in last_msg for w in ["no", "ocupad", "luego", "despues", "no tengo tiempo"]):
-            reply = "Comprendo totalmente, no se preocupe. Si gusta le devolvemos la llamada en otro momento. ¡Que tenga un excelente día!"
-            
-        elif len(req.history) <= 5 and any(w in last_msg for w in ["si", "sí", "diga", "habla", "ok", "claro", "bueno"]):
-            reply = "Perfecto, gracias. Fíjese que queríamos recordarle que se acerca su fecha de pago. Como siempre ha sido un excelente cliente, solo queríamos confirmar. ¿Todo bien para este mes o ha tenido algún inconveniente?"
-            
+
+        elif n == 2 and is_confused:
+            reply = f"Disculpe, claro. Le habla Sofía, asesora de Bancoagrícola. Le llamo por su {product}. ¿Tiene un minutito?"
+
+        elif n == 2 and is_no_time:
+            reply = "Entendido, no hay problema. ¿A qué hora le queda mejor para devolverle la llamada?"
+
+        elif n == 2 and is_yes:
+            # Client confirmed identity – introduce reason, then PAUSE (no data dump)
+            reply = f"Perfecto, Carlos. Gracias. Fíjese que le llamo porque notamos que se acerca su fecha de pago de {product} y normalmente usted siempre está al día. Solo quería asegurarme de que todo estuviera bien de su parte. ¿Cómo va todo este mes?"
+
+        elif n >= 3 and is_paid:
+            reply = "¡Qué bien, Carlos! Si ya realizó el pago, el sistema se actualizará en las próximas horas. Le agradecemos mucho su puntualidad. ¿Hay algo más en que le podamos ayudar?"
+
+        elif n >= 3 and is_angry:
+            reply = "Carlos, tiene toda la razón y entiendo su molestia. Antes de cualquier otra cosa, déjeme registrar su queja para que quede documentada. ¿Me puede contar exactamente qué pasó?"
+
+        elif n >= 3 and is_problem:
+            # Client revealed a problem – empathize, ask more before offering solution
+            reply = "Entiendo perfectamente, a veces los imprevistos aparecen. No se preocupe, para eso estamos. ¿Es una situación de esta quincena o viene de un poco más atrás?"
+
+        elif n >= 3 and is_question:
+            reply = f"Claro que sí. Su cuota es de ${amount:.2f} y su fecha límite es en {days_left} días. Puede pagar desde la app, en ventanilla o en cualquier corresponsal. ¿Cuál le queda más fácil?"
+
+        elif n >= 4 and is_yes and not is_agreement:
+            # Client is engaging, time to offer alternatives
+            alt_text = f"**{alt_name}**" + (f": {alt_desc}" if alt_desc else "")
+            reply = (
+                f"Perfecto Carlos, le cuento. Dado su perfil con nosotros, tengo autorizado ofrecerle una opción que puede ayudarle: {alt_text}. "
+                f"Esto le permitiría estar tranquilo con su historial. ¿Le parece una buena opción o prefiere ver otra alternativa?"
+            )
+
+        elif n >= 4 and is_agreement:
+            reply = (
+                f"Excelente, Carlos. Para confirmar: quedamos en {alt_name} para su {product}. "
+                f"Le llegará un mensaje de texto en los próximos minutos con el resumen. "
+                f"¿El pago lo haría desde la app o prefiere ventanilla?"
+            )
+
+        elif n >= 5:
+            # Late stage – close with a specific commitment
+            reply = (
+                f"Perfecto. Entonces, solo para dejarlo bien anotado en el sistema: "
+                f"el arreglo de ${amount:.2f} queda registrado para los próximos {days_left} días. "
+                f"¡Muchas gracias por su tiempo, Carlos! Que tenga un excelente día."
+            )
+
         else:
-            mock_res = call_llm(system_prompt, last_msg, alts)
-            alt_name = alts[0]['alt_id'] if alts else 'Hablar con un asesor'
-            
-            if mock_res['barrier_detected'] == 'OTHER' and mock_res['tone_overall'] in ['NEUTRAL', 'COOPERATIVE']:
-                reply = "¿Me podría dar un poquito más de detalle sobre su situación para ver cómo le podemos ayudar?"
-            elif mock_res['barrier_detected'] == 'ALREADY_PAID':
-                reply = "¡Excelente! Si ya realizó el pago, por favor ignore este mensaje. El sistema se actualizará pronto. ¡Muchas gracias por su puntualidad!"
-            else:
-                reply = f"Entiendo perfectamente la situación, a veces hay imprevistos. Justamente para apoyarle, el banco me autoriza a ofrecerle esta opción: {alt_name}. ¿Le parece bien si lo dejamos programado así para que esté tranquilo?"
+            # Fallback – keep the conversation going naturally
+            reply = "Cuénteme un poco más para poder orientarle de la mejor manera posible."
+
         hallucination_check = check_hallucination(reply, alts)
         return {
             "reply": reply,
