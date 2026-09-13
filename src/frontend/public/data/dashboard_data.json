@@ -1,0 +1,1556 @@
+{
+  "generated_at": "2026-09-13T00:22:01.721471+00:00",
+  "models": {
+    "anomaly_detection": {
+      "candidates": {
+        "IsolationForest": {
+          "auc_s0_vs_s3": 0.9588,
+          "fit_time_s": 0.199,
+          "latency_p50_ms": 5.098,
+          "latency_p95_ms": 5.615,
+          "model_size_kb": 2258.9,
+          "golden_g01_estable": 0.246,
+          "golden_g02_anomalia_benigna": 0.691,
+          "golden_g07_caida_ingreso": 0.512,
+          "golden_g07_pctil_anomalia": 10.8,
+          "golden_g12_cliente_nuevo": 0.209,
+          "golden_check_pass": true
+        },
+        "LocalOutlierFactor": {
+          "auc_s0_vs_s3": 0.6824,
+          "fit_time_s": 0.056,
+          "latency_p50_ms": 0.618,
+          "latency_p95_ms": 0.874,
+          "model_size_kb": 1113.3,
+          "golden_g01_estable": 0.049,
+          "golden_g02_anomalia_benigna": 1.0,
+          "golden_g07_caida_ingreso": 0.1,
+          "golden_g07_pctil_anomalia": 0.5,
+          "golden_g12_cliente_nuevo": 0.027,
+          "golden_check_pass": true
+        },
+        "OneClassSVM": {
+          "auc_s0_vs_s3": 0.8365,
+          "fit_time_s": 0.016,
+          "latency_p50_ms": 0.47,
+          "latency_p95_ms": 0.554,
+          "model_size_kb": 27.3,
+          "golden_g01_estable": 0.497,
+          "golden_g02_anomalia_benigna": 1.0,
+          "golden_g07_caida_ingreso": 0.598,
+          "golden_g07_pctil_anomalia": 3.2,
+          "golden_g12_cliente_nuevo": 0.452,
+          "golden_check_pass": true
+        },
+        "ZScore_Mahalanobis": {
+          "auc_s0_vs_s3": 0.9736,
+          "fit_time_s": 0.47,
+          "latency_p50_ms": 0.513,
+          "latency_p95_ms": 0.612,
+          "model_size_kb": 27.4,
+          "golden_g01_estable": 0.008,
+          "golden_g02_anomalia_benigna": 0.231,
+          "golden_g07_caida_ingreso": 0.034,
+          "golden_g07_pctil_anomalia": 16.7,
+          "golden_g12_cliente_nuevo": 0.005,
+          "golden_check_pass": true
+        }
+      },
+      "winner": "IsolationForest",
+      "why": "Mejor relación AUC/latencia/explicabilidad (ablación por feature, barata de calcular). Z-score de Mahalanobis queda como segunda opinión para monitoreo de drift poblacional."
+    },
+    "supervised_risk": {
+      "candidates": {
+        "LogisticRegression": {
+          "auc": 0.7369,
+          "brier_score": 0.213,
+          "calibration_mae": 0.1575,
+          "fit_time_s": 0.004,
+          "latency_p50_ms": 0.369,
+          "latency_p95_ms": 0.641,
+          "model_size_kb": 1.4,
+          "positive_rate_train": 0.35,
+          "positive_rate_test": 0.345
+        },
+        "RandomForest": {
+          "auc": 0.7214,
+          "brier_score": 0.216,
+          "calibration_mae": 0.1444,
+          "fit_time_s": 0.302,
+          "latency_p50_ms": 26.068,
+          "latency_p95_ms": 28.224,
+          "model_size_kb": 2224.0,
+          "positive_rate_train": 0.35,
+          "positive_rate_test": 0.345
+        },
+        "LightGBM": {
+          "auc": 0.6681,
+          "brier_score": 0.2248,
+          "calibration_mae": 0.1009,
+          "fit_time_s": 2.169,
+          "latency_p50_ms": 0.791,
+          "latency_p95_ms": 1.126,
+          "model_size_kb": 623.9,
+          "positive_rate_train": 0.35,
+          "positive_rate_test": 0.345
+        }
+      },
+      "winner": "LogisticRegression",
+      "why": "Gana en AUC, Brier score, tamaño y latencia pese a ser el modelo más simple -- con 3,000 filas y 11 features, Random Forest y LightGBM no encuentran no-linealidad real que explotar y solo agregan costo de explicabilidad (necesitarían SHAP)."
+    },
+    "channel_preference": {
+      "metrics": {
+        "channel_model_auc": 0.5256,
+        "channel_model_fit_time_s": 0.004,
+        "channel_model_n_train": 7923,
+        "channel_model_n_test": 1981,
+        "channel_model_size_kb": 2.7,
+        "channel_source_distribution": {
+          "FALLBACK_CALL": 0.84,
+          "MODEL_LEVEL1": 0.16
+        },
+        "channel_latency_p50_ms": 7.084,
+        "channel_latency_p95_ms": 8.41,
+        "timing_latency_p50_ms": 3.2,
+        "timing_latency_p95_ms": 4.581,
+        "golden_g09_low_digital_response_channel": {
+          "channel": "APP_PUSH",
+          "confidence": 0.0121
+        }
+      },
+      "why": "Nivel 1 (tasa por cliente) + nivel 2 (Logistic Regression poblacional, AUC modesto porque no ve la afinidad oculta del generador) + fallback determinista a CALL. El diseño de dos niveles es la elección, no un solo algoritmo ganador."
+    },
+    "score_customer_latency": {
+      "real_customers": {
+        "p50_ms": 51.30585000051724,
+        "p95_ms": 60.961900000120295,
+        "mean_ms": 57.072430000013505,
+        "n_reps": 150
+      },
+      "golden_customers": {
+        "p50_ms": 64.94314999963535,
+        "p95_ms": 67.40368499995384,
+        "mean_ms": 64.48433833326514,
+        "n_reps": 60
+      }
+    }
+  },
+  "golden_customers": [
+    {
+      "customer_id": "GOLD-G01",
+      "scenario": "S0_estable",
+      "expected_situation": "S0",
+      "actual_situation": "S0",
+      "passed": true,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.7948,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G02",
+      "scenario": "S0_no_molestar_anomalia_benigna",
+      "expected_situation": "S0",
+      "actual_situation": "S0",
+      "passed": true,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.9589,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G03",
+      "scenario": "S1_friccion_cronica",
+      "expected_situation": "S1",
+      "actual_situation": "S1",
+      "passed": true,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.7859,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G04",
+      "scenario": "S1_paga_al_limite",
+      "expected_situation": "S1",
+      "actual_situation": "S1",
+      "passed": true,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.7863,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G05",
+      "scenario": "S2_asalariado_dia30",
+      "expected_situation": "S2",
+      "actual_situation": "S2",
+      "passed": true,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.8175,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G06",
+      "scenario": "S2_independiente_fecha_incierta",
+      "expected_situation": "S0 (excepción documentada)",
+      "actual_situation": "S0",
+      "passed": true,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.8164,
+      "note": "income_date_unknown=1 desactiva la regla S2 a propósito (v1 §10)"
+    },
+    {
+      "customer_id": "GOLD-G07",
+      "scenario": "S3_caida_ingreso",
+      "expected_situation": "S3",
+      "actual_situation": "S3",
+      "passed": true,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.8929,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G08",
+      "scenario": "S3_gasto_mas_intentos_fallidos",
+      "expected_situation": "S3",
+      "actual_situation": "S3",
+      "passed": true,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 1.0,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G09",
+      "scenario": "S4_baja_respuesta_digital",
+      "expected_situation": "low_digital_response=True (v1 S4, ver nota v2)",
+      "actual_situation": "low_digital_response=True",
+      "passed": true,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.8006,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G10",
+      "scenario": "S2_S4_hibrido",
+      "expected_situation": "S2",
+      "actual_situation": "S2",
+      "passed": true,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.8169,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G11",
+      "scenario": "S3_S4_escalar_humano",
+      "expected_situation": "S3",
+      "actual_situation": "S3",
+      "passed": true,
+      "risk_level": "HIGH",
+      "anomaly_score": 0.9978,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G12",
+      "scenario": "cliente_nuevo_sin_historial",
+      "expected_situation": "S0",
+      "actual_situation": "S0",
+      "passed": true,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.7812,
+      "note": null
+    }
+  ],
+  "golden_conversations": [
+    {
+      "conversation_id": "CV-G01",
+      "customer_id": "GOLD-G03",
+      "situation_hint": "S1",
+      "channel": "APP_PUSH",
+      "turns_total": 2,
+      "barrier_detected": "FORGOT",
+      "barrier_confidence": 0.95,
+      "barrier_vs_situation_match": true,
+      "tone_overall": "COOPERATIVE",
+      "tone_trajectory": "STABLE",
+      "escalation_triggered": false,
+      "alternatives_offered": "ALT-REMINDER-PAYLINK;ALT-AUTOSAVE-PCT",
+      "alternative_accepted": "ALT-REMINDER-PAYLINK",
+      "result": "PAID",
+      "llm_hallucination_flag": false,
+      "transcript_mock": "Cliente: se me olvidó, ¿me pueden mandar el enlace? Gracias.",
+      "golden_notes": "Fricción mínima: tiene el dinero, solo necesitaba el recordatorio."
+    },
+    {
+      "conversation_id": "CV-G02",
+      "customer_id": "GOLD-G05",
+      "situation_hint": "S2",
+      "channel": "WHATSAPP",
+      "turns_total": 4,
+      "barrier_detected": "DATE_MISMATCH",
+      "barrier_confidence": 0.9,
+      "barrier_vs_situation_match": true,
+      "tone_overall": "NEUTRAL",
+      "tone_trajectory": "STABLE",
+      "escalation_triggered": false,
+      "alternatives_offered": "ALT-DATE-SHIFT;ALT-AUTOSAVE-PCT",
+      "alternative_accepted": "ALT-DATE-SHIFT",
+      "result": "ACCEPTED",
+      "llm_hallucination_flag": false,
+      "transcript_mock": "Cliente: me pagan hasta el 30. Asistente: podemos mover tu fecha al 2026-09-17.",
+      "golden_notes": "Fecha concreta ya resuelta por el Policy Engine (2026-09-17), el LLM solo la parafrasea."
+    },
+    {
+      "conversation_id": "CV-G03",
+      "customer_id": "GOLD-G07",
+      "situation_hint": "S3",
+      "channel": "WHATSAPP",
+      "turns_total": 6,
+      "barrier_detected": "LIQUIDITY",
+      "barrier_confidence": 0.92,
+      "barrier_vs_situation_match": true,
+      "tone_overall": "COOPERATIVE",
+      "tone_trajectory": "IMPROVING",
+      "escalation_triggered": false,
+      "alternatives_offered": "ALT-PARTIAL;ALT-AUTOSAVE-PCT",
+      "alternative_accepted": "ALT-PARTIAL",
+      "result": "ACCEPTED",
+      "llm_hallucination_flag": false,
+      "transcript_mock": "Cliente: este mes no puedo completar, ando mal. Asistente: entiendo, puedes abonar un mínimo de $40.0 y diferimos el resto. Cliente: ok, gracias por entender.",
+      "golden_notes": "Empatía + trayectoria de tono TENSE->COOPERATIVE dentro de la misma conversación."
+    },
+    {
+      "conversation_id": "CV-G04",
+      "customer_id": "GOLD-G08",
+      "situation_hint": "S3",
+      "channel": "APP_PUSH",
+      "turns_total": 3,
+      "barrier_detected": "TECHNICAL",
+      "barrier_confidence": 0.85,
+      "barrier_vs_situation_match": false,
+      "tone_overall": "NEUTRAL",
+      "tone_trajectory": "STABLE",
+      "escalation_triggered": true,
+      "alternatives_offered": "ALT-PARTIAL;ALT-AUTOSAVE-PCT",
+      "alternative_accepted": null,
+      "result": "ESCALATED",
+      "llm_hallucination_flag": false,
+      "transcript_mock": "Cliente: intenté pagar por la app y me tira error, no me deja.",
+      "golden_notes": "MISMATCH intencional: el sistema infirió S3/liquidez pero la barrera real es técnica. ALT-CHANNEL-SUPPORT del catálogo exige balance_ratio>=1 (para no confundir 'no puede pagar' con 'quiere pagar y la app falla'), y este cliente tiene balance_ratio<1 -- ninguna alternativa del catálogo calza, así que el sistema debe escalar en vez de forzar una oferta que no es la correcta. Limitación real documentada para Fase 7+: re-resolver alternativas tras conocer la barrera, no solo con la situación pre-conversación."
+    },
+    {
+      "conversation_id": "CV-G05",
+      "customer_id": "GOLD-G09",
+      "situation_hint": "S0",
+      "channel": "CALL",
+      "turns_total": 3,
+      "barrier_detected": "DATE_MISMATCH",
+      "barrier_confidence": 0.7,
+      "barrier_vs_situation_match": false,
+      "tone_overall": "COOPERATIVE",
+      "tone_trajectory": "STABLE",
+      "escalation_triggered": false,
+      "alternatives_offered": "ALT-NONE",
+      "alternative_accepted": null,
+      "result": "NO_OFFER_MATCHED",
+      "llm_hallucination_flag": false,
+      "transcript_mock": "Cliente (por llamada): ah perdón, no vi los mensajes. Sí, me pagan a fin de mes.",
+      "golden_notes": "Demuestra que el fallback de canal (NBA Fase 5, CHANNEL_SWITCH a CALL) funciona: el cliente responde por llamada. Situación quedó S0 (baja respuesta digital es ortogonal a la situación financiera, ver docs/contracts.md), así que el catálogo no tenía ALT-DATE-SHIFT preautorizada -- misma limitación que CV-G04, anotada para Fase 7+."
+    },
+    {
+      "conversation_id": "CV-G06",
+      "customer_id": "GOLD-G11",
+      "situation_hint": "S3",
+      "channel": "CALL",
+      "turns_total": 2,
+      "barrier_detected": "LIQUIDITY",
+      "barrier_confidence": 0.8,
+      "barrier_vs_situation_match": true,
+      "tone_overall": "HOSTILE",
+      "tone_trajectory": "STABLE",
+      "escalation_triggered": true,
+      "alternatives_offered": null,
+      "alternative_accepted": null,
+      "result": "ESCALATED",
+      "llm_hallucination_flag": false,
+      "transcript_mock": "Cliente: ¡ya déjenme de molestar, no tengo dinero y punto!",
+      "golden_notes": "Regla de escalamiento por tono HOSTILE (should_escalate): la IA no negocia sola con un cliente hostil, corta y pasa a un humano de inmediato."
+    },
+    {
+      "conversation_id": "CV-G07",
+      "customer_id": "GOLD-G04",
+      "situation_hint": "S1",
+      "channel": "SMS",
+      "turns_total": 2,
+      "barrier_detected": "ALREADY_PAID",
+      "barrier_confidence": 0.9,
+      "barrier_vs_situation_match": false,
+      "tone_overall": "NEUTRAL",
+      "tone_trajectory": "STABLE",
+      "escalation_triggered": false,
+      "alternatives_offered": null,
+      "alternative_accepted": null,
+      "result": "PAID_WITHOUT_ALT_VERIFY",
+      "llm_hallucination_flag": false,
+      "transcript_mock": "Cliente: ya pagué ayer, revisen su sistema.",
+      "golden_notes": "Regla del prompt (#6): ALREADY_PAID nunca ofrece alternativas, indica que se verificará el pago -- evita la falla de insistir en cobrar algo ya pagado."
+    },
+    {
+      "conversation_id": "CV-G08",
+      "customer_id": "GOLD-G06",
+      "situation_hint": "S0",
+      "channel": "WHATSAPP",
+      "turns_total": 5,
+      "barrier_detected": "DATE_MISMATCH",
+      "barrier_confidence": 0.6,
+      "barrier_vs_situation_match": false,
+      "tone_overall": "NEUTRAL",
+      "tone_trajectory": "STABLE",
+      "escalation_triggered": false,
+      "alternatives_offered": "ALT-NONE",
+      "alternative_accepted": null,
+      "result": "PENDING_DATE_FROM_CUSTOMER",
+      "llm_hallucination_flag": false,
+      "transcript_mock": "Cliente: soy independiente, no tengo fecha fija. Asistente: ¿cuándo esperas tu próximo ingreso?",
+      "golden_notes": "Prueba `income_date_unknown`: la regla S2 no aplica sin una fecha real (documentado en BA_A_Tiempo_Diseno_Dataset_v1.md §10), así que el sistema clasificó S0 y el prompt (regla #7) instruye preguntar en vez de asumir -- el LLM compensa lo que las reglas deterministas no pueden inferir sin dato."
+    },
+    {
+      "conversation_id": "CV-G09",
+      "customer_id": "GOLD-G10",
+      "situation_hint": "S2",
+      "channel": "WHATSAPP",
+      "turns_total": 1,
+      "barrier_detected": "REFUSAL",
+      "barrier_confidence": 0.95,
+      "barrier_vs_situation_match": false,
+      "tone_overall": "TENSE",
+      "tone_trajectory": "STABLE",
+      "escalation_triggered": false,
+      "alternatives_offered": null,
+      "alternative_accepted": null,
+      "result": "OPT_OUT",
+      "llm_hallucination_flag": false,
+      "transcript_mock": "Cliente: ya no me escriban más, por favor.",
+      "golden_notes": "Respeto al rechazo explícito -- debe setear opt_out_flag y el NBA (Fase 5) ya no debe volver a contactar (compuerta OPT_OUT en nba_engine._should_contact)."
+    },
+    {
+      "conversation_id": "CV-G10",
+      "customer_id": "GOLD-G07",
+      "situation_hint": "S3",
+      "channel": "WHATSAPP",
+      "turns_total": 3,
+      "barrier_detected": "LIQUIDITY",
+      "barrier_confidence": 0.9,
+      "barrier_vs_situation_match": true,
+      "tone_overall": "NEUTRAL",
+      "tone_trajectory": "STABLE",
+      "escalation_triggered": false,
+      "alternatives_offered": "ALT-PARTIAL;ALT-AUTOSAVE-PCT",
+      "alternative_accepted": "ALT-PARTIAL",
+      "result": "FLAGGED_FOR_REVIEW",
+      "llm_hallucination_flag": true,
+      "transcript_mock": "Asistente: puedes abonar $40.0 sin intereses, y si prefieres, lo dejamos para el 2026-12-01 sin problema.",
+      "golden_notes": "CASO ADVERSARIAL A PROPÓSITO: 'Asistente: puedes abonar $40.0 sin intereses, y si prefieres, lo dejamos para el 2026-12-01 sin problema.' contiene 'sin intereses' (nunca autorizado, ver policies.json `allow_interest_waiver=false`) y una fecha 2026-12-01 que no está en las alternativas resueltas. check_hallucination debe marcar llm_hallucination_flag=True -- métrica de seguridad para el jurado (idealmente 0% salvo este caso de prueba)."
+    }
+  ],
+  "portfolio": {
+    "n_sampled": 1800,
+    "pct_no_contact": 88.1,
+    "situation_hint_distribution": {
+      "S0": 0.5978,
+      "S1": 0.3778,
+      "S3": 0.0244
+    },
+    "risk_level_distribution": {
+      "MEDIUM": 0.665,
+      "HIGH": 0.335
+    },
+    "recommended_action_distribution": {
+      "SIMPLE_REMINDER": 139,
+      "CHANNEL_SWITCH": 68,
+      "EMPATHETIC_CONVERSATION": 8
+    },
+    "channel_source_distribution": {
+      "FALLBACK_CALL": 0.9116,
+      "MODEL_LEVEL1": 0.0884
+    }
+  },
+  "conversation_metrics": {
+    "n_conversations": 215,
+    "tone_distribution": {
+      "COOPERATIVE": 0.4884,
+      "NEUTRAL": 0.3535,
+      "TENSE": 0.1163,
+      "HOSTILE": 0.0419
+    },
+    "barrier_distribution": {
+      "FORGOT": 0.5116,
+      "LIQUIDITY": 0.1395,
+      "DISPUTE": 0.0744,
+      "OTHER": 0.0744,
+      "TECHNICAL": 0.0605,
+      "REFUSAL": 0.0512,
+      "ALREADY_PAID": 0.0465,
+      "DATE_MISMATCH": 0.0419
+    },
+    "barrier_vs_situation_match_rate": 0.5581,
+    "escalation_rate": 0.0419,
+    "acceptance_rate": 0.707
+  },
+  "nba_priority_table_top": [
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "DATE_MISMATCH",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 5,
+      "n_accepted": 4,
+      "n_paid_on_time_after": 4,
+      "avg_turns": 3.0,
+      "pct_tense_or_hostile": 0.2,
+      "acceptance_rate": 0.8,
+      "success_rate": 0.7143
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "FORGOT",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 105,
+      "n_accepted": 86,
+      "n_paid_on_time_after": 71,
+      "avg_turns": 3.7,
+      "pct_tense_or_hostile": 0.1048,
+      "acceptance_rate": 0.819,
+      "success_rate": 0.6729
+    },
+    {
+      "situation_hint": "S0",
+      "barrier_detected": "DATE_MISMATCH",
+      "channel": "CALL",
+      "alt_id": "ALT-CHANNEL-SUPPORT",
+      "n_offered": 1,
+      "n_accepted": 1,
+      "n_paid_on_time_after": 1,
+      "avg_turns": 4.0,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 1.0,
+      "success_rate": 0.6667
+    },
+    {
+      "situation_hint": "S3",
+      "barrier_detected": "LIQUIDITY",
+      "channel": "SMS",
+      "alt_id": "ALT-PARTIAL",
+      "n_offered": 1,
+      "n_accepted": 1,
+      "n_paid_on_time_after": 1,
+      "avg_turns": 4.0,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 1.0,
+      "success_rate": 0.6667
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "OTHER",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 9,
+      "n_accepted": 7,
+      "n_paid_on_time_after": 6,
+      "avg_turns": 3.78,
+      "pct_tense_or_hostile": 0.3333,
+      "acceptance_rate": 0.7778,
+      "success_rate": 0.6364
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "DISPUTE",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 9,
+      "n_accepted": 7,
+      "n_paid_on_time_after": 6,
+      "avg_turns": 4.11,
+      "pct_tense_or_hostile": 0.2222,
+      "acceptance_rate": 0.7778,
+      "success_rate": 0.6364
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "LIQUIDITY",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 11,
+      "n_accepted": 7,
+      "n_paid_on_time_after": 6,
+      "avg_turns": 3.91,
+      "pct_tense_or_hostile": 0.1818,
+      "acceptance_rate": 0.6364,
+      "success_rate": 0.5385
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "REFUSAL",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 8,
+      "n_accepted": 4,
+      "n_paid_on_time_after": 4,
+      "avg_turns": 4.5,
+      "pct_tense_or_hostile": 0.125,
+      "acceptance_rate": 0.5,
+      "success_rate": 0.5
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "TECHNICAL",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 11,
+      "n_accepted": 6,
+      "n_paid_on_time_after": 5,
+      "avg_turns": 4.18,
+      "pct_tense_or_hostile": 0.2727,
+      "acceptance_rate": 0.5455,
+      "success_rate": 0.4615
+    },
+    {
+      "situation_hint": "S3",
+      "barrier_detected": "LIQUIDITY",
+      "channel": "CALL",
+      "alt_id": "ALT-PARTIAL",
+      "n_offered": 9,
+      "n_accepted": 4,
+      "n_paid_on_time_after": 4,
+      "avg_turns": 4.22,
+      "pct_tense_or_hostile": 0.3333,
+      "acceptance_rate": 0.4444,
+      "success_rate": 0.4545
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "ALREADY_PAID",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 7,
+      "n_accepted": 4,
+      "n_paid_on_time_after": 3,
+      "avg_turns": 2.86,
+      "pct_tense_or_hostile": 0.1429,
+      "acceptance_rate": 0.5714,
+      "success_rate": 0.4444
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "FORGOT",
+      "channel": "SMS",
+      "alt_id": "ALT-AUTOSAVE-PCT",
+      "n_offered": 3,
+      "n_accepted": 1,
+      "n_paid_on_time_after": 1,
+      "avg_turns": 2.67,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 0.3333,
+      "success_rate": 0.4
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "ALREADY_PAID",
+      "channel": "CALL",
+      "alt_id": "ALT-GRACE-DAYS",
+      "n_offered": 3,
+      "n_accepted": 1,
+      "n_paid_on_time_after": 1,
+      "avg_turns": 3.67,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 0.3333,
+      "success_rate": 0.4
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "DISPUTE",
+      "channel": "CALL",
+      "alt_id": "ALT-GRACE-DAYS",
+      "n_offered": 3,
+      "n_accepted": 1,
+      "n_paid_on_time_after": 1,
+      "avg_turns": 5.0,
+      "pct_tense_or_hostile": 0.6667,
+      "acceptance_rate": 0.3333,
+      "success_rate": 0.4
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "LIQUIDITY",
+      "channel": "CALL",
+      "alt_id": "ALT-GRACE-DAYS",
+      "n_offered": 3,
+      "n_accepted": 1,
+      "n_paid_on_time_after": 1,
+      "avg_turns": 5.33,
+      "pct_tense_or_hostile": 0.3333,
+      "acceptance_rate": 0.3333,
+      "success_rate": 0.4
+    }
+  ],
+  "sample_scored_customers": [
+    {
+      "customer_id": "C02091",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 28,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.4828,
+        "risk_level": "MEDIUM",
+        "anomaly_score": 0.742,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.31
+      },
+      "situation": {
+        "situation_hint": "S0",
+        "low_digital_response": false,
+        "top_factors": [],
+        "flags": []
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0066,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "NONE"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.3
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": null,
+        "nba_reason": "No se cumplen las condiciones para intervenir.",
+        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
+      },
+      "policy_context": {
+        "balance_ratio": 1.5692238826139446,
+        "income_due_gap": -15.0,
+        "projected_coverage": 4.413570896716142,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-NONE"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.204539+00:00"
+      }
+    },
+    {
+      "customer_id": "C00620",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 3,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.5335,
+        "risk_level": "MEDIUM",
+        "anomaly_score": 0.8111,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.3484
+      },
+      "situation": {
+        "situation_hint": "S0",
+        "low_digital_response": false,
+        "top_factors": [
+          "spending_velocity_7d"
+        ],
+        "flags": [
+          "contact_history_insufficient"
+        ]
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0121,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "CALL"
+      },
+      "timing": {
+        "best_hour_window": "18:00-19:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.1
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": "2026-09-12T18:00",
+        "nba_reason": "Se observa que el ritmo de gasto de la última semana se aceleró.",
+        "block_reason": "S0"
+      },
+      "policy_context": {
+        "balance_ratio": 2.408534909838625,
+        "income_due_gap": 1.0,
+        "projected_coverage": 2.408534909838625,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-NONE"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.265437+00:00"
+      }
+    },
+    {
+      "customer_id": "C00472",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 16,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.5234,
+        "risk_level": "MEDIUM",
+        "anomaly_score": 0.8286,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.3199
+      },
+      "situation": {
+        "situation_hint": "S0",
+        "low_digital_response": true,
+        "top_factors": [
+          "min_balance_ratio_30d",
+          "balance_ratio"
+        ],
+        "flags": []
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0121,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "NONE"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.3
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": null,
+        "nba_reason": "No se cumplen las condiciones para intervenir.",
+        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
+      },
+      "policy_context": {
+        "balance_ratio": 5.847189009288819,
+        "income_due_gap": -1.0,
+        "projected_coverage": 10.0,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-NONE"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.315544+00:00"
+      }
+    },
+    {
+      "customer_id": "C02767",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 8,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.7004,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.8115,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.6263
+      },
+      "situation": {
+        "situation_hint": "S0",
+        "low_digital_response": false,
+        "top_factors": [
+          "balance_vs_historical",
+          "income_variation"
+        ],
+        "flags": [
+          "contact_history_insufficient"
+        ]
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0121,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "CALL"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.1
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": "2026-09-15T12:00",
+        "nba_reason": "Se observa que el saldo está muy por debajo de su propio histórico; y el ingreso reciente se desvía de su promedio histórico.",
+        "block_reason": "S0"
+      },
+      "policy_context": {
+        "balance_ratio": 0.9037346084627752,
+        "income_due_gap": -15.0,
+        "projected_coverage": 4.452937528712423,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-NONE"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.376480+00:00"
+      }
+    },
+    {
+      "customer_id": "C01614",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 3,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.7101,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.7848,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.6603
+      },
+      "situation": {
+        "situation_hint": "S0",
+        "low_digital_response": false,
+        "top_factors": [
+          "recent_balance_drop"
+        ],
+        "flags": [
+          "contact_history_insufficient"
+        ]
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0121,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "CALL"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.1
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": "2026-09-12T12:00",
+        "nba_reason": "Se observa que el saldo cayó rápido en las últimas dos semanas.",
+        "block_reason": "S0"
+      },
+      "policy_context": {
+        "balance_ratio": 1.1873542047411794,
+        "income_due_gap": 10.0,
+        "projected_coverage": 1.1873542047411794,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-NONE"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.435287+00:00"
+      }
+    },
+    {
+      "customer_id": "C00178",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 8,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.5958,
+        "risk_level": "MEDIUM",
+        "anomaly_score": 0.7329,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.5045
+      },
+      "situation": {
+        "situation_hint": "S1",
+        "low_digital_response": true,
+        "top_factors": [
+          "last_payment_delay_deviation"
+        ],
+        "flags": []
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0121,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "CALL"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.3
+      },
+      "nba": {
+        "should_contact": true,
+        "recommended_action": "CHANNEL_SWITCH",
+        "scheduled_for": "2026-09-15T12:00",
+        "nba_reason": "Se observa que el último pago se retrasó más de lo habitual para este cliente.",
+        "block_reason": null
+      },
+      "policy_context": {
+        "balance_ratio": 1.4540206174729744,
+        "income_due_gap": 2.0,
+        "projected_coverage": 1.4540206174729744,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-REMINDER-PAYLINK",
+          "ALT-GRACE-DAYS",
+          "ALT-AUTOSAVE-PCT"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.496399+00:00"
+      }
+    },
+    {
+      "customer_id": "C00692",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 8,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.89,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.9904,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.823
+      },
+      "situation": {
+        "situation_hint": "S1",
+        "low_digital_response": false,
+        "top_factors": [
+          "failed_payment_attempts_30d",
+          "failed_attempts_deviation",
+          "spending_velocity_7d"
+        ],
+        "flags": [
+          "contact_history_insufficient"
+        ]
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0121,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "CALL"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.1
+      },
+      "nba": {
+        "should_contact": true,
+        "recommended_action": "SIMPLE_REMINDER",
+        "scheduled_for": "2026-09-15T12:00",
+        "nba_reason": "Se observa que hubo intentos de cobro fallidos este mes; y los intentos fallidos están por encima de su propia norma; y el ritmo de gasto de la última semana se aceleró.",
+        "block_reason": null
+      },
+      "policy_context": {
+        "balance_ratio": 1.1993971653560966,
+        "income_due_gap": -4.0,
+        "projected_coverage": 4.519788362535813,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-REMINDER-PAYLINK",
+          "ALT-CHANNEL-SUPPORT",
+          "ALT-AUTOSAVE-PCT"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.557597+00:00"
+      }
+    },
+    {
+      "customer_id": "C02193",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 16,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.6516,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.7628,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.5774
+      },
+      "situation": {
+        "situation_hint": "S1",
+        "low_digital_response": false,
+        "top_factors": [
+          "balance_ratio"
+        ],
+        "flags": []
+      },
+      "channel": {
+        "channel_pref_model": "SMS",
+        "channel_pref_confidence": 0.6667,
+        "channel_source": "MODEL_LEVEL1",
+        "channel_used": "NONE"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 4,
+        "timing_confidence": 0.3
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": null,
+        "nba_reason": "No se cumplen las condiciones para intervenir.",
+        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
+      },
+      "policy_context": {
+        "balance_ratio": 4.31532072359576,
+        "income_due_gap": -15.0,
+        "projected_coverage": 10.0,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-REMINDER-PAYLINK",
+          "ALT-AUTOSAVE-PCT"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.602105+00:00"
+      }
+    },
+    {
+      "customer_id": "C01438",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 3,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.8089,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.8338,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.7922
+      },
+      "situation": {
+        "situation_hint": "S1",
+        "low_digital_response": false,
+        "top_factors": [
+          "failed_payment_attempts_30d",
+          "failed_attempts_deviation",
+          "last_payment_delay_deviation"
+        ],
+        "flags": [
+          "contact_history_insufficient"
+        ]
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0121,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "CALL"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.1
+      },
+      "nba": {
+        "should_contact": true,
+        "recommended_action": "SIMPLE_REMINDER",
+        "scheduled_for": "2026-09-12T12:00",
+        "nba_reason": "Se observa que hubo intentos de cobro fallidos este mes; y los intentos fallidos están por encima de su propia norma; y el último pago se retrasó más de lo habitual para este cliente.",
+        "block_reason": null
+      },
+      "policy_context": {
+        "balance_ratio": 1.7093603577729168,
+        "income_due_gap": 13.0,
+        "projected_coverage": 1.7093603577729168,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-REMINDER-PAYLINK",
+          "ALT-AUTOSAVE-PCT"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.662565+00:00"
+      }
+    },
+    {
+      "customer_id": "C01168",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 13,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.7061,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.8342,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.6207
+      },
+      "situation": {
+        "situation_hint": "S1",
+        "low_digital_response": false,
+        "top_factors": [
+          "last_payment_delay_deviation",
+          "balance_vs_historical"
+        ],
+        "flags": []
+      },
+      "channel": {
+        "channel_pref_model": "WHATSAPP",
+        "channel_pref_confidence": 0.5,
+        "channel_source": "MODEL_LEVEL1",
+        "channel_used": "NONE"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.4
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": null,
+        "nba_reason": "No se cumplen las condiciones para intervenir.",
+        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
+      },
+      "policy_context": {
+        "balance_ratio": 2.518064254286081,
+        "income_due_gap": -14.0,
+        "projected_coverage": 10.0,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-REMINDER-PAYLINK",
+          "ALT-GRACE-DAYS",
+          "ALT-AUTOSAVE-PCT"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.707320+00:00"
+      }
+    },
+    {
+      "customer_id": "C01675",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 3,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.8862,
+        "risk_level": "HIGH",
+        "anomaly_score": 1.0,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.8104
+      },
+      "situation": {
+        "situation_hint": "S3",
+        "low_digital_response": false,
+        "top_factors": [],
+        "flags": []
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.3333,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "CALL"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 7,
+        "timing_confidence": 0.6
+      },
+      "nba": {
+        "should_contact": true,
+        "recommended_action": "EMPATHETIC_CONVERSATION",
+        "scheduled_for": "2026-09-12T12:00",
+        "nba_reason": "Señal de riesgo sin un factor dominante claro.",
+        "block_reason": null
+      },
+      "policy_context": {
+        "balance_ratio": 0.4360769441009282,
+        "income_due_gap": 2.0,
+        "projected_coverage": 0.4360769441009282,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-PARTIAL",
+          "ALT-AUTOSAVE-PCT"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.757867+00:00"
+      }
+    },
+    {
+      "customer_id": "C00045",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 28,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.8276,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.9305,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.759
+      },
+      "situation": {
+        "situation_hint": "S3",
+        "low_digital_response": false,
+        "top_factors": [
+          "spending_velocity_7d"
+        ],
+        "flags": [
+          "income_date_unknown"
+        ]
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.012,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "NONE"
+      },
+      "timing": {
+        "best_hour_window": "18:00-19:30",
+        "best_days_before_due": 7,
+        "timing_confidence": 0.5
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": null,
+        "nba_reason": "No se cumplen las condiciones para intervenir.",
+        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
+      },
+      "policy_context": {
+        "balance_ratio": 0.9141479411579384,
+        "income_due_gap": -15.0,
+        "projected_coverage": 0.9141479411579384,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-PARTIAL",
+          "ALT-AUTOSAVE-PCT"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.811308+00:00"
+      }
+    },
+    {
+      "customer_id": "C01021",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 3,
+      "gates": {
+        "current_cycle_paid": true,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.8875,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.963,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.8371
+      },
+      "situation": {
+        "situation_hint": "S3",
+        "low_digital_response": true,
+        "top_factors": [
+          "balance_vs_historical",
+          "last_payment_delay_deviation",
+          "expense_variation_30d"
+        ],
+        "flags": []
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0121,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "NONE"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.3
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": null,
+        "nba_reason": "No se cumplen las condiciones para intervenir.",
+        "block_reason": "CURRENT_CYCLE_PAID"
+      },
+      "policy_context": {
+        "balance_ratio": 0.6671399331643366,
+        "income_due_gap": -3.0,
+        "projected_coverage": 3.343257924494986,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-PARTIAL",
+          "ALT-AUTOSAVE-PCT"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.861182+00:00"
+      }
+    },
+    {
+      "customer_id": "C01739",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 13,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.8364,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.939,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.768
+      },
+      "situation": {
+        "situation_hint": "S3",
+        "low_digital_response": false,
+        "top_factors": [
+          "last_payment_delay_deviation",
+          "failed_payment_attempts_30d",
+          "income_variation"
+        ],
+        "flags": []
+      },
+      "channel": {
+        "channel_pref_model": "APP_PUSH",
+        "channel_pref_confidence": 0.6667,
+        "channel_source": "MODEL_LEVEL1",
+        "channel_used": "NONE"
+      },
+      "timing": {
+        "best_hour_window": "18:00-19:30",
+        "best_days_before_due": 4,
+        "timing_confidence": 0.4
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": null,
+        "nba_reason": "No se cumplen las condiciones para intervenir.",
+        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
+      },
+      "policy_context": {
+        "balance_ratio": 0.9001762940472617,
+        "income_due_gap": -15.0,
+        "projected_coverage": 4.310166051867433,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-PARTIAL",
+          "ALT-AUTOSAVE-PCT"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.906345+00:00"
+      }
+    },
+    {
+      "customer_id": "C00772",
+      "snapshot_date": "2026-09-12",
+      "days_to_due": 28,
+      "gates": {
+        "current_cycle_paid": false,
+        "opt_out_flag": false
+      },
+      "risk": {
+        "risk_score": 0.6971,
+        "risk_level": "HIGH",
+        "anomaly_score": 0.9289,
+        "anomaly_flag": true,
+        "risk_prob_lr": 0.5425
+      },
+      "situation": {
+        "situation_hint": "S3",
+        "low_digital_response": false,
+        "top_factors": [
+          "balance_vs_historical",
+          "min_balance_ratio_30d",
+          "income_variation"
+        ],
+        "flags": [
+          "contact_history_insufficient"
+        ]
+      },
+      "channel": {
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0121,
+        "channel_source": "FALLBACK_CALL",
+        "channel_used": "NONE"
+      },
+      "timing": {
+        "best_hour_window": "12:00-13:30",
+        "best_days_before_due": 5,
+        "timing_confidence": 0.1
+      },
+      "nba": {
+        "should_contact": false,
+        "recommended_action": "NO_CONTACT",
+        "scheduled_for": null,
+        "nba_reason": "No se cumplen las condiciones para intervenir.",
+        "block_reason": "OUTSIDE_INTERVENTION_WINDOW"
+      },
+      "policy_context": {
+        "balance_ratio": 0.4896101391080877,
+        "income_due_gap": -15.0,
+        "projected_coverage": 3.5947789423534635,
+        "remaining_installments_assumed": 12,
+        "eligible_alternatives_hint": [
+          "ALT-PARTIAL",
+          "ALT-AUTOSAVE-PCT"
+        ]
+      },
+      "meta": {
+        "model_version": "if_v1_lr_v1_ch_v1",
+        "scored_at": "2026-09-13T00:22:02.957109+00:00"
+      }
+    }
+  ]
+}

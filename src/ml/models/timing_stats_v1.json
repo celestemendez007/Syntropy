@@ -1,0 +1,28 @@
+{
+  "pop_hour_window": {
+    "SALARIED": "12:00-13:30",
+    "BIWEEKLY": "12:00-13:30",
+    "INDEPENDENT": "18:00-19:30",
+    "UNKNOWN": "12:00-13:30"
+  },
+  "pop_days_before_due": 5,
+  "hour_bin_width_h": 1.5,
+  "days_buckets": [
+    [
+      1,
+      2
+    ],
+    [
+      3,
+      5
+    ],
+    [
+      6,
+      8
+    ],
+    [
+      9,
+      15
+    ]
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "channel_model_auc": 0.5256,
+  "channel_model_fit_time_s": 0.004,
+  "channel_model_n_train": 7923,
+  "channel_model_n_test": 1981,
+  "channel_model_size_kb": 2.7,
+  "channel_source_distribution": {
+    "FALLBACK_CALL": 0.84,
+    "MODEL_LEVEL1": 0.16
+  },
+  "channel_latency_p50_ms": 7.084,
+  "channel_latency_p95_ms": 8.41,
+  "timing_latency_p50_ms": 3.2,
+  "timing_latency_p95_ms": 4.581,
+  "golden_g09_low_digital_response_channel": {
+    "channel": "APP_PUSH",
+    "confidence": 0.0121
+  }
+}
