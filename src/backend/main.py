@@ -6,6 +6,7 @@ import groq
 from dotenv import load_dotenv
 import pandas as pd
 import json
+from datetime import datetime
 
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "src", "backend"))
@@ -17,6 +18,45 @@ from conversation_engine import build_system_prompt, check_hallucination
 load_dotenv()
 
 app = FastAPI(title="Syntropy Simulator API")
+
+LIVE_CALLS_FILE = os.path.join(os.path.dirname(__file__), "..", "..", "data", "synthetic", "live_calls_log.json")
+
+def save_live_conversation(customer_id: str, history: list, reply: str, phase: str, emotion: str):
+    calls = []
+    if os.path.exists(LIVE_CALLS_FILE):
+        try:
+            with open(LIVE_CALLS_FILE, "r", encoding="utf-8") as f:
+                calls = json.load(f)
+        except Exception:
+            pass
+            
+    hist_list = [{"role": m.role, "content": m.content} for m in history]
+    hist_list.append({"role": "assistant", "content": reply})
+    
+    if calls and calls[-1]["customer_id"] == customer_id:
+        calls[-1]["history"] = hist_list
+        calls[-1]["phase"] = phase
+        calls[-1]["emotion"] = emotion
+        calls[-1]["timestamp"] = datetime.now().isoformat()
+    else:
+        calls.append({
+            "customer_id": customer_id,
+            "history": hist_list,
+            "phase": phase,
+            "emotion": emotion,
+            "timestamp": datetime.now().isoformat()
+        })
+        
+    os.makedirs(os.path.dirname(LIVE_CALLS_FILE), exist_ok=True)
+    with open(LIVE_CALLS_FILE, "w", encoding="utf-8") as f:
+        json.dump(calls, f, ensure_ascii=False, indent=2)
+
+@app.get("/api/admin/live_calls")
+def get_live_calls():
+    if os.path.exists(LIVE_CALLS_FILE):
+        with open(LIVE_CALLS_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
 
 app.add_middleware(
     CORSMiddleware,
@@ -115,21 +155,22 @@ def chat(req: ChatRequest):
     # 2. Build the strict guardrail prompt
     system_prompt = build_system_prompt(score, alts)
     
+    # --- Global Intent/Emotion helpers ---
+    last_msg = req.history[-1].content.lower().strip() if req.history else ""
+    def has(words): return any(w in last_msg for w in words)
+    is_yes       = has(["si", "sí", "claro", "ok", "bueno", "dale", "correcto", "perfecto", "adelante", "diga", "aha", "aham"])
+    is_angry     = has(["molest", "enfad", "indign", "grosería", "irresponsable", "siempre hacen", "pésimo", "pesimo", "mal servicio"])
+    is_problem   = has(["malo", "mal", "problema", "error", "falla", "no tengo", "no me alcanza", "quedé corto", "falta", "aprieto", "difícil", "dificil", "complicado", "no cuento"])
+    is_confused  = has(["quien", "quién", "de donde", "qué banco", "cuál banco", "no entiendo", "que pasa", "cómo", "como así"])
+    is_agreement = has(["de acuerdo", "acepto", "está bien", "listo", "perfecto", "va", "hecho", "venga"])
+    
+    current_emotion = "NEUTRAL"
+    if is_angry: current_emotion = "HOSTILE"
+    elif is_problem: current_emotion = "TENSE"
+    elif is_confused: current_emotion = "CONFUSED"
+    elif is_yes or is_agreement: current_emotion = "COOPERATIVE"
+
     if not groq_api_key:
-        # --- Motor Conversacional Mock (Multi-Fase), SIN API key de Groq ---
-        #
-        # Antes esto avanzaba contando turnos (n == 1, n == 2...) y saludaba a
-        # "Carlos" siempre, sin importar quién fuera el cliente real -- por eso
-        # se sentía robótico y "perdía el hilo" en cuanto el cliente decía algo
-        # fuera del guion esperado para ese número de turno exacto.
-        #
-        # Ahora la fase se determina leyendo la ÚLTIMA RESPUESTA DEL ASISTENTE
-        # en el historial (no un contador ciego), así que si el cliente contesta
-        # "fuera de orden" la conversación sigue desde donde de verdad se quedó,
-        # no desde donde el contador de turnos asumía que debía estar. Y el
-        # nombre/monto/producto/días son los REALES del cliente (`score`), nunca
-        # inventados -- así nunca chocan con el guardrail `check_hallucination`.
-        last_msg = req.history[-1].content.lower().strip() if req.history else ""
         last_bot_msg = next((m.content for m in reversed(req.history) if m.role == "assistant"), "")
 
         policy_context = score.get("policy_context", {})
@@ -140,15 +181,8 @@ def chat(req: ChatRequest):
         amount_display = f"${amount:.2f}" if amount is not None else "su cuota"
         days_display = str(days_left) if days_left is not None else "pocos"
 
-        # --- Intent helpers (sobre el ÚLTIMO mensaje del cliente) ---
-        def has(words): return any(w in last_msg for w in words)
-        is_yes       = has(["si", "sí", "claro", "ok", "bueno", "dale", "correcto", "perfecto", "adelante", "diga", "aha", "aham"])
         is_no_time   = has(["ocupad", "luego", "despues", "después", "ahorita no", "no puedo hablar", "no tengo tiempo"])
-        is_confused  = has(["quien", "quién", "de donde", "qué banco", "cuál banco", "no entiendo", "que pasa", "cómo", "como así"])
         is_paid      = has(["ya pagué", "ya pague", "ya lo hice", "ya realicé", "ya transferí"])
-        is_problem   = has(["malo", "mal", "problema", "error", "falla", "no tengo", "no me alcanza", "quedé corto", "falta", "aprieto", "difícil", "dificil", "complicado", "no cuento"])
-        is_angry     = has(["molest", "enfad", "indign", "grosería", "irresponsable", "siempre hacen", "pésimo", "pesimo", "mal servicio"])
-        is_agreement = has(["de acuerdo", "acepto", "está bien", "listo", "perfecto", "va", "hecho", "venga"])
         is_question  = has(["cuánto", "cuanto", "cuando", "cuándo", "cómo", "donde", "por qué", "qué es", "que es"])
         is_reject    = has(["no", "no quiero", "no me sirve", "no puedo con eso", "otra opción", "otra opcion"]) and not is_yes
 
@@ -253,6 +287,7 @@ def chat(req: ChatRequest):
             reply = f"Cuénteme un poco más, {name}, para poder orientarle de la mejor manera posible."
 
         hallucination_check = check_hallucination(reply, alts)
+        save_live_conversation(req.customer_id, req.history, reply, phase, current_emotion)
         return {
             "reply": reply,
             "hallucination_flagged": hallucination_check["llm_hallucination_flag"],
@@ -279,6 +314,7 @@ def chat(req: ChatRequest):
 
     # 4. Run the guardrails on the LLM's response before sending it back
     hallucination_check = check_hallucination(reply, alts)
+    save_live_conversation(req.customer_id, req.history, reply, "LLM_GENERATED", current_emotion)
 
     return {
         "reply": reply,
