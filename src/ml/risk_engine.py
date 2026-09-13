@@ -1,20 +1,21 @@
 """
-risk_engine.py — Motor de riesgo real (Fase 1-2 de research/ba_a_tiempo).
+risk_engine.py — Motor de riesgo real (Fase 1-3 de research/ba_a_tiempo).
 
 Reemplaza el mock anterior (4 clientes hardcodeados). Implementa:
   - anomaly_score real: Isolation Forest entrenado sobre 3,000 clientes sintéticos
     (ver research/ba_a_tiempo/outputs/anomaly_benchmark_report.md para la comparación
     contra Local Outlier Factor, One-Class SVM y z-score de Mahalanobis).
+  - risk_prob_lr real: Logistic Regression entrenada sobre la etiqueta sintética
+    `synthetic_late_payment_next_cycle` (ver research/ba_a_tiempo/outputs/risk_benchmark_report.md
+    para la comparación contra Random Forest y LightGBM -- LR gana en AUC, calibración,
+    tamaño y latencia, además de ser el único con explicabilidad de fórmula exacta).
+  - risk_score = 0.6*risk_prob_lr + 0.4*anomaly_score (SUPUESTO DE DEMO, pesos fijos
+    en RISK_W_LR/RISK_W_IF, cortes de risk_level en RISK_CUTS). Ya no es un proxy de
+    anomaly_score solamente.
   - situation_hint real: reglas deterministas (no ML) sobre las features derivadas,
     S0-S4 según docs/contracts.md v2.
-  - top_factors real: ablación por feature (reemplazar por la mediana y medir el
-    cambio en el score de IF).
-
-PENDIENTE (Fase 3, no implementada aún):
-  - risk_score / risk_level combinando IF + un modelo supervisado (Logistic Regression /
-    LightGBM sobre la etiqueta sintética). Por ahora risk_level se deriva SOLO de
-    anomaly_score como proxy interino -- está marcado explícitamente abajo para que
-    nadie lo confunda con el diseño final. No se debe usar como score productivo.
+  - top_factors real: ablación por feature sobre el Isolation Forest (reemplazar por
+    la mediana y medir el cambio en el score).
 
 Requiere: pandas, scikit-learn, joblib, numpy (ver requirements del módulo ml).
 """
@@ -35,10 +36,23 @@ IF_FEATURES = [
 ]
 IF_LOG1P = {"balance_vs_historical", "balance_ratio", "min_balance_ratio_30d", "spending_velocity_7d"}
 
+LR_FEATURES = [
+    "balance_ratio", "projected_coverage", "balance_vs_historical", "income_variation",
+    "expense_variation_30d", "payment_punctuality", "partial_payments_n",
+    "failed_payment_attempts_30d", "income_due_gap_pos", "income_amount_cv", "external_debt_ratio_mock",
+]
+LR_LOG1P = {"balance_ratio", "projected_coverage", "balance_vs_historical"}
+
+RISK_W_LR, RISK_W_IF = 0.6, 0.4  # SUPUESTO DE DEMO (BA_A_Tiempo_Diseno_Dataset_v1.md §7)
+RISK_CUTS = (0.35, 0.65)
+
 _dataset_cache = None
 _model_cache = None
 _scaler_cache = None
 _golden_cache = None
+_risk_model_cache = None
+_risk_scaler_cache = None
+_if_feature_medians_cache = None
 
 
 def load_dataset() -> pd.DataFrame:
@@ -46,6 +60,17 @@ def load_dataset() -> pd.DataFrame:
     if _dataset_cache is None:
         _dataset_cache = pd.read_csv(_DATA_PATH)
     return _dataset_cache
+
+
+def _if_feature_medians() -> pd.Series:
+    """Medianas poblacionales de IF_FEATURES, cacheadas: `_top_factors` las usa
+    para la ablación en cada llamada, y recalcular `median()` sobre 3,000 filas
+    por feature en cada scoring individual es trabajo repetido innecesario
+    (el dataset no cambia entre llamadas)."""
+    global _if_feature_medians_cache
+    if _if_feature_medians_cache is None:
+        _if_feature_medians_cache = load_dataset()[IF_FEATURES].median()
+    return _if_feature_medians_cache
 
 
 def load_golden() -> pd.DataFrame:
@@ -79,11 +104,35 @@ def _load_model_and_scaler():
     return _model_cache, _scaler_cache
 
 
+def _load_risk_model_and_scaler():
+    global _risk_model_cache, _risk_scaler_cache
+    if _risk_model_cache is None:
+        _risk_model_cache = joblib.load(os.path.join(_MODELS_DIR, "risk_LogisticRegression.joblib"))
+        _risk_scaler_cache = joblib.load(os.path.join(_MODELS_DIR, "risk_scaler.joblib"))
+    return _risk_model_cache, _risk_scaler_cache
+
+
 def _prepare_features(row: pd.Series) -> pd.DataFrame:
     X = row[IF_FEATURES].to_frame().T.astype(float)
     for col in IF_LOG1P:
         X[col] = np.log1p(np.clip(X[col], 0, None))
     return X
+
+
+def _prepare_lr_features(row: pd.Series) -> pd.DataFrame:
+    X = row[LR_FEATURES].to_frame().T.astype(float)
+    for col in LR_LOG1P:
+        X[col] = np.log1p(np.clip(X[col], 0, None))
+    return X
+
+
+def _risk_prob_lr(row: pd.Series) -> float:
+    """Probabilidad de pago tardío/parcial en el siguiente ciclo, según la Logistic
+    Regression ganadora del benchmark de Fase 3 (ver risk_benchmark_report.md)."""
+    model, scaler = _load_risk_model_and_scaler()
+    X = _prepare_lr_features(row)
+    X_s = pd.DataFrame(scaler.transform(X), columns=X.columns)
+    return float(model.predict_proba(X_s)[0, 1])
 
 
 def _anomaly_score(row: pd.Series):
@@ -101,15 +150,32 @@ def _anomaly_score(row: pd.Series):
 def _top_factors(row: pd.Series, n: int = 3):
     """Ablación: reemplaza cada feature por la mediana poblacional y mide cuánto
     sube el anomaly_score al quitarla. Las que más lo suben son las que más
-    explican la anomalía de este cliente."""
-    dataset = load_dataset()
-    base_score, _ = _anomaly_score(row)
-    contributions = {}
+    explican la anomalía de este cliente.
+
+    Batcheado en una sola llamada a `score_samples` (base + 10 versiones
+    ablacionadas = 11 filas) en vez de 11 llamadas individuales: cada llamada a
+    IsolationForest.score_samples paga ~7ms de overhead fijo (validación +
+    recorrer 200 árboles) sin importar el tamaño del batch, así que 11 llamadas
+    de 1 fila cuestan ~11x más que 1 llamada de 11 filas. Esto fue el cuello de
+    botella real medido en el benchmark end-to-end de Fase 5
+    (score_customer_benchmark_report.md) -- no el I/O, como se sospechaba antes
+    de perfilar."""
+    model, scaler = _load_model_and_scaler()
+    medians = _if_feature_medians()
+
+    variants = [row]
     for feat in IF_FEATURES:
         modified = row.copy()
-        modified[feat] = dataset[feat].median()
-        score_without, _ = _anomaly_score(modified)
-        contributions[feat] = base_score - score_without  # cuánto aportaba esta feature
+        modified[feat] = medians[feat]
+        variants.append(modified)
+
+    X_all = pd.concat([_prepare_features(v) for v in variants], ignore_index=True)
+    X_all_s = pd.DataFrame(scaler.transform(X_all), columns=X_all.columns)
+    raw_scores = model.score_samples(X_all_s)
+    scores = np.clip((-raw_scores + 0.2) / 0.8, 0, 1)
+
+    base_score = scores[0]
+    contributions = {feat: base_score - scores[i + 1] for i, feat in enumerate(IF_FEATURES)}
     ranked = sorted(contributions.items(), key=lambda kv: kv[1], reverse=True)
     return [f for f, delta in ranked[:n] if delta > 0.02]
 
@@ -152,42 +218,42 @@ def get_risk_profile(customer_id: str) -> dict:
     """
     Perfil de riesgo real para un cliente. Reemplaza el mock anterior.
 
-    anomaly_score y situation_hint son reales (Isolation Forest + reglas).
-    risk_score/risk_level son un PROXY INTERINO basado solo en anomaly_score
-    hasta que la Fase 3 (Logistic Regression / LightGBM sobre etiqueta sintética)
-    esté integrada -- no representan el diseño final del riesgo combinado.
+    anomaly_score (Isolation Forest), risk_prob_lr (Logistic Regression) y
+    situation_hint (reglas) son reales. risk_score combina IF + LR con los pesos
+    SUPUESTO DE DEMO de RISK_W_LR/RISK_W_IF (ver BA_A_Tiempo_Diseno_Dataset_v1.md §7
+    y research/ba_a_tiempo/outputs/risk_benchmark_report.md para por qué se eligió LR).
     """
     dataset = load_dataset()
     row = _find_customer_row(customer_id)
     if row is None:
         return {
             "customer_id": customer_id, "risk_level": "MEDIUM", "risk_score": 0.5,
-            "anomaly_score": 0.5, "situation_hint": "S0", "low_digital_response": False,
+            "anomaly_score": 0.5, "risk_prob_lr": 0.5, "situation_hint": "S0", "low_digital_response": False,
             "top_factors": [], "_warning": "customer_id no encontrado en dataset ni golden, valores por defecto",
         }
 
     anomaly_score, _ = _anomaly_score(row)
+    risk_prob_lr = _risk_prob_lr(row)
     situation_hint, low_digital_response = _situation_hint(row)
     top_factors = _top_factors(row)
 
-    # --- PROXY INTERINO (ver docstring). Cortes iguales a docs/contracts.md (0.35/0.65). ---
-    risk_score_proxy = anomaly_score
-    if risk_score_proxy < 0.35:
+    risk_score = RISK_W_LR * risk_prob_lr + RISK_W_IF * anomaly_score
+    if risk_score < RISK_CUTS[0]:
         risk_level = "LOW"
-    elif risk_score_proxy < 0.65:
+    elif risk_score < RISK_CUTS[1]:
         risk_level = "MEDIUM"
     else:
         risk_level = "HIGH"
 
     return {
         "customer_id": customer_id,
-        "risk_score": round(risk_score_proxy, 4),
+        "risk_score": round(risk_score, 4),
         "risk_level": risk_level,
         "anomaly_score": round(anomaly_score, 4),
+        "risk_prob_lr": round(risk_prob_lr, 4),
         "situation_hint": situation_hint,
         "low_digital_response": low_digital_response,
         "top_factors": top_factors,
-        "_pending": "risk_score es proxy de anomaly_score; falta integrar LR/LightGBM (Fase 3)",
     }
 
 

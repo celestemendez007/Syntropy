@@ -1,0 +1,55 @@
+{
+  "_comment": "SUPUESTO DE DEMO: catálogo ficticio de alternativas autorizadas por Bancoagricola para la demo. Ver BA_A_Tiempo_Propuesta_v2.md §6. Elegibilidad y parámetros resueltos en policy_engine.py -- este archivo es la referencia narrativa (qué es cada alt_id y su demo asociada), no el motor de reglas.",
+  "_gap_note": "remaining_installments no existe en el generador sintético (research/ba_a_tiempo/ba_a_tiempo/generator.py) -- las condiciones que lo usan en el diseño original se simplifican y se documentan en policy_engine.py.",
+  "alternatives": [
+    {
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "label": "Recordatorio + enlace de pago directo",
+      "situations": ["S1"],
+      "demo": "Boton 'pagar ahora' en la app"
+    },
+    {
+      "alt_id": "ALT-DATE-SHIFT",
+      "label": "Mover la fecha de pago dentro de un rango",
+      "situations": ["S2"],
+      "demo": "Calendario con fechas permitidas resaltadas"
+    },
+    {
+      "alt_id": "ALT-GRACE-DAYS",
+      "label": "Dias de gracia sin recargo",
+      "situations": ["S1", "S2"],
+      "demo": "Calendario"
+    },
+    {
+      "alt_id": "ALT-PARTIAL",
+      "label": "Pago parcial + saldo diferido",
+      "situations": ["S3"],
+      "demo": "Slider de monto (minimo autorizado)"
+    },
+    {
+      "alt_id": "ALT-AUTOSAVE-PCT",
+      "label": "Ahorro gradual: apartar % de ingresos hacia la cuota",
+      "situations": ["S1", "S2", "S3"],
+      "demo": "Ahorro por porcentaje, con proyeccion"
+    },
+    {
+      "alt_id": "ALT-PAYMENT-PLAN",
+      "label": "Reestructuracion (solo humano)",
+      "situations": ["S3"],
+      "demo": "Escalamiento",
+      "human_only": true
+    },
+    {
+      "alt_id": "ALT-CHANNEL-SUPPORT",
+      "label": "Derivar a soporte tecnico",
+      "situations": ["S0", "S1", "S2", "S3"],
+      "demo": "Ticket de soporte"
+    },
+    {
+      "alt_id": "ALT-NONE",
+      "label": "No ofrecer nada",
+      "situations": ["S0"],
+      "demo": null
+    }
+  ]
+}

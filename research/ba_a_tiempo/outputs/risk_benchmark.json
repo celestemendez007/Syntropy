@@ -1,0 +1,35 @@
+{
+  "LogisticRegression": {
+    "auc": 0.7369,
+    "brier_score": 0.213,
+    "calibration_mae": 0.1575,
+    "fit_time_s": 0.004,
+    "latency_p50_ms": 0.369,
+    "latency_p95_ms": 0.641,
+    "model_size_kb": 1.4,
+    "positive_rate_train": 0.35,
+    "positive_rate_test": 0.345
+  },
+  "RandomForest": {
+    "auc": 0.7214,
+    "brier_score": 0.216,
+    "calibration_mae": 0.1444,
+    "fit_time_s": 0.302,
+    "latency_p50_ms": 26.068,
+    "latency_p95_ms": 28.224,
+    "model_size_kb": 2224.0,
+    "positive_rate_train": 0.35,
+    "positive_rate_test": 0.345
+  },
+  "LightGBM": {
+    "auc": 0.6681,
+    "brier_score": 0.2248,
+    "calibration_mae": 0.1009,
+    "fit_time_s": 2.169,
+    "latency_p50_ms": 0.791,
+    "latency_p95_ms": 1.126,
+    "model_size_kb": 623.9,
+    "positive_rate_train": 0.35,
+    "positive_rate_test": 0.345
+  }
+}

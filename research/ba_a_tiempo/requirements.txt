@@ -1,0 +1,7 @@
+pandas
+scikit-learn
+lightgbm
+joblib
+numpy
+tabulate
+pytest

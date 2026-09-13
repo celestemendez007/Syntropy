@@ -38,13 +38,15 @@ def test_unknown_customer_falls_back_gracefully():
     assert profile["risk_level"] == "MEDIUM"
 
 
-def test_risk_score_is_marked_as_pending():
-    """El proxy interino debe quedar explícito en el JSON para que nadie lo use
-    como si fuera el diseño final (Fase 3 -- LR/LightGBM -- aún no integrada)."""
+def test_risk_score_combines_lr_and_anomaly():
+    """Fase 3: risk_score ya no es un proxy de anomaly_score -- combina risk_prob_lr
+    (Logistic Regression) y anomaly_score (Isolation Forest) con pesos 0.6/0.4."""
     df = load_dataset()
     profile = get_risk_profile(df["customer_id"].iloc[0])
-    assert "_pending" in profile
-    assert profile["risk_score"] == profile["anomaly_score"]
+    assert "_pending" not in profile
+    assert 0 <= profile["risk_prob_lr"] <= 1
+    expected = round(0.6 * profile["risk_prob_lr"] + 0.4 * profile["anomaly_score"], 4)
+    assert profile["risk_score"] == expected
 
 
 def test_golden_g02_benign_anomaly_not_misclassified_as_liquidity_crisis():
