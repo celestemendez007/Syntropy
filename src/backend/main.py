@@ -99,6 +99,9 @@ def chat(req: ChatRequest):
     else:
         try:
             score = score_customer(req.customer_id)
+            if "error" in score:
+                raise HTTPException(status_code=404, detail=f"Cliente no encontrado: {req.customer_id}")
+            
             # get_eligible_alternatives espera (customer_id, risk_profile) -- risk_profile
             # necesita "situation_hint" (vive en score["situation"]), no en score["risk"].
             # La llamada anterior pasaba (score["risk"], score["profile"]), que no es ni
@@ -146,7 +149,7 @@ def chat(req: ChatRequest):
         is_problem   = has(["malo", "mal", "problema", "error", "falla", "no tengo", "no me alcanza", "quedé corto", "falta", "aprieto", "difícil", "dificil", "complicado", "no cuento"])
         is_angry     = has(["molest", "enfad", "indign", "grosería", "irresponsable", "siempre hacen", "pésimo", "pesimo", "mal servicio"])
         is_agreement = has(["de acuerdo", "acepto", "está bien", "listo", "perfecto", "va", "hecho", "venga"])
-        is_question  = has(["cuánto", "cuanto", "cuando", "cuándo", "cómo pago", "donde pago", "por qué", "porque me llaman"])
+        is_question  = has(["cuánto", "cuanto", "cuando", "cuándo", "cómo", "donde", "por qué", "qué es", "que es"])
         is_reject    = has(["no", "no quiero", "no me sirve", "no puedo con eso", "otra opción", "otra opcion"]) and not is_yes
 
         # --- Fase actual: se lee de la última respuesta del asistente, no de un contador ---
@@ -158,7 +161,7 @@ def chat(req: ChatRequest):
             phase = "INTRO"
         elif "a veces los imprevistos" in last_bot_msg or "déjeme registrar su queja" in last_bot_msg:
             phase = "LISTENING"
-        elif "tengo autorizado ofrecerle" in last_bot_msg:
+        elif "tengo autorizado ofrecerle" in last_bot_msg or "le explico" in last_bot_msg:
             phase = "OFFERING"
         elif "Para confirmar" in last_bot_msg:
             phase = "CONFIRMING"
@@ -169,10 +172,12 @@ def chat(req: ChatRequest):
             if not alts:
                 return "conectarle con un asesor para revisar su caso con más detalle"
             alt = alts[0]
-            parts = [f"**{alt['alt_id']}**"]
+            if alt['alt_id'] == "ALT-NONE":
+                return "mantener el acuerdo original y realizar el pago de su cuota normal"
+            parts = [f"la opción {alt['alt_id']}"]
             for key in ("date", "min_amount", "min_percentage", "percentage", "grace_days"):
                 if alt.get(key) is not None:
-                    parts.append(f"{key}={alt[key]}")
+                    parts.append(f"con {key} {alt[key]}")
             return " ".join(parts)
 
         # --- Máquina de estados: (fase_anterior, intención del cliente) -> respuesta ---
@@ -220,6 +225,10 @@ def chat(req: ChatRequest):
         elif phase == "OFFERING" and is_reject:
             reply = ("Entiendo. Si ninguna de estas opciones le funciona, lo mejor es que hable directo con "
                      "un asesor humano para revisar su caso con más detalle -- ¿le parece si lo conecto?")
+
+        elif phase == "OFFERING" and is_question:
+            reply = (f"Claro, le explico. La idea de {offer_text()} es darle flexibilidad para que su récord "
+                     f"siga impecable. ¿Le gustaría que dejemos registrada esta opción en el sistema?")
 
         elif phase == "OFFERING" and has(["app", "ventanilla", "corresponsal", "banca en línea", "banca en linea"]):
             # El cliente ya adelantó el canal de pago en el mismo mensaje que acepta --
