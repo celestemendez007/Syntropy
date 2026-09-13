@@ -173,3 +173,29 @@
   border-top: 1px solid var(--gridline);
   padding-top: 16px;
 }
+
+/* Simulator Styles */
+.top-nav { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid #333; padding-bottom: 1rem; }
+.top-nav button { background: none; border: none; color: #888; font-size: 1.2rem; cursor: pointer; }
+.top-nav button.active { color: white; border-bottom: 2px solid #646cff; }
+
+.simulator-container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; height: 80vh; }
+.sim-controls { display: flex; gap: 1rem; margin-bottom: 1rem; }
+.chat-window { flex: 1; background: #1a1a1a; border-radius: 8px; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; border: 1px solid #333; }
+.chat-bubble-container { display: flex; flex-direction: column; max-width: 80%; }
+.chat-bubble-container.user { align-self: flex-end; }
+.chat-bubble-container.assistant { align-self: flex-start; }
+.chat-bubble { padding: 10px 15px; border-radius: 12px; font-size: 1rem; }
+.chat-bubble.user { background-color: #0b93f6; color: white; border-bottom-right-radius: 2px; }
+.chat-bubble.assistant { background-color: #333; color: white; border-bottom-left-radius: 2px; }
+
+.chat-input-area { display: flex; gap: 0.5rem; margin-top: 1rem; }
+.chat-input-area input { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; }
+.mic-btn { background: #333; border: 1px solid #555; border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
+.mic-btn.listening { background: #d93025; animation: pulse 1.5s infinite; }
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(217, 48, 37, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(217, 48, 37, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(217, 48, 37, 0); }
+}
+.hallucination-warning { font-size: 0.8rem; color: #ff6b6b; margin-top: 4px; }
