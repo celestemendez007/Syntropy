@@ -33,36 +33,44 @@ export default function LiveAdminDashboard() {
   }
 
   return (
-    <div className="admin-tab">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-        <h2>Monitor de Interacciones en Vivo</h2>
-        <button onClick={fetchCalls} className="btn">Actualizar Ahora</button>
+    <div>
+      <div style={{ backgroundColor: 'var(--ba-navy)', color: '#fff', padding: '15px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '32px', height: '32px', backgroundColor: 'var(--ba-yellow)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--ba-navy)', fontWeight: 'bold' }}>BA</div>
+          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '600' }}>Monitor en Vivo (Admin)</h2>
+        </div>
+        <button onClick={fetchCalls} style={{ backgroundColor: 'var(--ba-yellow)', color: 'var(--ba-navy)', border: 'none', padding: '8px 15px', borderRadius: 'var(--ba-radius-sm)', fontWeight: 'bold', cursor: 'pointer' }}>Actualizar</button>
       </div>
 
-      <div className="table-scroll">
-        <table className="mini-table">
-          <thead>
-            <tr>
-              <th>ID Usuario</th>
-              <th>Última Fase</th>
-              <th>Emoción</th>
-              <th>Hora de Actualización</th>
-              <th>Acción</th>
-            </tr>
-          </thead>
-          <tbody>
-            {calls.length === 0 ? (
-              <tr><td colSpan="5">No hay interacciones en vivo registradas aún. Inicia un chat en el simulador.</td></tr>
-            ) : (
-              calls.map((call, idx) => (
-                <React.Fragment key={idx}>
-                  <tr>
-                    <td><strong>{call.customer_id}</strong></td>
-                    <td><span className={`badge ${STATUS_COLOR[call.phase] || 'neutral'}`}>{call.phase}</span></td>
-                    <td><span className={`badge ${STATUS_COLOR[call.emotion] || 'neutral'}`}>{call.emotion}</span></td>
-                    <td>{new Date(call.timestamp).toLocaleString()}</td>
-                    <td>
-                      <button onClick={() => setExpandedRow(expandedRow === idx ? null : idx)}>
+      <div style={{ padding: '20px' }}>
+        <div style={{ backgroundColor: 'var(--ba-card-bg)', borderRadius: 'var(--ba-radius-sm)', padding: '20px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+          <div className="table-scroll">
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid var(--ba-border)' }}>
+                  <th style={{ padding: '12px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>ID Usuario</th>
+                  <th style={{ padding: '12px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>Última Fase</th>
+                  <th style={{ padding: '12px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>Emoción</th>
+                  <th style={{ padding: '12px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>Hora</th>
+                  <th style={{ padding: '12px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.85rem', textTransform: 'uppercase' }}>Acción</th>
+                </tr>
+              </thead>
+              <tbody>
+                {calls.length === 0 ? (
+                  <tr><td colSpan="5" style={{ padding: '20px', textAlign: 'center', color: 'var(--ba-text-muted)' }}>No hay interacciones registradas aún.</td></tr>
+                ) : (
+                  calls.map((call, idx) => (
+                    <React.Fragment key={idx}>
+                      <tr style={{ borderBottom: '1px solid var(--ba-border-subtle)' }}>
+                        <td style={{ padding: '15px 8px', color: 'var(--ba-navy)', fontWeight: '600' }}>{call.customer_id}</td>
+                    <td style={{ padding: '15px 8px' }}><span className={`badge ${STATUS_COLOR[call.phase] || 'neutral'}`}>{call.phase}</span></td>
+                    <td style={{ padding: '15px 8px' }}><span className={`badge ${STATUS_COLOR[call.emotion] || 'neutral'}`}>{call.emotion}</span></td>
+                    <td style={{ padding: '15px 8px', color: 'var(--ba-text-secondary)', fontSize: '0.9rem' }}>{new Date(call.timestamp).toLocaleString()}</td>
+                    <td style={{ padding: '15px 8px' }}>
+                      <button 
+                        onClick={() => setExpandedRow(expandedRow === idx ? null : idx)}
+                        style={{ backgroundColor: 'transparent', border: '1px solid var(--ba-border)', color: 'var(--ba-navy)', padding: '5px 10px', borderRadius: 'var(--ba-radius-sm)', cursor: 'pointer', fontWeight: 'bold' }}
+                      >
                         {expandedRow === idx ? 'Ocultar' : 'Ver Historial'}
                       </button>
                     </td>
@@ -70,9 +78,9 @@ export default function LiveAdminDashboard() {
                   {expandedRow === idx && (
                     <tr>
                       <td colSpan="5">
-                        <div style={{ backgroundColor: '#2d333b', padding: '15px', borderRadius: '5px', textAlign: 'left', fontSize: '13px' }}>
+                        <div style={{ backgroundColor: 'var(--ba-bg)', padding: '20px', borderRadius: 'var(--ba-radius-sm)', textAlign: 'left', fontSize: '14px', border: '1px solid var(--ba-border)' }}>
                           {call.history.map((msg, i) => (
-                            <div key={i} style={{ marginBottom: '10px', color: msg.role === 'assistant' ? '#58a6ff' : '#fff' }}>
+                            <div key={i} style={{ marginBottom: '12px', color: msg.role === 'assistant' ? 'var(--ba-navy)' : 'var(--ba-text-primary)' }}>
                               <strong>{msg.role === 'assistant' ? 'IA / Agente:' : 'Cliente:'}</strong> {msg.content}
                             </div>
                           ))}
@@ -85,6 +93,8 @@ export default function LiveAdminDashboard() {
             )}
           </tbody>
         </table>
+      </div>
+      </div>
       </div>
     </div>
   );
