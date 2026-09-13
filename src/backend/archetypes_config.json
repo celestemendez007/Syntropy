@@ -1,0 +1,216 @@
+[
+  {
+    "id": "A1",
+    "name": "Arquetipo 1 — Cliente estable y ordenado",
+    "match": {
+      "situations": ["S0"],
+      "digital_capabilities": ["D1", "D2"]
+    },
+    "description": "Cliente que normalmente paga bien, tiene buen patrón y no presenta señales relevantes.",
+    "ai_can_do": [
+      "recordar fecha de pago",
+      "mostrar monto y vencimiento",
+      "ofrecer acceso rápido al detalle del crédito",
+      "sugerir activar recordatorios o revisar la programación de pago"
+    ],
+    "useful_alternatives": [
+      "ver próxima cuota",
+      "confirmar si el pago ya está programado",
+      "activar notificación",
+      "consultar historial de pagos"
+    ],
+    "escalation_rules": [
+      "No insistir si el cliente no presenta riesgo",
+      "No ofrecer productos innecesarios",
+      "No escalar"
+    ]
+  },
+  {
+    "id": "A2",
+    "name": "Arquetipo 2 — Cliente que olvidó o tuvo una fricción leve",
+    "match": {
+      "situations": ["S1"],
+      "digital_capabilities": ["D1", "D2", "D3"]
+    },
+    "description": "Sí puede pagar, pero olvidó la fecha, no revisó la app o tuvo una fricción leve.",
+    "ai_can_do": [
+      "enviar recordatorio amigable",
+      "mostrar fecha, cuota y estado del pago",
+      "llevar directo al flujo de pago o revisión del crédito",
+      "explicar si el débito aún está pendiente o si faltan fondos"
+    ],
+    "useful_alternatives": [
+      "pago inmediato",
+      "promesa de pago en fecha cercana autorizada",
+      "recordatorio configurado",
+      "verificar si el cargo automático está activo"
+    ],
+    "escalation_rules": [
+      "el cliente dice 'ya pagué' y no coincide el sistema",
+      "el cliente reporta error del cobro",
+      "el cliente reclama un monto extraño"
+    ]
+  },
+  {
+    "id": "A3",
+    "name": "Arquetipo 3 — Cliente con desfase de fecha de ingreso",
+    "match": {
+      "situations": ["S2"],
+      "digital_capabilities": ["D1", "D2", "D3"]
+    },
+    "description": "Quiere pagar, pero su flujo de ingresos no coincide con la fecha de vencimiento.",
+    "ai_can_do": [
+      "identificar que sí hay intención de pago",
+      "consultar alternativas autorizadas por el banco",
+      "proponer fecha válida",
+      "explicar con claridad lo permitido"
+    ],
+    "useful_alternatives": [
+      "promesa de pago en fecha autorizada",
+      "reprogramación corta si existe en política",
+      "fecha de pago alternativa si el producto lo permite",
+      "contacto con asesor si necesita revisión más profunda"
+    ],
+    "escalation_rules": [
+      "pide más tiempo del permitido",
+      "el desfase es recurrente",
+      "ya hubo varios incumplimientos",
+      "el producto es hipotecario y el impacto es más delicado"
+    ]
+  },
+  {
+    "id": "A4",
+    "name": "Arquetipo 4 — Cliente con presión de liquidez temporal",
+    "match": {
+      "situations": ["S3"],
+      "digital_capabilities": ["D1", "D2", "D3"]
+    },
+    "description": "El cliente no puede cubrir el pago completo en este ciclo.",
+    "ai_can_do": [
+      "reconocer que el problema ya no es solo olvido",
+      "mostrar empatía",
+      "consultar opciones autorizadas",
+      "no inventar soluciones",
+      "escalar si el caso supera el catálogo permitido"
+    ],
+    "useful_alternatives": [
+      "promesa de pago autorizada",
+      "pago parcial si la política lo permite",
+      "cambio a canal humano",
+      "revisión personalizada"
+    ],
+    "escalation_rules": [
+      "el cliente dice que no puede pagar nada",
+      "solicita reducción de cuota, congelamiento, eliminación de intereses o cambio estructural",
+      "el caso involucra vivienda, hipoteca o acumulación de deudas",
+      "existe indicio de sobreendeudamiento"
+    ]
+  },
+  {
+    "id": "A5",
+    "name": "Arquetipo 5 — Cliente de productos rotativos / uso intensivo de liquidez",
+    "match": {
+      "situations": ["S3", "S4"],
+      "digital_capabilities": ["D1", "D2", "D3"]
+    },
+    "description": "Cliente que usa mucho productos como Credicheque, Sobregiro, Extrafinanciamiento. Requiere prudencia.",
+    "ai_can_do": [
+      "ayudar a entender su obligación actual",
+      "explicar fechas y montos",
+      "ofrecer opciones del catálogo permitido",
+      "recomendar hablar con un asesor si la tensión es recurrente"
+    ],
+    "useful_alternatives": [
+      "promesa de pago",
+      "pago parcial si la política lo permite",
+      "reducción de fricción de pago",
+      "asesor humano"
+    ],
+    "escalation_rules": [
+      "haya uso repetido de liquidez puente",
+      "el cliente ya no pueda salir del ciclo",
+      "solicite más financiamiento para cubrir financiamiento"
+    ]
+  },
+  {
+    "id": "A6",
+    "name": "Arquetipo 6 — Cliente con baja respuesta digital o canal inefectivo",
+    "match": {
+      "situations": ["S4"],
+      "digital_capabilities": ["D1", "D2", "D3"]
+    },
+    "description": "El problema no necesariamente es incapacidad de pago, sino que el canal digital no está funcionando.",
+    "ai_can_do": [
+      "registrar baja interacción",
+      "reducir insistencia",
+      "cambiar momento o canal",
+      "dejar opción de humano",
+      "evitar múltiples mensajes repetitivos"
+    ],
+    "useful_alternatives": [
+      "nuevo horario de contacto",
+      "llamada con asesor",
+      "mensaje más simple",
+      "acceso directo desde app"
+    ],
+    "escalation_rules": [
+      "cuando hay cero respuesta tras varios intentos",
+      "cuando el producto es sensible y el pago está por vencer",
+      "cuando el cliente rechaza el canal digital"
+    ]
+  },
+  {
+    "id": "A7",
+    "name": "Arquetipo 7 — Cliente con baja alfabetización digital / necesita guía",
+    "match": {
+      "situations": ["S0", "S1", "S2", "S3", "S4", "S5"],
+      "digital_capabilities": ["D3"]
+    },
+    "description": "Persona que no usa bien la app, se confunde, no sabe revisar cuota o necesita instrucciones claras.",
+    "ai_can_do": [
+      "dar instrucciones paso a paso",
+      "explicar dónde entrar en la app",
+      "indicar cómo ver saldo, cuota o historial",
+      "ayudar a encontrar la sección correcta",
+      "explicar qué significa cada campo",
+      "repetir instrucciones de forma simple",
+      "cambiar a lenguaje más sencillo",
+      "ofrecer botón de 'hablar con asesor'"
+    ],
+    "useful_alternatives": [
+      "guía paso a paso",
+      "explicación simplificada"
+    ],
+    "escalation_rules": [
+      "no logra iniciar sesión",
+      "olvidó contraseña y falla recuperación",
+      "no entiende el flujo tras varios intentos",
+      "necesita soporte muy personalizado",
+      "es una persona vulnerable que claramente necesita acompañamiento humano"
+    ]
+  },
+  {
+    "id": "A8",
+    "name": "Arquetipo 8 — Cliente en circunstancia compleja / no puede pagar",
+    "match": {
+      "situations": ["S6"],
+      "digital_capabilities": ["D1", "D2", "D3"]
+    },
+    "description": "Cliente que directamente no puede pagar por pérdida de ingreso, enfermedad, etc.",
+    "ai_can_do": [
+      "escuchar y clasificar la situación",
+      "reconocer que es un caso fuera de autoservicio",
+      "no prometer soluciones inexistentes",
+      "escalar rápido a humano",
+      "registrar el contexto"
+    ],
+    "useful_alternatives": [
+      "escalamiento a asesor",
+      "revisión personalizada",
+      "seguimiento humano"
+    ],
+    "escalation_rules": [
+      "siempre escalar rápido a humano"
+    ]
+  }
+]

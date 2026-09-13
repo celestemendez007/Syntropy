@@ -17,6 +17,8 @@ Reemplazar `call_llm()` por una llamada real (OpenAI/Anthropic) con
 este módulo: el guardrail y las categorías cerradas son independientes del proveedor.
 """
 import re
+import os
+import json
 from datetime import datetime
 
 # ---------------------------------------------------------------------------
@@ -97,7 +99,8 @@ buena, ofrece hablar con un asesor.
 9. Si el cliente no puede iniciar sesión, recuperar su contraseña, o el problema es de acceso/seguridad \
 a la cuenta, NO intentes resolverlo tú: nunca pidas ni proceses credenciales, y ofrece de inmediato \
 conectarlo con un asesor.
-{digital_capability_block}
+
+{archetype_block}
 
 ## Contexto del cliente (ya calculado por el sistema, no lo cuestiones ni lo recalcules)
 - Situación: {situation_hint} (ver nota interna, no se la reveles al cliente con este código)
@@ -113,24 +116,42 @@ conectarlo con un asesor.
 Responde siempre en español, en tono cercano y respetuoso, en turnos cortos.
 """
 
-DIGITAL_CAPABILITY_GUIDANCE = """
-## Este cliente necesita guía paso a paso dentro de la app (capacidad digital D3)
-La IA SÍ puede: dar instrucciones paso a paso, explicar dónde entrar en la app, indicar cómo \
-ver saldo/cuota/historial, repetir instrucciones de forma simple, usar lenguaje sencillo, y \
-ofrecer conectar con un asesor en cualquier momento.
-La IA NO debe: recuperar credenciales, saltarse autenticación, asumir control de la cuenta, \
-ejecutar operaciones sin confirmación clara, ni diagnosticar problemas técnicos o disputas \
-complejas -- eso siempre es para un asesor humano.
-Ejemplo de respuesta válida: "Le puedo guiar paso a paso dentro de la app. Primero entre a la \
-sección de créditos, luego seleccione su producto y después toque 'Historial'. Si prefiere, \
-también puedo ayudarle a solicitar apoyo de un asesor."
-Si tras dos intentos de guía el cliente sigue sin lograrlo, o no puede iniciar sesión, ofrece \
-inmediatamente: "Puedo conectarle con un asesor para que le ayude directamente."
-"""
+def load_archetypes_config():
+    config_path = os.path.join(os.path.dirname(__file__), "archetypes_config.json")
+    if not os.path.exists(config_path):
+        return []
+    with open(config_path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
+def _get_archetype(situation_hint: str, digital_capability: str) -> dict:
+    archetypes = load_archetypes_config()
+    for arch in archetypes:
+        match = arch.get("match", {})
+        if situation_hint in match.get("situations", []) and digital_capability in match.get("digital_capabilities", []):
+            return arch
+    return {}
 
-def _digital_capability_block(needs_guided_help: bool) -> str:
-    return DIGITAL_CAPABILITY_GUIDANCE if needs_guided_help else ""
+def _archetype_block(situation_hint: str, digital_capability: str) -> str:
+    arch = _get_archetype(situation_hint, digital_capability)
+    if not arch:
+        return ""
+    
+    lines = [f"## Perfil Identificado: {arch.get('name', 'Desconocido')}"]
+    lines.append(f"Descripción: {arch.get('description', '')}")
+    
+    can_do = arch.get("ai_can_do", [])
+    if can_do:
+        lines.append("Qué puedes hacer (IA):")
+        for item in can_do:
+            lines.append(f"- {item}")
+            
+    escalation = arch.get("escalation_rules", [])
+    if escalation:
+        lines.append("Reglas de escalamiento (CUÁNDO DEBES DETENERTE Y PASAR A UN HUMANO):")
+        for item in escalation:
+            lines.append(f"- {item}")
+            
+    return "\n".join(lines)
 
 
 def _format_alternatives_block(eligible_alternatives: list) -> str:
@@ -164,7 +185,7 @@ def build_system_prompt(score_result: dict, eligible_alternatives: list) -> str:
         channel=score_result.get("channel", {}).get("channel_pref_model", "UNDETERMINED"),
         credit_product=profile.get("credit_product", "N/D"),
         digital_capability=profile.get("digital_capability", "D1"),
-        digital_capability_block=_digital_capability_block(profile.get("needs_guided_help", False)),
+        archetype_block=_archetype_block(situation.get("situation_hint", "S0"), profile.get("digital_capability", "D1")),
         extra_context=extra_context,
         alternatives_block=_format_alternatives_block(eligible_alternatives),
     )

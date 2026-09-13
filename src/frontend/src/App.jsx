@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import Simulator from './Simulator'
+import AdminTab from './AdminTab'
 
 const STATUS_COLOR = {
   LOW: 'good', MEDIUM: 'warning', HIGH: 'critical',
@@ -143,10 +144,13 @@ export default function App() {
       <nav className="top-nav">
         <button className={activeTab === 'dashboard' ? 'active' : ''} onClick={() => setActiveTab('dashboard')}>Dashboard Central</button>
         <button className={activeTab === 'simulator' ? 'active' : ''} onClick={() => setActiveTab('simulator')}>Simulador de Llamada (Fase 6)</button>
+        <button className={activeTab === 'admin' ? 'active' : ''} onClick={() => setActiveTab('admin')}>Arquetipos (Admin)</button>
       </nav>
       
       {activeTab === 'simulator' ? (
         <Simulator />
+      ) : activeTab === 'admin' ? (
+        <AdminTab />
       ) : (
       <div className="dashboard">
         <header className="dashboard-header">

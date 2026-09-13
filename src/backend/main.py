@@ -105,3 +105,18 @@ def chat(req: ChatRequest):
         "hallucination_flagged": hallucination_check["llm_hallucination_flag"],
         "unauthorized_mentions": hallucination_check["unauthorized_mentions"]
     }
+
+@app.get("/api/archetypes")
+def get_archetypes():
+    config_path = os.path.join(os.path.dirname(__file__), "archetypes_config.json")
+    if not os.path.exists(config_path):
+        return []
+    with open(config_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+@app.post("/api/archetypes")
+def update_archetypes(new_config: list[dict]):
+    config_path = os.path.join(os.path.dirname(__file__), "archetypes_config.json")
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(new_config, f, indent=2, ensure_ascii=False)
+    return {"status": "success"}
