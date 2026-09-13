@@ -24,7 +24,7 @@ class SessionRequest(BaseModel):
 
 class Command(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    action: Literal["message", "select", "confirm", "cancel", "callback", "seen", "snooze", "reminder", "channel", "select_product", "greet"]
+    action: Literal["message", "select", "confirm", "cancel", "callback", "seen", "snooze", "reminder", "channel", "select_product", "greet", "clear_chat"]
     version: int = Field(ge=0)
     text: str | None = Field(default=None, min_length=1, max_length=1500)
     offer_id: str | None = Field(default=None, max_length=80)

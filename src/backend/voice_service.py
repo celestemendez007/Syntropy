@@ -28,7 +28,7 @@ async def synthesize(text):
     import edge_tts
     voice = os.getenv('BA_VOICE', 'es-SV-LorenaNeural')
     audio = bytearray()
-    async for chunk in edge_tts.Communicate(text, voice, rate='+3%').stream():
+    async for chunk in edge_tts.Communicate(text, voice, rate='+15%').stream():
         if chunk['type'] == 'audio':
             audio.extend(chunk['data'])
     if not audio:

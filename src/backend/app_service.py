@@ -613,6 +613,8 @@ class BankingService:
                 state["events"].append({"type": "CHANNEL_CHANGED", "at": now(), "channel": state["channel"], "title": "Preferencia de contacto actualizada"})
             elif action == "select_product":
                 self.select_product(state, command["product_id"])
+            elif action == "clear_chat":
+                state["messages"] = [m for m in state["messages"] if m["role"] == "system"]
             else:
                 raise DemoError("Acción no reconocida.")
             # state["product"] is the live, mutable focus; state["products"] is a
