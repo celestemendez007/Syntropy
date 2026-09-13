@@ -185,6 +185,46 @@ class BankingService:
         with self.connect() as db:
             return self.public(self._read(db, sid))
 
+    # Emoción no es un dato del modelo -- se infiere de la última barrera
+    # detectada por classify() (ya calculada para decidir la respuesta), para
+    # que el monitor de admin no duplique una heurística de sentimiento aparte.
+    _INTENT_EMOTION = {
+        "UNSAFE": "HOSTILE", "REFUSAL": "HOSTILE",
+        "LIQUIDITY": "TENSE", "DATE_MISMATCH": "TENSE", "FORGOT": "TENSE",
+        "HUMAN": "CONFUSED", "TECHNICAL": "CONFUSED",
+        "ACCEPT": "COOPERATIVE", "PAY": "COOPERATIVE", "SEEN": "COOPERATIVE",
+    }
+
+    def list_live_calls(self):
+        """Conversaciones para el monitor de admin. Se leen directamente de las
+        sesiones activas (SQLite) en vez de un log aparte -- una sola fuente de
+        verdad para lo que el cliente y el agente realmente dijeron."""
+        with self.connect() as db:
+            rows = db.execute("SELECT state FROM sessions").fetchall()
+        calls = []
+        for (raw,) in rows:
+            state = json.loads(raw)
+            if not state["messages"]:
+                continue
+            last_intent = next((e["intent"] for e in reversed(state["events"]) if e.get("type") == "BARRIER_CLASSIFIED"), None)
+            if state["receipt"] or state["pending_offer"]:
+                phase = "CONFIRMING"
+            elif state["support"]:
+                phase = "ESCALATED"
+            elif state["offers"]:
+                phase = "OFFERING"
+            else:
+                phase = "LISTENING"
+            calls.append({
+                "customer_id": state["customer_id"],
+                "history": [{"role": m["role"], "content": m["content"]} for m in state["messages"]],
+                "phase": phase,
+                "emotion": self._INTENT_EMOTION.get(last_intent, "NEUTRAL"),
+                "timestamp": state["messages"][-1]["at"],
+            })
+        calls.sort(key=lambda c: c["timestamp"])
+        return calls
+
     def public(self, state):
         result = copy.deepcopy(state)
         score = result.pop("score")

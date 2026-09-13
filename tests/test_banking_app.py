@@ -168,3 +168,14 @@ def test_websocket_wrong_origin_is_rejected(client):
     with pytest.raises(WebSocketDisconnect):
         with client.websocket_connect(f"/api/sessions/{s['id']}/live",headers={'origin':'https://unrelated.example'}):
             pass
+
+def test_admin_live_calls_reflects_real_sessions_only_after_a_message(client):
+    idle=client.post('/api/sessions',json={'customer_id':'GOLD-G09'}).json()
+    active=client.post('/api/sessions',json={'customer_id':'GOLD-G07'}).json()
+    client.post(f"/api/sessions/{active['id']}/commands",json={'action':'message','version':0,'text':'no puedo cubrirlo completo'})
+    calls=client.get('/api/admin/live_calls').json()
+    ids=[c['customer_id'] for c in calls]
+    assert 'GOLD-G07' in ids and 'GOLD-G09' not in ids  # idle session has no messages yet
+    call=next(c for c in calls if c['customer_id']=='GOLD-G07')
+    assert call['emotion']=='TENSE' and call['phase']=='OFFERING'
+    assert call['history'][0]==dict(role='user',content='no puedo cubrirlo completo')

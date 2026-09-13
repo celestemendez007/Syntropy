@@ -67,6 +67,10 @@ def scenarios():
 def customers():
     return [{"customer_id": cid, "scenario": label} for _, label, cid in SCENARIOS]
 
+@app.get("/api/admin/live_calls")
+def live_calls():
+    return app.state.service.list_live_calls()
+
 @app.post("/api/sessions", status_code=201)
 def create_session(request: SessionRequest):
     return app.state.service.create(request.customer_id)
