@@ -37,7 +37,6 @@ export default function VoiceCall(){
     if(!callOpen)return
     let disposed=false
     setError('');setAudioUrl(null);setStatus('connecting');setSeconds(0);setMuted(false)
-    latest.current.command('clear_chat')
     const instance=new CallAudio(latest.current.state.id,{
       status:v=>!disposed&&setStatus(v),caption:v=>!disposed&&setCaption(v),error:v=>!disposed&&setError(v),
       accept:s=>!disposed&&latest.current.accept(s,false),message:t=>latest.current.command('message',{text:t}),finish:()=>!disposed&&end(),

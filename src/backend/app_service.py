@@ -152,6 +152,7 @@ class BankingService:
             state['active_call_id'] = call_id
             state['call_end'] = False
             state['version'] += 1
+            state["messages"] = [m for m in state["messages"] if m["role"] == "system"]
             self.assistant(state, f"Hola, {state['name']}. Soy tu asistente de BA A Tiempo. Esta llamada se guarda para que puedas revisarla. ¿Te viene bien conversar sobre tu próximo pago?")
             db.execute('UPDATE sessions SET state=? WHERE id=?', (json.dumps(state), sid))
         return {'call_id': call_id, 'state': self.public(state)}
