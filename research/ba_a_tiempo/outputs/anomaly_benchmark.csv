@@ -1,5 +1,5 @@
 model,auc_s0_vs_s3,fit_time_s,latency_p50_ms,latency_p95_ms,model_size_kb,golden_g01_estable,golden_g02_anomalia_benigna,golden_g07_caida_ingreso,golden_g07_pctil_anomalia,golden_g12_cliente_nuevo,golden_check_pass
-IsolationForest,0.9588,0.208,10.687,12.204,2259.6,0.246,0.691,0.512,10.8,0.209,True
-LocalOutlierFactor,0.6824,0.085,1.199,1.448,1113.4,0.049,1.0,0.1,0.5,0.027,True
-OneClassSVM,0.8365,0.027,0.581,0.679,27.3,0.497,1.0,0.598,3.2,0.452,True
-ZScore_Mahalanobis,0.9736,0.71,0.691,0.784,27.4,0.008,0.231,0.034,16.7,0.005,True
+IsolationForest,0.9588,0.474,14.523,20.673,2258.9,0.246,0.691,0.512,10.8,0.209,True
+LocalOutlierFactor,0.6824,0.092,1.979,2.96,1113.3,0.049,1.0,0.1,0.5,0.027,True
+OneClassSVM,0.8365,0.037,0.922,1.968,27.3,0.497,1.0,0.598,3.2,0.452,True
+ZScore_Mahalanobis,0.9736,1.404,1.544,3.629,27.4,0.008,0.231,0.034,16.7,0.005,True

@@ -1,44 +1,44 @@
-# Fase 2 ‚Äî Benchmark de detecci√≥n de anomal√≠as
+# Fase 2 ó Benchmark de detecciÛn de anomalÌas
 
-Comparaci√≥n sobre las mismas 10 features (`config.IF_FEATURES`), mismo train/test split, seed 42. AUC evaluado SOLO con `synthetic_situation_truth` (S0 vs S3), que nunca se usa para entrenar ‚Äî es la variable oculta del generador, exclusiva para medir qu√© tan bien cada modelo separa lo normal de lo an√≥malo. S1/S2/S4 se excluyen del AUC por ser ambiguos por dise√±o (mezclan rasgos normales y an√≥malos).
+ComparaciÛn sobre las mismas 10 features (`config.IF_FEATURES`), mismo train/test split, seed 42. AUC evaluado SOLO con `synthetic_situation_truth` (S0 vs S3), que nunca se usa para entrenar ó es la variable oculta del generador, exclusiva para medir quÈ tan bien cada modelo separa lo normal de lo anÛmalo. S1/S2/S4 se excluyen del AUC por ser ambiguos por diseÒo (mezclan rasgos normales y anÛmalos).
 
 ## Resultados
 
 | model              |   auc_s0_vs_s3 |   fit_time_s |   latency_p50_ms |   latency_p95_ms |   model_size_kb |   golden_g01_estable |   golden_g02_anomalia_benigna |   golden_g07_caida_ingreso |   golden_g07_pctil_anomalia |   golden_g12_cliente_nuevo | golden_check_pass   |
 |:-------------------|---------------:|-------------:|-----------------:|-----------------:|----------------:|---------------------:|------------------------------:|---------------------------:|----------------------------:|---------------------------:|:--------------------|
-| IsolationForest    |         0.9588 |        0.208 |           10.687 |           12.204 |          2259.6 |                0.246 |                         0.691 |                      0.512 |                        10.8 |                      0.209 | True                |
-| LocalOutlierFactor |         0.6824 |        0.085 |            1.199 |            1.448 |          1113.4 |                0.049 |                         1     |                      0.1   |                         0.5 |                      0.027 | True                |
-| OneClassSVM        |         0.8365 |        0.027 |            0.581 |            0.679 |            27.3 |                0.497 |                         1     |                      0.598 |                         3.2 |                      0.452 | True                |
-| ZScore_Mahalanobis |         0.9736 |        0.71  |            0.691 |            0.784 |            27.4 |                0.008 |                         0.231 |                      0.034 |                        16.7 |                      0.005 | True                |
+| IsolationForest    |         0.9588 |        0.474 |           14.523 |           20.673 |          2258.9 |                0.246 |                         0.691 |                      0.512 |                        10.8 |                      0.209 | True                |
+| LocalOutlierFactor |         0.6824 |        0.092 |            1.979 |            2.96  |          1113.3 |                0.049 |                         1     |                      0.1   |                         0.5 |                      0.027 | True                |
+| OneClassSVM        |         0.8365 |        0.037 |            0.922 |            1.968 |            27.3 |                0.497 |                         1     |                      0.598 |                         3.2 |                      0.452 | True                |
+| ZScore_Mahalanobis |         0.9736 |        1.404 |            1.544 |            3.629 |            27.4 |                0.008 |                         0.231 |                      0.034 |                        16.7 |                      0.005 | True                |
 
-`golden_g07_pctil_anomalia`: percentil de anomal√≠a del cliente G07 (ca√≠da real de ingreso) dentro de la poblaci√≥n de test. 0 = el m√°s an√≥malo de todos; 50 = mediana (nada an√≥malo).
+`golden_g07_pctil_anomalia`: percentil de anomalÌa del cliente G07 (caÌda real de ingreso) dentro de la poblaciÛn de test. 0 = el m·s anÛmalo de todos; 50 = mediana (nada anÛmalo).
 
 ## Lectura de los resultados (no solo el ranking)
 
 - **Mejor AUC agregado (S0 vs S3):** `ZScore_Mahalanobis` (0.9736).
-- **Menor latencia p95:** `OneClassSVM` (0.679 ms).
-- **Modelo m√°s peque√±o:** `OneClassSVM` (27.3 KB).
-- **Mejor detecci√≥n del caso realista G07 (percentil m√°s bajo = m√°s an√≥malo):** `LocalOutlierFactor` (0.5 percentil).
+- **Menor latencia p95:** `OneClassSVM` (1.968 ms).
+- **Modelo m·s pequeÒo:** `OneClassSVM` (27.3 KB).
+- **Mejor detecciÛn del caso realista G07 (percentil m·s bajo = m·s anÛmalo):** `LocalOutlierFactor` (0.5 percentil).
 - **Pasan el chequeo ordinal golden (G02 y G07 > G01):** IsolationForest, LocalOutlierFactor, OneClassSVM, ZScore_Mahalanobis.
 
-**Discrepancia importante:** `ZScore_Mahalanobis` gana en AUC agregado, pero en el caso individual G07 (una ca√≠da de ingreso real, no un extremo) su percentil de anomal√≠a es 16.7, mientras que `LocalOutlierFactor` lo ubica en el percentil 0.5. Un AUC alto sobre miles de clientes describe qu√© tan bien separa la *poblaci√≥n* S0 de la S3 en promedio; no garantiza que un caso moderado e individual ‚Äîel tipo de cliente que en producci√≥n s√≠ quieres detectar‚Äî quede cerca de la cola an√≥mala. Esto importa m√°s para el producto que el AUC solo, porque el sistema punt√∫a un cliente a la vez, no una poblaci√≥n.
+**Discrepancia importante:** `ZScore_Mahalanobis` gana en AUC agregado, pero en el caso individual G07 (una caÌda de ingreso real, no un extremo) su percentil de anomalÌa es 16.7, mientras que `LocalOutlierFactor` lo ubica en el percentil 0.5. Un AUC alto sobre miles de clientes describe quÈ tan bien separa la *poblaciÛn* S0 de la S3 en promedio; no garantiza que un caso moderado e individual óel tipo de cliente que en producciÛn sÌ quieres detectaró quede cerca de la cola anÛmala. Esto importa m·s para el producto que el AUC solo, porque el sistema punt˙a un cliente a la vez, no una poblaciÛn.
 
 ### Notas de explicabilidad
 
-- **IsolationForest:** Alta. Se puede calcular contribuci√≥n por feature via ablaci√≥n (reemplazar por mediana y medir el cambio en el score); √°rboles cortos, f√°cil de auditar manualmente un caso.
-- **LocalOutlierFactor:** Media. El score depende de la densidad local (vecinos), m√°s dif√≠cil de explicar en una frase a un jurado no t√©cnico ('est√° lejos de sus 35 vecinos m√°s cercanos').
-- **OneClassSVM:** Baja. El hiperplano en espacio de kernel RBF no tiene traducci√≥n directa a 'esta variable caus√≥ la anomal√≠a'; requiere SHAP con costo computacional alto.
-- **ZScore_Mahalanobis:** Muy alta. Se puede descomponer exactamente cu√°nto aporta cada variable a la distancia (contribuci√≥n = diferencia al cuadrado ponderada por la inversa de covarianza). Es una f√≥rmula, no una aproximaci√≥n.
+- **IsolationForest:** Alta. Se puede calcular contribuciÛn por feature via ablaciÛn (reemplazar por mediana y medir el cambio en el score); ·rboles cortos, f·cil de auditar manualmente un caso.
+- **LocalOutlierFactor:** Media. El score depende de la densidad local (vecinos), m·s difÌcil de explicar en una frase a un jurado no tÈcnico ('est· lejos de sus 35 vecinos m·s cercanos').
+- **OneClassSVM:** Baja. El hiperplano en espacio de kernel RBF no tiene traducciÛn directa a 'esta variable causÛ la anomalÌa'; requiere SHAP con costo computacional alto.
+- **ZScore_Mahalanobis:** Muy alta. Se puede descomponer exactamente cu·nto aporta cada variable a la distancia (contribuciÛn = diferencia al cuadrado ponderada por la inversa de covarianza). Es una fÛrmula, no una aproximaciÛn.
 
-### Veredicto (ponderando todos los criterios, no un solo n√∫mero)
-Un solo caso golden (G07) no debe decidir entre modelos por s√≠ solo ‚Äî es n=1. LocalOutlierFactor gana ah√≠, pero su AUC agregado (0.68) es mediocre: en la mitad de los casos no separa bien lo normal de lo an√≥malo, y su score depende de la densidad local (`n_neighbors=35`), un hiperpar√°metro al que es sensible; un resultado excelente en un caso y d√©bil en el agregado es m√°s se√±al de varianza del modelo que de superioridad real. Se descarta como elecci√≥n principal por esa raz√≥n, aunque vale la pena revisar con m√°s golden cases si el tiempo lo permite.
+### Veredicto (ponderando todos los criterios, no un solo n˙mero)
+Un solo caso golden (G07) no debe decidir entre modelos por sÌ solo ó es n=1. LocalOutlierFactor gana ahÌ, pero su AUC agregado (0.68) es mediocre: en la mitad de los casos no separa bien lo normal de lo anÛmalo, y su score depende de la densidad local (`n_neighbors=35`), un hiperpar·metro al que es sensible; un resultado excelente en un caso y dÈbil en el agregado es m·s seÒal de varianza del modelo que de superioridad real. Se descarta como elecciÛn principal por esa razÛn, aunque vale la pena revisar con m·s golden cases si el tiempo lo permite.
 
-**Isolation Forest** es la recomendaci√≥n para producci√≥n del MVP: AUC agregado alto (0.96, segundo lugar detr√°s del z-score por un margen peque√±o), ubica el caso G07 en el percentil 10.8 (razonablemente cerca de la cola an√≥mala, sin ser el mejor ni el peor), latencia p95 de ~13 ms por cliente ‚Äîperfectamente aceptable para scoring uno-a-uno, aunque sea la m√°s lenta de las cuatro‚Äî, y la mejor relaci√≥n explicabilidad/costo: ablaci√≥n por feature es barata de calcular con pocos √°rboles y se puede explicar en una frase ('se aisl√≥ r√°pido de los dem√°s clientes').
+**Isolation Forest** es la recomendaciÛn para producciÛn del MVP: AUC agregado alto (0.96, segundo lugar detr·s del z-score por un margen pequeÒo), ubica el caso G07 en el percentil 10.8 (razonablemente cerca de la cola anÛmala, sin ser el mejor ni el peor), latencia p95 de ~13 ms por cliente óperfectamente aceptable para scoring uno-a-uno, aunque sea la m·s lenta de las cuatroó, y la mejor relaciÛn explicabilidad/costo: ablaciÛn por feature es barata de calcular con pocos ·rboles y se puede explicar en una frase ('se aislÛ r·pido de los dem·s clientes').
 
-**Z-score de Mahalanobis** es el hallazgo m√°s √∫til de este benchmark: con el AUC agregado m√°s alto (0.97), el modelo m√°s chico (27 KB) y la explicabilidad m√°s exacta de las cuatro (una f√≥rmula, no una aproximaci√≥n), es la elecci√≥n correcta como **segunda opini√≥n** ‚Äî por ejemplo para monitorear drift poblacional en el dashboard ('¬øla cartera completa se est√° alejando de su centro hist√≥rico?') ‚Äî precisamente porque mide algo distinto a Isolation Forest: distancia al centro global de la poblaci√≥n, no aislabilidad local. Que subestime a G07 (percentil 16.7, el peor de los cuatro en ese caso) muestra su l√≠mite: asume una distribuci√≥n aproximadamente el√≠ptica, y una ca√≠da de ingreso moderada sin otros s√≠ntomas no siempre genera suficiente distancia de Mahalanobis. Es una raz√≥n para no usarlo solo, no para descartarlo.
+**Z-score de Mahalanobis** es el hallazgo m·s ˙til de este benchmark: con el AUC agregado m·s alto (0.97), el modelo m·s chico (27 KB) y la explicabilidad m·s exacta de las cuatro (una fÛrmula, no una aproximaciÛn), es la elecciÛn correcta como **segunda opiniÛn** ó por ejemplo para monitorear drift poblacional en el dashboard ('øla cartera completa se est· alejando de su centro histÛrico?') ó precisamente porque mide algo distinto a Isolation Forest: distancia al centro global de la poblaciÛn, no aislabilidad local. Que subestime a G07 (percentil 16.7, el peor de los cuatro en ese caso) muestra su lÌmite: asume una distribuciÛn aproximadamente elÌptica, y una caÌda de ingreso moderada sin otros sÌntomas no siempre genera suficiente distancia de Mahalanobis. Es una razÛn para no usarlo solo, no para descartarlo.
 
-**One-Class SVM** queda tercero: AUC intermedio (0.84), el m√°s barato en tama√±o y de los m√°s r√°pidos, pero su score en un hiperplano de kernel RBF no se explica ante un jurado sin recurrir a SHAP, que tiene costo computacional alto. Se recomienda solo si la latencia fuera el criterio dominante y hubiera presupuesto de ingenier√≠a para explicabilidad post-hoc.
+**One-Class SVM** queda tercero: AUC intermedio (0.84), el m·s barato en tamaÒo y de los m·s r·pidos, pero su score en un hiperplano de kernel RBF no se explica ante un jurado sin recurrir a SHAP, que tiene costo computacional alto. Se recomienda solo si la latencia fuera el criterio dominante y hubiera presupuesto de ingenierÌa para explicabilidad post-hoc.
 
-**Decisi√≥n para el MVP:** Isolation Forest como score principal (`anomaly_score`), z-score de Mahalanobis como chequeo secundario de drift poblacional en el dashboard. Ninguno se usa aislado; el JSON de contrato (Fase 5) puede exponer ambos.
+**DecisiÛn para el MVP:** Isolation Forest como score principal (`anomaly_score`), z-score de Mahalanobis como chequeo secundario de drift poblacional en el dashboard. Ninguno se usa aislado; el JSON de contrato (Fase 5) puede exponer ambos.
 
-Este veredicto es v√°lido para **esta corrida con esta seed**; el detalle completo queda en `outputs/anomaly_benchmark.csv` para que el equipo lo revise.
+Este veredicto es v·lido para **esta corrida con esta seed**; el detalle completo queda en `outputs/anomaly_benchmark.csv` para que el equipo lo revise.
