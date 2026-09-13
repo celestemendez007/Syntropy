@@ -27,11 +27,12 @@ export default function VoiceCall(){
   latest.current={command,accept,state}
   const ended=status==='ended'
   async function end(close=false){
-    if(ending.current)return
+    if(ending.current){if(close)setCallOpen(false);return}
     ending.current=true;setStatus('ended');setSaving(true)
-    try{const url=await engine.current?.end();setAudioUrl(url);if(close)setCallOpen(false)}
+    try{setAudioUrl(await engine.current?.end()||null)}
     catch(e){setError('La llamada terminó, pero la grabación no se guardó: '+e.message)}
-    finally{setSaving(false);ending.current=false}
+    // Closing must never depend on the recording being saved.
+    finally{setSaving(false);ending.current=false;if(close)setCallOpen(false)}
   }
   useEffect(()=>{
     if(!callOpen)return
@@ -54,7 +55,7 @@ export default function VoiceCall(){
   if(!callOpen)return null
   const submit=async e=>{e.preventDefault();if(!text.trim())return;engine.current?.interrupt();const value=text;setText('');await command('message',{text:value})}
   return <section className="voice-call" aria-label="Llamada con BA A Tiempo">
-    <div className="call-top"><span className={'round-icon yellow '+(status==='speaking'?'speaking':'')}><Icon name="headset" size={30}/></span><div><strong>BA A Tiempo</strong><span>{labels[status]} · {Math.floor(seconds/60).toString().padStart(2,'0')}:{(seconds%60).toString().padStart(2,'0')}</span></div><button className="icon-button" disabled={saving} aria-label="Cerrar llamada" onClick={()=>end(true)}><Icon name="close"/></button></div>
+    <div className="call-top"><span className={'round-icon yellow '+(status==='speaking'?'speaking':'')}><Icon name="headset" size={30}/></span><div><strong>BA A Tiempo</strong><span>{labels[status]} · {Math.floor(seconds/60).toString().padStart(2,'0')}:{(seconds%60).toString().padStart(2,'0')}</span></div><button className="icon-button" aria-label="Cerrar llamada" onClick={()=>end(true)}><Icon name="close"/></button></div>
     <div className="voice-wave" aria-hidden="true">{Array.from({length:15},(_,i)=><i key={i} style={{height:[12,22,36,19,29][i%5],animationDelay:i*.08+'s',animationPlayState:['speaking','listening'].includes(status)?'running':'paused'}}/>)}</div>
     <p className="recording-status">{saving?'Guardando tu grabación…':ended?(audioUrl?'Grabación y conversación guardadas':'Conversación guardada'):'● Grabando · Puedes hablar sin tocar el micrófono e interrumpirme'}</p>
     <p className="call-caption" aria-live="polite">{caption}</p>

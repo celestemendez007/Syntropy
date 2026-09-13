@@ -27,3 +27,29 @@ test('sustained user speech interrupts playback but a transient click does not',
 test('muted microphone cannot dispatch audio for transcription',()=>{
  const a=new CallAudio('test',{});a.callId='test';a.muted=true;a.frame(new Float32Array(4096).fill(.8));assert.equal(a.parts.length,0)
 })
+test('a turn that never comes back releases the call instead of freezing it',()=>{
+ let time=0;const original=globalThis.performance
+ Object.defineProperty(globalThis,'performance',{value:{now:()=>time},configurable:true})
+ try{const status=[],errors=[]
+  const a=new CallAudio('test',{status:v=>status.push(v),error:e=>errors.push(e)})
+  a.wait(true);time+=10000;a.check()
+  assert.equal(a.thinking,true,'still within the grace period')
+  time+=25000;a.check()
+  assert.equal(a.thinking,false);assert.equal(status.at(-1),'listening');assert.equal(errors.length,1)
+ }finally{Object.defineProperty(globalThis,'performance',{value:original,configurable:true})}
+})
+test('a reply interrupted while its audio loads returns to listening',async()=>{
+ const status=[],a=new CallAudio('test',{status:v=>status.push(v),caption:()=>{},error:()=>{}})
+ a.context={decodeAudioData:async()=>({})}
+ const original=globalThis.fetch
+ globalThis.fetch=async()=>{a.interrupt();return{ok:true,arrayBuffer:async()=>new ArrayBuffer(8)}}
+ try{await a.say({id:'m1',content:'hola'},false)
+  assert.equal(a.speaking,false);assert.equal(status.at(-1),'listening')
+ }finally{globalThis.fetch=original}
+})
+test('hanging up finishes even if the recorder never reports that it stopped',async()=>{
+ const a=new CallAudio('test',{})
+ a.recorder={state:'recording',mimeType:'audio/webm',stop(){/* silently never fires onstop */}}
+ await a.end()
+ assert.equal(a.closed,true)
+})

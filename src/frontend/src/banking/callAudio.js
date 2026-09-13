@@ -9,10 +9,30 @@ export function encodeWav(parts, sampleRate) {
   for(const p of parts)for(const s of p){v.setInt16(at,Math.max(-1,Math.min(1,s))*32767,true);at+=2}
   return new Blob([buffer],{type:'audio/wav'})
 }
-async function checked(url,options){const r=await fetch(url,options);if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.detail||'No pudimos conectar. Intenta nuevamente.')}return r}
+// Every call request is bounded: a stalled fetch used to leave the microphone
+// disabled for the rest of the call, which is what made calls look frozen.
+async function checked(url,options={},timeout=25000){
+  const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),timeout)
+  let r
+  try{r=await fetch(url,{...options,signal:abort.signal})}
+  catch(e){throw new Error(e.name==='AbortError'?'Eso tardó más de lo normal. Puedes intentarlo otra vez.':'No pudimos conectar. Intenta nuevamente.')}
+  finally{clearTimeout(timer)}
+  if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.detail||'No pudimos conectar. Intenta nuevamente.')}
+  return r
+}
+const bounded=(promise,ms)=>Promise.race([promise,new Promise(resolve=>setTimeout(resolve,ms))])
 
 export class CallAudio {
-  constructor(sid,cb){Object.assign(this,{sid,cb,parts:[],recorded:[],preRoll:[],closed:false,muted:false,thinking:false,speaking:false,generation:0})}
+  constructor(sid,cb){Object.assign(this,{sid,cb,parts:[],recorded:[],preRoll:[],spoken:new Set(),closed:false,muted:false,thinking:false,speaking:false,generation:0,thinkingSince:0})}
+  wait(on){this.thinking=on;this.thinkingSince=on?performance.now():0}
+  // Last line of defence: whatever goes wrong, the call goes back to listening
+  // instead of sitting on "Estoy revisando lo que me cuentas…" forever.
+  check(){
+    if(this.closed||!this.thinking||performance.now()-this.thinkingSince<30000)return
+    this.wait(false);this.cb.error('Eso tardó demasiado. Ya puedes seguir hablando.')
+    if(!this.speaking)this.cb.status(this.muted?'muted':'listening')
+  }
+  idle(){if(!this.closed&&!this.speaking&&!this.thinking)this.cb.status(this.muted?'muted':'listening')}
   async start(){
     this.cb.status('connecting');this.context=new AudioContext();await this.context.resume()
     const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}})
@@ -25,7 +45,8 @@ export class CallAudio {
     if(!mime)throw new Error('Este navegador no permite grabar llamadas. Usa Chrome o Edge, o continúa por chat.')
     this.recorder=new MediaRecorder(this.destination.stream,{mimeType:mime,audioBitsPerSecond:48000})
     this.recorder.ondataavailable=e=>{if(e.data.size)this.recorded.push(e.data)};this.recorder.start(1000)
-    const result=await(await checked(`/api/sessions/${this.sid}/calls`,{method:'POST'})).json();this.callId=result.call_id
+    this.watchdog=setInterval(()=>this.check(),1000)
+    const result=await(await checked(`/api/sessions/${this.sid}/calls`,{method:'POST'},15000)).json();this.callId=result.call_id
     if(this.closed){await this.end();return}
     this.cb.accept(result.state);this.cb.status('listening');await this.say(result.state.messages.at(-1),false)
   }
@@ -45,31 +66,50 @@ export class CallAudio {
     }
   }
   async hear(audio){
-    this.thinking=true;this.interrupt();this.cb.status('thinking')
+    this.wait(true);this.interrupt();this.cb.status('thinking')
     try{const result=await(await checked(`/api/sessions/${this.sid}/transcribe`,{method:'POST',headers:{'Content-Type':'audio/wav'},body:audio})).json()
-      if(!this.closed&&result.text.trim()){this.cb.caption(result.text);await this.cb.message(result.text)}
-    }catch(e){if(!this.closed)this.cb.error(e.message)}finally{this.thinking=false;if(!this.closed&&!this.speaking)this.cb.status(this.muted?'muted':'listening')}
+      // The reply itself is bounded too: a slow model must not hold the mic.
+      if(!this.closed&&result.text.trim()){this.cb.caption(result.text);await bounded(this.cb.message(result.text),30000)}
+    }catch(e){if(!this.closed)this.cb.error(e.message)}finally{this.wait(false);this.idle()}
   }
   interrupt(){this.generation++;if(this.source){this.source.onended=null;try{this.source.stop()}catch{/* stopped */}this.source=null}this.speaking=false}
   async say(message,closeAfter){
-    if(this.closed||!message||this.lastMessage===message.id)return
-    this.lastMessage=message.id;this.interrupt();const generation=this.generation
+    if(this.closed||!message||this.spoken.has(message.id))return
+    this.interrupt();const generation=this.generation
     this.cb.caption(message.content);this.cb.status('thinking')
+    let playing=false
     try{const r=await checked(`/api/sessions/${this.sid}/speech/${message.id}`),audio=await this.context.decodeAudioData(await r.arrayBuffer())
       if(this.closed||generation!==this.generation)return
+      this.spoken.add(message.id)
       this.source=this.context.createBufferSource();this.source.buffer=audio;this.source.connect(this.context.destination);this.source.connect(this.destination)
-      this.speaking=true;this.cb.status('speaking')
-      this.source.onended=()=>{this.speaking=false;this.source=null;this.parts=[];this.preRoll=[];if(!this.closed){if(closeAfter)this.cb.finish();else this.cb.status(this.muted?'muted':'listening')}}
+      this.speaking=true;playing=true;this.cb.status('speaking')
+      this.source.onended=()=>{this.speaking=false;this.source=null;this.parts=[];this.preRoll=[];if(!this.closed){if(closeAfter)this.cb.finish();else this.idle()}}
       await this.context.resume();this.source.start()
-    }catch(e){if(!this.closed){this.cb.error(e.message+' Tu micrófono sigue disponible.');this.cb.status('listening')}}
+    }catch(e){
+      // The reply is already on screen: losing the voice must not end the call,
+      // and the turn must not be retried forever against a failing synthesizer.
+      this.spoken.add(message.id)
+      if(!this.closed){this.cb.error('No pudimos reproducir la voz esta vez. Puedes seguir leyendo y hablando.');if(closeAfter)this.cb.finish()}
+    }finally{if(!playing)this.idle()}
   }
   toggleMute(){this.muted=!this.muted;this.parts=[];this.preRoll=[];this.stream?.getAudioTracks().forEach(t=>{t.enabled=!this.muted});if(!this.speaking)this.cb.status(this.muted?'muted':'listening');return this.muted}
   async end(){
-    this.closed=true;this.interrupt();this.processor?.disconnect();this.input?.disconnect();this.stream?.getTracks().forEach(t=>t.stop())
-    if(this.recorder&&this.recorder.state!=='inactive'){await new Promise(resolve=>{this.recorder.onstop=resolve;this.recorder.stop()});this.blob=new Blob(this.recorded,{type:this.recorder.mimeType})}
-    if(this.context&&this.context.state!=='closed')await this.context.close()
-    if(!this.callId)return
-    await checked(`/api/sessions/${this.sid}/calls/${this.callId}/end`,{method:'POST'});return this.save()
+    if(this.ending)return this.ending
+    this.ending=(async()=>{
+      this.closed=true;clearInterval(this.watchdog);this.interrupt()
+      this.processor?.disconnect();this.input?.disconnect();this.stream?.getTracks().forEach(t=>t.stop())
+      if(this.recorder&&this.recorder.state!=='inactive'){
+        // A recorder that never fires onstop used to hang hanging up entirely.
+        await new Promise(resolve=>{const done=()=>resolve();this.recorder.onstop=done;setTimeout(done,4000);try{this.recorder.stop()}catch{done()}})
+        this.blob=new Blob(this.recorded,{type:this.recorder.mimeType})
+      }
+      if(this.context&&this.context.state!=='closed')await this.context.close().catch(()=>{})
+      if(!this.callId)return
+      // Closing the call server-side is best effort; the recording still matters.
+      await checked(`/api/sessions/${this.sid}/calls/${this.callId}/end`,{method:'POST'},15000).catch(()=>{})
+      return this.save()
+    })()
+    return this.ending
   }
-  async save(){if(!this.blob?.size||!this.callId)return;const r=await checked(`/api/sessions/${this.sid}/calls/${this.callId}/audio`,{method:'PUT',headers:{'Content-Type':this.blob.type},body:this.blob});return(await r.json()).audio_url}
+  async save(){if(!this.blob?.size||!this.callId)return;const r=await checked(`/api/sessions/${this.sid}/calls/${this.callId}/audio`,{method:'PUT',headers:{'Content-Type':this.blob.type},body:this.blob},60000);return(await r.json()).audio_url}
 }

@@ -1,6 +1,7 @@
 """Neural speech and local transcription; call media is private runtime data."""
 import io
 import os
+import re
 import threading
 import time
 from pathlib import Path
@@ -24,11 +25,30 @@ def transcribe(data):
     return {'text': text, 'latency_ms': round((time.perf_counter() - started) * 1000)}
 
 
+def _money(match):
+    units, cents = match.group(1).replace(',', ''), match.group(2)
+    spoken = f'{units} dólares' if units != '1' else 'un dólar'
+    return spoken if not cents or int(cents) == 0 else f'{spoken} con {int(cents)} centavos'
+
+
+def speakable(text):
+    """Símbolos y espacios en blanco leídos como los diría una persona.
+
+    edge-tts deletrea '$44.00' y hace una pausa larga en cada salto de línea:
+    eso es lo que suena robótico. El texto mostrado en pantalla no cambia,
+    solo lo que se envía a la voz, y los números siguen siendo los mismos.
+    """
+    text = re.sub(r'\$\s*(\d[\d,]*)(?:\.(\d{2}))?', _money, text)
+    text = re.sub(r'(\d+(?:[.,]\d+)?)\s*%', r'\1 por ciento', text)
+    text = re.sub(r'N\.?°\s*', 'número ', text)
+    return re.sub(r'\s+', ' ', text).strip()
+
+
 async def synthesize(text):
     import edge_tts
     voice = os.getenv('BA_VOICE', 'es-SV-LorenaNeural')
     audio = bytearray()
-    async for chunk in edge_tts.Communicate(text, voice, rate='+3%').stream():
+    async for chunk in edge_tts.Communicate(speakable(text), voice, rate=os.getenv('BA_VOICE_RATE', '+18%')).stream():
         if chunk['type'] == 'audio':
             audio.extend(chunk['data'])
     if not audio:
