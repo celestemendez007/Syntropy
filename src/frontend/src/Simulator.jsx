@@ -153,8 +153,8 @@ export default function Simulator() {
       </div>
       
       {selectedCustomer === 'RANDOM' && randomProfile && (
-        <div style={{ padding: '10px', background: '#1e293b', borderLeft: '4px solid #8b5cf6', marginBottom: '20px', borderRadius: '4px' }}>
-          <strong>Contexto del Agente:</strong> Estás hablando con un <strong>{randomProfile.archetype}</strong> que tiene un crédito de tipo <strong>{randomProfile.product}</strong>.
+        <div style={{ padding: '12px 16px', background: '#1e293b', color: '#f8fafc', borderLeft: '4px solid #8b5cf6', marginBottom: '20px', borderRadius: '6px', fontSize: '0.95rem' }}>
+          <strong>Contexto del Agente:</strong> Estás hablando con un perfil <strong>{randomProfile.archetype}</strong> que tiene un crédito de tipo <strong>{randomProfile.product}</strong>.
         </div>
       )}
 
