@@ -6,17 +6,17 @@ Comparación sobre las mismas 10 features (`config.IF_FEATURES`), mismo train/tes
 
 | model              |   auc_s0_vs_s3 |   fit_time_s |   latency_p50_ms |   latency_p95_ms |   model_size_kb |   golden_g01_estable |   golden_g02_anomalia_benigna |   golden_g07_caida_ingreso |   golden_g07_pctil_anomalia |   golden_g12_cliente_nuevo | golden_check_pass   |
 |:-------------------|---------------:|-------------:|-----------------:|-----------------:|----------------:|---------------------:|------------------------------:|---------------------------:|----------------------------:|---------------------------:|:--------------------|
-| IsolationForest    |         0.9588 |        0.199 |            5.098 |            5.615 |          2258.9 |                0.246 |                         0.691 |                      0.512 |                        10.8 |                      0.209 | True                |
-| LocalOutlierFactor |         0.6824 |        0.056 |            0.618 |            0.874 |          1113.3 |                0.049 |                         1     |                      0.1   |                         0.5 |                      0.027 | True                |
-| OneClassSVM        |         0.8365 |        0.016 |            0.47  |            0.554 |            27.3 |                0.497 |                         1     |                      0.598 |                         3.2 |                      0.452 | True                |
-| ZScore_Mahalanobis |         0.9736 |        0.47  |            0.513 |            0.612 |            27.4 |                0.008 |                         0.231 |                      0.034 |                        16.7 |                      0.005 | True                |
+| IsolationForest    |         0.9588 |        0.556 |           15.784 |           18.907 |          2258.9 |                0.246 |                         0.691 |                      0.512 |                        10.8 |                      0.209 | True                |
+| LocalOutlierFactor |         0.6824 |        0.16  |            1.89  |            2.576 |          1113.3 |                0.049 |                         1     |                      0.1   |                         0.5 |                      0.027 | True                |
+| OneClassSVM        |         0.8365 |        0.051 |            1.282 |            1.769 |            27.3 |                0.497 |                         1     |                      0.598 |                         3.2 |                      0.452 | True                |
+| ZScore_Mahalanobis |         0.9736 |        1.543 |            1.452 |            1.97  |            27.4 |                0.008 |                         0.231 |                      0.034 |                        16.7 |                      0.005 | True                |
 
 `golden_g07_pctil_anomalia`: percentil de anomalía del cliente G07 (caída real de ingreso) dentro de la población de test. 0 = el más anómalo de todos; 50 = mediana (nada anómalo).
 
 ## Lectura de los resultados (no solo el ranking)
 
 - **Mejor AUC agregado (S0 vs S3):** `ZScore_Mahalanobis` (0.9736).
-- **Menor latencia p95:** `OneClassSVM` (0.554 ms).
+- **Menor latencia p95:** `OneClassSVM` (1.769 ms).
 - **Modelo más pequeño:** `OneClassSVM` (27.3 KB).
 - **Mejor detección del caso realista G07 (percentil más bajo = más anómalo):** `LocalOutlierFactor` (0.5 percentil).
 - **Pasan el chequeo ordinal golden (G02 y G07 > G01):** IsolationForest, LocalOutlierFactor, OneClassSVM, ZScore_Mahalanobis.

@@ -212,6 +212,16 @@ def build_customers_snapshot(state: pd.DataFrame, panel: pd.DataFrame, rng: np.r
     flip = rng.random(n) < 0.04
     df[C.LABEL] = np.where(flip, 1 - label, label)
 
+    # Arquetipos de 3 capas: producto crediticio + capacidad digital (contexto de
+    # enrutamiento, nunca feature de IF/LR -- ver config.py). Se sortean AL FINAL a
+    # propósito: son independientes de todo lo anterior, e insertarlos aquí no
+    # desplaza la secuencia de números aleatorios que ya determinó el resto de las
+    # columnas (incluida la etiqueta) -- agregar una dimensión nueva no debe cambiar
+    # en silencio los valores de todas las columnas existentes con la misma seed.
+    df["credit_product"] = rng.choice(list(C.CREDIT_PRODUCTS), size=n, p=list(C.CREDIT_PRODUCTS.values()))
+    df["digital_capability"] = rng.choice(list(C.DIGITAL_CAPABILITY_MIX), size=n,
+                                           p=list(C.DIGITAL_CAPABILITY_MIX.values()))
+
     # flags de calidad y demográficos ficticios
     df["has_missing_core"] = 0
     df["full_name_mock"] = "Cliente Demo " + df["customer_id"].str.replace("C", "")
@@ -277,7 +287,8 @@ GOLDEN_SPECS = [
         balance_ratio=1.4, payment_punctuality=0.5, expected_intervene=True)),
     dict(id="G05", scenario="S2_asalariado_dia30", situation="S2", overrides=dict(
         balance_ratio=0.5, projected_coverage=3.5, income_due_gap=5, income_due_gap_pos=5,
-        payment_punctuality=0.4, expected_intervene=True)),
+        payment_punctuality=0.4, credit_product="VEHICLE_LOAN", digital_capability="D1",
+        expected_intervene=True)),
     dict(id="G06", scenario="S2_independiente_fecha_incierta", situation="S2", overrides=dict(
         income_type="INDEPENDENT", income_day_std=7, balance_ratio=0.7, income_amount_cv=0.4,
         income_date_unknown=1, expected_intervene=True)),
@@ -299,12 +310,21 @@ GOLDEN_SPECS = [
     dict(id="G12", scenario="cliente_nuevo_sin_historial", situation="S0", overrides=dict(
         tenure_months=1, hist_cycles_available=0, balance_ratio=2.0, baseline_unreliable=1,
         expected_intervene=False)),
+    dict(id="G13", scenario="D3_dificultad_digital_necesita_guia", situation="S1", overrides=dict(
+        balance_ratio=1.8, payment_punctuality=0.5, digital_capability="D3",
+        credit_product="HOME_LOAN", app_engagement_ratio=0.3, contact_response_rate=0.3,
+        expected_intervene=True, expected_guided_help=True)),
+    dict(id="G14", scenario="S6_producto_sensible_escalar_temprano", situation="S3", overrides=dict(
+        balance_ratio=0.45, income_variation=-0.35, failed_payment_attempts_30d=1,
+        credit_product="PERSONAL_LOAN_MORTGAGE_BACKED", digital_capability="D1",
+        expected_intervene=True, expected_escalation=True, expected_complex_case=True)),
 ]
 
 
 def build_golden_customers(snapshot_columns: list[str]) -> pd.DataFrame:
-    """Construye los 12 golden customers con valores fijos (no muestreados)."""
+    """Construye los 14 golden customers con valores fijos (no muestreados)."""
     base_defaults = dict(
+        credit_product="PERSONAL_LOAN_PAYROLL_DEDUCTION", digital_capability="D1",
         income_type="SALARIED", installment_amount=200.0, income_hist_avg=750.0, expenses_hist_avg=550.0,
         current_balance=500.0, balance_14d_ago=520.0, min_balance_30d=400.0, avg_balance_30d=450.0,
         hist_avg_balance=500.0, hist_std_balance=50.0, hist_avg_balance_at_due=300.0,
@@ -340,6 +360,8 @@ def build_golden_customers(snapshot_columns: list[str]) -> pd.DataFrame:
         row["golden_expected_intervene"] = spec["overrides"].get("expected_intervene", None)
         row["golden_expected_escalation"] = spec["overrides"].get("expected_escalation", False)
         row["golden_expected_anomalous"] = spec["overrides"].get("expected_anomalous", False)
+        row["golden_expected_guided_help"] = spec["overrides"].get("expected_guided_help", False)
+        row["golden_expected_complex_case"] = spec["overrides"].get("expected_complex_case", False)
         rows.append(row)
     gdf = pd.DataFrame(rows)
     for col in snapshot_columns:

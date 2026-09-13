@@ -49,3 +49,33 @@ FORBIDDEN_FEATURES = {
     "max_days_in_arrears_12m", "last_intervention_outcome", "prior_interventions_accepted_n",
     "days_to_due", "customer_id", "full_name_mock", "dui_mock", "phone_mock", "account_id_mock",
 }
+
+# --- Arquetipos de 3 capas (mejora post-Fase 8): producto crediticio + capacidad digital ---
+# Ninguno de los dos entra a IF_FEATURES ni LR_FEATURES a propósito: son contexto de
+# enrutamiento (NBA / Policy Engine / prompt), no señales de riesgo o anomalía -- mezclarlos
+# arriesgaría que el modelo "aprenda" que cierto producto es intrínsecamente más riesgoso en
+# vez de medir el comportamiento real del ciclo (mismo principio que excluye `income_type` de IF).
+CREDIT_PRODUCTS = {
+    "PERSONAL_LOAN_PAYROLL_DEDUCTION": 0.20,   # Crédito Personal con orden de descuento
+    "PERSONAL_LOAN_ACCOUNT_DEBIT": 0.15,       # Crédito Personal con cargo a cuenta
+    "PERSONAL_LOAN_MORTGAGE_BACKED": 0.05,     # Crédito Personal con Garantía Hipotecaria
+    "CREDICHEQUE": 0.10,
+    "SALARY_ADVANCE": 0.08,                    # Adelanto de Salario
+    "OVERDRAFT_ELITE": 0.07,                   # Sobregiro Elite
+    "EXTRA_FINANCING": 0.05,                   # Extrafinanciamiento
+    "HOME_LOAN": 0.10,                         # Crédito de Vivienda
+    "VEHICLE_LOAN": 0.12,                      # Crédito para Vehículo
+    "STUDENT_LOAN": 0.08,                      # Crédito de Estudio
+}
+# Productos donde el umbral de escalamiento a humano debe ser más bajo (garantía real o
+# monto/plazo grandes -- un error de negociación automática pesa más).
+SENSITIVE_CREDIT_PRODUCTS = {"PERSONAL_LOAN_MORTGAGE_BACKED", "HOME_LOAN", "VEHICLE_LOAN"}
+# Productos rotativos/liquidez-puente: no se debe ofrecer "más crédito" como salida
+# automática a una presión de liquidez ya existente (evita el ciclo deuda-sobre-deuda).
+REVOLVING_CREDIT_PRODUCTS = {"CREDICHEQUE", "OVERDRAFT_ELITE", "EXTRA_FINANCING", "SALARY_ADVANCE"}
+
+# D1 = autónomo digital, D2 = necesita guía paso a paso, D3 = no sabe usar bien la app.
+# SUPUESTO DE DEMO: no hay dato de edad en el generador, así que es un sorteo independiente
+# (documentado como limitación -- en producción real vendría de comportamiento observado a
+# más largo plazo, no de una sola corrida).
+DIGITAL_CAPABILITY_MIX = {"D1": 0.65, "D2": 0.25, "D3": 0.10}

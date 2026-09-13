@@ -18,12 +18,13 @@ def test_top_level_shape(data):
     assert EXPECTED_TOP_KEYS <= set(data.keys())
 
 
-def test_all_twelve_golden_customers_present_and_pass(data):
+def test_all_fourteen_golden_customers_present_and_pass(data):
     """Con las dos excepciones documentadas (G09 S4->low_digital_response, G06
-    income_date_unknown desactiva la regla S2), los 12 golden deben pasar --
+    income_date_unknown desactiva la regla S2), los 14 golden deben pasar --
     si esto falla, alguien cambió una regla de situation_hint sin actualizar la
-    excepción documentada aquí y en el diseño."""
-    assert len(data["golden_customers"]) == 12
+    excepción documentada aquí y en el diseño. G13/G14 son los arquetipos nuevos
+    (capacidad digital D3 y producto sensible)."""
+    assert len(data["golden_customers"]) == 14
     failed = [g["customer_id"] for g in data["golden_customers"] if not g["passed"]]
     assert failed == [], f"golden customers fallando: {failed}"
 

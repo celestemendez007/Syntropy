@@ -53,7 +53,8 @@ BARRIER_MATCH_RATE = 0.70  # 70% de las veces la barrera dicha coincide con situ
 PAID_ON_TIME_IF_ACCEPTED_PROB = 0.85
 
 INTERVENTIONS_FIELDNAMES = ["intervention_id", "customer_id", "situation_hint", "low_digital_response",
-                            "risk_level", "decision", "channel_used", "channel_source", "recommended_action"]
+                            "risk_level", "decision", "channel_used", "channel_source", "recommended_action",
+                            "credit_product", "digital_capability", "needs_guided_help", "complex_case"]
 CONVERSATIONS_FIELDNAMES = ["conversation_id", "intervention_id", "customer_id", "situation_hint", "channel",
                             "turns_total", "barrier_detected", "barrier_vs_situation_match", "tone_overall",
                             "escalation_triggered", "alternatives_offered", "alternative_accepted",
@@ -116,6 +117,8 @@ def generate(n_customers: int = 1800, seed: int = SEED) -> tuple:
             "decision": "INTERVENE" if nba["intervene"] else "NO_CONTACT",
             "channel_used": nba["channel"], "channel_source": nba.get("channel_source", ""),
             "recommended_action": nba["action"],
+            "credit_product": nba["credit_product"], "digital_capability": nba["digital_capability"],
+            "needs_guided_help": nba["needs_guided_help"], "complex_case": nba["complex_case"],
         })
 
         if not nba["intervene"]:

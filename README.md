@@ -52,7 +52,28 @@ Para considerar este MVP como exitoso durante el hackathon, debe cumplirse lo si
 | Feedback loop (`nba_priority_table`, suavizado bayesiano, recálculo) | ✅ Real | `src/backend/nba_priority.py`, wireado en `score_customer.py`. `conversations_log`/`interventions_log` son sintéticos (sin LLM real conectado), ver `research/ba_a_tiempo/outputs/nba_priority_table_report.md` |
 | Reporte final consolidado | ✅ Real | `docs/reporte_final.md` — comparativa de qué modelo ganó en cada fase y por qué, limitaciones conocidas |
 | Dashboard mínimo | ✅ Real | `src/frontend` (React + Vite), lee `public/data/dashboard_data.json` (estático, sin backend HTTP) |
-| Script único para correr todo | ✅ Real | `python run_all.py` desde la raíz — regenera todo, sincroniza producción, corre 146 tests, ~3 min |
+| Script único para correr todo | ✅ Real | `python run_all.py` desde la raíz — regenera todo, sincroniza producción, corre los tests, ~3 min |
+| Arquetipos de 3 capas (situación + producto crediticio + capacidad digital) | ✅ Real | `nba_engine.py` + `policy_engine.py` + `conversation_engine.py`. Ver `docs/contracts.md` §5 ("profile") |
+
+### Arquetipos de 3 capas (mejora post-Fase 8)
+
+El perfil de un cliente ya no depende solo de `situation_hint` (S0-S3): se combina con
+`credit_product` (10 productos reales de Bancoagrícola) y `digital_capability` (D1 autónomo /
+D2 necesita guía / D3 no sabe usar la app) — p. ej. "crédito de vehículo + desfase de fecha +
+capacidad digital D1". Ninguna de las dos dimensiones nuevas es feature de riesgo (IF/LR); son
+contexto de enrutamiento para NBA, Policy Engine y el prompt del LLM.
+
+- **`GUIDED_APP_HELP`** (acción nueva): un cliente D3 recibe guía paso a paso dentro de la app,
+  no solo un cambio de canal — son problemas distintos (no sabe usar la app vs. no responde por
+  el canal habitual). El prompt del LLM trae instrucciones explícitas de qué SÍ y qué NO puede
+  hacer (nunca recuperar credenciales ni saltarse autenticación; sí guiar y ofrecer un asesor).
+- **Umbral de escalamiento más bajo para productos sensibles** (`PERSONAL_LOAN_MORTGAGE_BACKED`,
+  `HOME_LOAN`, `VEHICLE_LOAN`): un error de negociación automática pesa más en garantía real.
+- **No empujar más deuda a productos rotativos** (`CREDICHEQUE`, `OVERDRAFT_ELITE`,
+  `EXTRA_FINANCING`, `SALARY_ADVANCE`) bajo presión de liquidez: `ALT-AUTOSAVE-PCT` queda
+  excluida del catálogo en ese caso, y `ALT-PAYMENT-PLAN` (revisión humana) siempre está disponible.
+- **2 golden customers nuevos**: `G13` (capacidad digital D3) y `G14` (producto sensible,
+  severidad moderada) — 14 golden customers en total.
 
 **Todas las 8 fases del proyecto están completas.** Ver `docs/reporte_final.md` para el
 resumen consolidado y las limitaciones conocidas.

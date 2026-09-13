@@ -1,10 +1,10 @@
 """
 nba_engine.py — Next Best Action real (Fase 5, BA_A_Tiempo_Diseno_Dataset_v1.md §P
-y BA_A_Tiempo_Propuesta_v2.md §7-8).
+y BA_A_Tiempo_Propuesta_v2.md §7-8; arquetipos de 3 capas post-Fase 8).
 
 Todo determinista (reglas), nada de ML aquí -- el riesgo viene de risk_engine.py
 (Fases 2-3) y el canal/momento de channel_timing_engine.py (Fase 4). Este módulo
-solo decide:
+decide:
 
   1. `should_contact` (compuertas, v1 §P): no si ya pagó, no si pidió no ser
      contactado, no si se le contactó muy seguido, no si low_digital_response
@@ -12,9 +12,18 @@ solo decide:
      anomalía, no fuera de la ventana de intervención (1-10 días antes del
      vencimiento).
   2. `recommended_action`: mapeo de `situation_hint` + `low_digital_response`
-     (+ severidad para escalamiento a humano, ver G11).
+     (+ severidad para escalamiento a humano, ver G11) -- ahora también con:
+       - `digital_capability` (D1/D2/D3): un D3 necesita guía paso a paso dentro
+         de la app (`GUIDED_APP_HELP`), no solo un cambio de canal (ver G13).
+       - `credit_product`: productos sensibles (garantía real, vivienda, vehículo)
+         bajan el umbral de escalamiento a humano -- un error de negociación
+         automática pesa más en esos productos (ver G14).
   3. `channel`/`scheduled_for`: delega en channel_timing_engine (Fase 4).
   4. `nba_reason`: plantilla legible desde `top_factors`.
+
+El arquetipo completo de un cliente (para NBA, Policy Engine y el prompt del LLM)
+es la combinación de estas tres capas -- p. ej. "crédito de vehículo + desfase de
+fecha + capacidad digital D1" -- nunca una sola dimensión aislada.
 """
 import os
 import sys
@@ -35,6 +44,24 @@ MIN_DAYS_BETWEEN_CONTACTS = 3
 INTERVENTION_WINDOW = (1, 10)
 ESCALATION_FAILED_ATTEMPTS_MIN = 3
 ESCALATION_BALANCE_RATIO_MAX = 0.3
+
+# Arquetipos de 3 capas (post-Fase 8, ver config.py de research/ba_a_tiempo para la
+# fuente de verdad de estas listas -- duplicadas aquí a propósito, mismo patrón que
+# IF_FEATURES/LR_FEATURES en risk_engine.py: producción no importa desde research/).
+SENSITIVE_CREDIT_PRODUCTS = {"PERSONAL_LOAN_MORTGAGE_BACKED", "HOME_LOAN", "VEHICLE_LOAN"}
+REVOLVING_CREDIT_PRODUCTS = {"CREDICHEQUE", "OVERDRAFT_ELITE", "EXTRA_FINANCING", "SALARY_ADVANCE"}
+# Umbral de escalamiento MÁS BAJO para productos sensibles: un error de negociación
+# automática en una hipoteca o un vehículo pesa más que en un crédito personal chico.
+SENSITIVE_ESCALATION_BALANCE_RATIO_MAX = 0.5
+SENSITIVE_ESCALATION_FAILED_ATTEMPTS_MIN = 1
+
+# Defaults para las compuertas tempranas (cliente no encontrado / no se debe contactar):
+# no hay acción real que tomar, pero el contrato siempre debe traer estas llaves.
+_DEFAULT_ARCHETYPE_FIELDS = {
+    "credit_product": "PERSONAL_LOAN_PAYROLL_DEDUCTION", "digital_capability": "D1",
+    "needs_guided_help": False, "human_support_recommended": False,
+    "complex_case": False, "avoid_more_credit": False,
+}
 
 TOP_FACTOR_TEMPLATES = {
     "balance_ratio": "el saldo actual cubre poco de la cuota",
@@ -125,18 +152,45 @@ def _should_contact(row: pd.Series, risk_profile: dict) -> tuple[bool, str | Non
     return True, None
 
 
-def _recommended_action(situation_hint: str, low_digital_response: bool, failed_attempts_30d: int,
-                         balance_ratio: float) -> str:
-    if situation_hint == "S3" and low_digital_response and (
+def _is_complex_case(situation_hint: str, credit_product: str, failed_attempts_30d: int,
+                      balance_ratio: float, low_digital_response: bool) -> bool:
+    """S6 del arquetipo ampliado: caso que debe escalar a humano, ya sea por producto
+    sensible con severidad moderada (umbral bajo a propósito, ver G14) o por la regla
+    genérica ya existente (S3 + baja respuesta digital + severidad alta, ver G11)."""
+    if situation_hint != "S3":
+        return False
+    if credit_product in SENSITIVE_CREDIT_PRODUCTS and (
+            balance_ratio < SENSITIVE_ESCALATION_BALANCE_RATIO_MAX
+            or failed_attempts_30d >= SENSITIVE_ESCALATION_FAILED_ATTEMPTS_MIN):
+        return True
+    if low_digital_response and (
             failed_attempts_30d >= ESCALATION_FAILED_ATTEMPTS_MIN or balance_ratio < ESCALATION_BALANCE_RATIO_MAX):
-        return "HUMAN_ESCALATION"
+        return True
+    return False
+
+
+def _recommended_action(situation_hint: str, low_digital_response: bool, digital_capability: str,
+                         credit_product: str, failed_attempts_30d: int, balance_ratio: float) -> tuple:
+    """Devuelve (action, complex_case). Orden de prioridad: 1) seguridad (escalar si
+    el caso es complejo) antes que 2) capacidad digital (D3 necesita guía, no solo
+    otro canal) antes que 3) baja respuesta (cambiar canal) antes que 4) la acción
+    base por situación financiera."""
+    if _is_complex_case(situation_hint, credit_product, failed_attempts_30d, balance_ratio, low_digital_response):
+        return "HUMAN_ESCALATION", True
+    if digital_capability == "D3":
+        return "GUIDED_APP_HELP", False
     if low_digital_response:
-        return "CHANNEL_SWITCH"
-    return {"S0": "NO_CONTACT", "S1": "SIMPLE_REMINDER", "S2": "DATE_OPTIONS",
-            "S3": "EMPATHETIC_CONVERSATION"}.get(situation_hint, "SIMPLE_REMINDER")
+        return "CHANNEL_SWITCH", False
+    action = {"S0": "NO_CONTACT", "S1": "SIMPLE_REMINDER", "S2": "DATE_OPTIONS",
+              "S3": "EMPATHETIC_CONVERSATION"}.get(situation_hint, "SIMPLE_REMINDER")
+    return action, False
 
 
-def _nba_reason(top_factors: list, situation_hint: str) -> str:
+def _nba_reason(top_factors: list, situation_hint: str, action: str) -> str:
+    if action == "GUIDED_APP_HELP":
+        return ("Puedo ayudarle a revisar su crédito, entender sus opciones y guiarle paso a paso "
+                "dentro de la app. Si su caso necesita revisión especial o apoyo técnico más directo, "
+                "puedo conectarle con un asesor para continuar.")
     if not top_factors:
         return "Sin factores destacados sobre su propio histórico; situación estable." if situation_hint == "S0" \
             else "Señal de riesgo sin un factor dominante claro."
@@ -154,20 +208,34 @@ def get_next_best_action(customer_id: str, risk_profile: dict) -> dict:
     """
     row = _find_customer_row(customer_id)
     if row is None:
-        return {"intervene": False, "channel": "NONE", "action": "NO_CONTACT",
+        return {**_DEFAULT_ARCHETYPE_FIELDS, "intervene": False, "channel": "NONE", "action": "NO_CONTACT",
                 "reason": "CUSTOMER_NOT_FOUND", "nba_reason": "Cliente no encontrado."}
 
     should_contact, block_reason = _should_contact(row, risk_profile)
     if not should_contact:
-        return {"intervene": False, "channel": "NONE", "action": "NO_CONTACT",
-                "reason": block_reason, "nba_reason": "No se cumplen las condiciones para intervenir."}
+        # `needs_guided_help` describe al cliente (su capacidad digital), no la decisión de
+        # contactarlo -- debe reflejar digital_capability real aunque no se vaya a intervenir,
+        # no quedar en el default solo porque las compuertas bloquearon el contacto.
+        blocked_digital_capability = row.get("digital_capability", "D1")
+        return {**_DEFAULT_ARCHETYPE_FIELDS, "intervene": False, "channel": "NONE", "action": "NO_CONTACT",
+                "reason": block_reason, "nba_reason": "No se cumplen las condiciones para intervenir.",
+                "credit_product": row.get("credit_product", "PERSONAL_LOAN_PAYROLL_DEDUCTION"),
+                "digital_capability": blocked_digital_capability,
+                "needs_guided_help": blocked_digital_capability == "D3"}
 
     situation_hint = risk_profile.get("situation_hint", "S0")
     low_digital_response = bool(risk_profile.get("low_digital_response", False))
     failed_attempts_30d = int(row.get("failed_payment_attempts_30d", 0))
     balance_ratio = float(row.get("balance_ratio", 1.0))
+    digital_capability = row.get("digital_capability", "D1")
+    credit_product = row.get("credit_product", "PERSONAL_LOAN_PAYROLL_DEDUCTION")
 
-    action = _recommended_action(situation_hint, low_digital_response, failed_attempts_30d, balance_ratio)
+    action, complex_case = _recommended_action(situation_hint, low_digital_response, digital_capability,
+                                                credit_product, failed_attempts_30d, balance_ratio)
+    needs_guided_help = digital_capability == "D3"
+    human_support_recommended = complex_case or (needs_guided_help and situation_hint == "S3")
+    avoid_more_credit = credit_product in REVOLVING_CREDIT_PRODUCTS and situation_hint in ("S3",)
+
     channel_timing = get_channel_and_timing(customer_id)
 
     days_to_due = row.get("days_to_due", 7)
@@ -186,7 +254,13 @@ def get_next_best_action(customer_id: str, risk_profile: dict) -> dict:
         "scheduled_for": scheduled_for,
         "action": action,
         "reason": f"{situation_hint}{'_LOW_DIGITAL_RESPONSE' if low_digital_response else ''}",
-        "nba_reason": _nba_reason(risk_profile.get("top_factors", []), situation_hint),
+        "nba_reason": _nba_reason(risk_profile.get("top_factors", []), situation_hint, action),
+        "credit_product": credit_product,
+        "digital_capability": digital_capability,
+        "needs_guided_help": needs_guided_help,
+        "human_support_recommended": human_support_recommended,
+        "complex_case": complex_case,
+        "avoid_more_credit": avoid_more_credit,
     }
 
 

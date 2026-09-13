@@ -141,6 +141,10 @@ def _portfolio_summary() -> dict:
         "risk_level_distribution": interventions["risk_level"].value_counts(normalize=True).round(4).to_dict(),
         "recommended_action_distribution": intervened["recommended_action"].value_counts().to_dict(),
         "channel_source_distribution": intervened["channel_source"].value_counts(normalize=True).round(4).to_dict(),
+        "credit_product_distribution": interventions["credit_product"].value_counts(normalize=True).round(4).to_dict(),
+        "digital_capability_distribution": interventions["digital_capability"].value_counts(normalize=True).round(4).to_dict(),
+        "pct_needs_guided_help": round(float(interventions["needs_guided_help"].mean()) * 100, 1),
+        "pct_complex_case": round(float(interventions["complex_case"].mean()) * 100, 1),
     }
 
 

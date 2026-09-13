@@ -60,3 +60,28 @@ def test_meta_has_model_version_and_timestamp():
     result = score_customer("C00001")
     assert result["meta"]["model_version"]
     assert "T" in result["meta"]["scored_at"]  # ISO 8601
+
+
+# --- Arquetipos de 3 capas ---
+
+def test_profile_section_has_all_archetype_fields():
+    result = score_customer("C00001")
+    profile = result["profile"]
+    for key in ("credit_product", "digital_capability", "needs_guided_help",
+                "human_support_recommended", "complex_case", "avoid_more_credit"):
+        assert key in profile
+    assert profile["digital_capability"] in {"D1", "D2", "D3"}
+
+
+def test_golden_g13_profile_flags_guided_help():
+    result = score_customer("GOLD-G13")
+    assert result["profile"]["digital_capability"] == "D3"
+    assert result["profile"]["needs_guided_help"] is True
+    assert result["nba"]["recommended_action"] == "GUIDED_APP_HELP"
+
+
+def test_golden_g14_profile_flags_complex_case():
+    result = score_customer("GOLD-G14")
+    assert result["profile"]["complex_case"] is True
+    assert result["profile"]["human_support_recommended"] is True
+    assert result["nba"]["recommended_action"] == "HUMAN_ESCALATION"

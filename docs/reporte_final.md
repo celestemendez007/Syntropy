@@ -4,11 +4,17 @@ Cobranza preventiva y empática con IA. Todo el pipeline (Fases 1-7) está imple
 probado; este documento consolida qué se comparó en cada fase, qué ganó, por qué, y qué
 limitaciones quedan explícitamente documentadas. Todos los datos son **sintéticos**.
 
-Para reproducir todo desde cero: `python run_all.py` desde la raíz del repo (~3 minutos).
+Para reproducir todo desde cero: `python run_all.py` desde la raíz del repo (~5-10 minutos).
 Regenera los datos, corre los tres benchmarks de modelos, sincroniza los ganadores a
 producción, genera las conversaciones (golden + sintéticas), recalcula la tabla de
 prioridades, mide la latencia end-to-end, exporta el dashboard y corre toda la suite de
-tests (146 tests entre `research/ba_a_tiempo/tests/` y `tests/`).
+tests entre `research/ba_a_tiempo/tests/` y `tests/`.
+
+**Actualización post-Fase 8**: el perfil de cliente pasó de una sola dimensión
+(`situation_hint`) a un arquetipo de 3 capas -- situación financiera + producto crediticio
+(10 productos reales) + capacidad digital (D1/D2/D3) -- para que NBA, Policy Engine y el
+LLM sepan no solo *qué* le pasa a un cliente sino *en qué producto* y *qué tan capaz es de
+resolverlo digitalmente*. Ver §9 más abajo.
 
 ---
 
@@ -180,9 +186,57 @@ con `score_customer`. `npm run dev` (o `npm run build`) en `src/frontend/`.
 ## 8. Cómo reproducir
 
 ```bash
-python run_all.py          # todo el pipeline, ~3 min, termina corriendo 146 tests
+python run_all.py          # todo el pipeline, ~5-10 min
 cd src/frontend && npm run dev   # dashboard en http://localhost:5173
 ```
 
 Ver `README.md` para el detalle por fase y `docs/contracts.md` para los contratos JSON
 completos entre módulos.
+
+---
+
+## 9. Arquetipos de 3 capas (mejora post-Fase 8)
+
+Un solo `situation_hint` (S0-S3) no distingue "cliente con crédito de vehículo que olvidó
+pagar" de "cliente con hipoteca en presión de liquidez que no sabe usar la app" -- dos casos
+que necesitan intervenciones completamente distintas. Se agregaron dos dimensiones más,
+ninguna usada como feature de riesgo (serían contaminación de contexto, no señal):
+
+- **`credit_product`** (10 productos reales del catálogo de Bancoagrícola: crédito personal
+  con orden de descuento / cargo a cuenta / garantía hipotecaria, Credicheque, Adelanto de
+  Salario, Sobregiro Elite, Extrafinanciamiento, Vivienda, Vehículo, Estudio).
+- **`digital_capability`** (D1 autónomo / D2 necesita guía / D3 no sabe usar bien la app).
+  **Limitación honesta**: no hay dato de edad ni alfabetización real en el generador, así
+  que es un sorteo independiente (D1 65%, D2 25%, D3 10%) -- en producción real vendría de
+  comportamiento observado, no de una corrida sintética.
+
+**Qué cambia en el sistema, no solo en el dato:**
+
+1. **`GUIDED_APP_HELP`** — acción nueva del NBA para clientes D3. Tiene prioridad sobre
+   `CHANNEL_SWITCH`: no saber usar la app y no responder por el canal habitual son problemas
+   distintos con soluciones distintas. El prompt del LLM recibe instrucciones explícitas de
+   qué SÍ puede hacer (guiar paso a paso, repetir en lenguaje simple) y qué NO (recuperar
+   credenciales, saltarse autenticación, diagnosticar disputas) -- con las frases exactas
+   que debe usar para ofrecer un asesor humano.
+2. **Umbral de escalamiento más bajo para productos sensibles** (garantía hipotecaria,
+   vivienda, vehículo): `balance_ratio < 0.5` o `1` intento fallido ya escalan a humano, en
+   vez de `< 0.3` / `3` intentos del umbral genérico -- un error de negociación automática
+   pesa más cuando hay una garantía real de por medio.
+3. **No empujar más deuda a productos rotativos** (Credicheque, Sobregiro, Extrafinanciamiento,
+   Adelanto de Salario): si el cliente ya usa uno de estos y está en presión de liquidez,
+   `ALT-AUTOSAVE-PCT` (comprometer % de ingreso futuro) queda excluida del catálogo elegible,
+   y `ALT-PAYMENT-PLAN` (revisión humana) siempre está disponible en su lugar -- evita el
+   ciclo deuda-sobre-deuda.
+4. **2 golden customers nuevos** (`G13` capacidad digital D3, `G14` producto sensible con
+   severidad moderada) validan ambas reglas nuevas explícitamente -- 14 golden customers en
+   total, todos pasando.
+
+**Un bug real encontrado y corregido en el camino**: al insertar los nuevos sorteos
+aleatorios en el generador, se desplazó sin querer la secuencia de números aleatorios de
+*todas* las columnas existentes (una misma seed ya no reproducía el mismo dataset) -- se
+corrigió moviendo los sorteos al final de la función, después de que la etiqueta sintética
+y las features ya estuvieran fijadas, así agregar una dimensión nueva no cambia en silencio
+los benchmarks de fases anteriores. Un segundo hallazgo: `needs_guided_help` inicialmente
+quedaba en `False` por defecto cuando una compuerta bloqueaba el contacto, incluso para un
+cliente realmente D3 -- se corrigió para que ese campo describa al cliente, no la decisión
+de contactarlo.

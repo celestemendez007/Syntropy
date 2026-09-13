@@ -1,4 +1,4 @@
 model,auc,brier_score,calibration_mae,fit_time_s,latency_p50_ms,latency_p95_ms,model_size_kb,positive_rate_train,positive_rate_test
-LogisticRegression,0.7369,0.213,0.1575,0.004,0.369,0.641,1.4,0.35,0.345
-RandomForest,0.7214,0.216,0.1444,0.302,26.068,28.224,2224.0,0.35,0.345
-LightGBM,0.6681,0.2248,0.1009,2.169,0.791,1.126,623.9,0.35,0.345
+LogisticRegression,0.7369,0.213,0.1575,0.011,1.196,1.523,1.4,0.35,0.345
+RandomForest,0.7214,0.216,0.1444,0.898,73.165,94.032,2224.0,0.35,0.345
+LightGBM,0.6681,0.2248,0.1009,4.766,1.462,1.653,623.9,0.35,0.345

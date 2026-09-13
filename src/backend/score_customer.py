@@ -102,6 +102,14 @@ def score_customer(customer_id: str) -> dict:
             "top_factors": risk_profile["top_factors"],
             "flags": _quality_flags(row),
         },
+        "profile": {
+            "credit_product": nba["credit_product"],
+            "digital_capability": nba["digital_capability"],
+            "needs_guided_help": nba["needs_guided_help"],
+            "human_support_recommended": nba["human_support_recommended"],
+            "complex_case": nba["complex_case"],
+            "avoid_more_credit": nba["avoid_more_credit"],
+        },
         "channel": {
             "channel_pref_model": channel_timing["channel_pref_model"],
             "channel_pref_confidence": channel_timing["channel_pref_confidence"],

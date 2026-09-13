@@ -126,6 +126,7 @@ contrato real para frontend/dashboard y para el LLM. No vuelve a calcular nada, 
   "gates": { "current_cycle_paid": false, "opt_out_flag": false },
   "risk": { "risk_score": 0.78, "risk_level": "HIGH", "anomaly_score": 0.81, "anomaly_flag": true, "risk_prob_lr": 0.74 },
   "situation": { "situation_hint": "S3", "low_digital_response": false, "top_factors": ["balance_ratio", "income_variation"], "flags": [] },
+  "profile": { "credit_product": "VEHICLE_LOAN", "digital_capability": "D1", "needs_guided_help": false, "human_support_recommended": false, "complex_case": false, "avoid_more_credit": false },
   "channel": { "channel_pref_model": "WHATSAPP", "channel_pref_confidence": 0.72, "channel_source": "MODEL_LEVEL1", "channel_used": "WHATSAPP" },
   "timing": { "best_hour_window": "12:00-13:30", "best_days_before_due": 5, "timing_confidence": 0.4 },
   "nba": { "should_contact": true, "recommended_action": "EMPATHETIC_CONVERSATION", "scheduled_for": "2026-09-14T12:00", "nba_reason": "...", "block_reason": null },
@@ -142,6 +143,39 @@ Latencia end-to-end medida en `research/ba_a_tiempo/outputs/score_customer_bench
 (p95 ≈ 60 ms sobre clientes reales, tras corregir un cuello de botella real encontrado al perfilar:
 la ablación de `top_factors` hacía 11 llamadas individuales al Isolation Forest en vez de una sola
 llamada por lotes).
+
+### `profile`: arquetipo de 3 capas (mejora post-Fase 8)
+Situación financiera (`situation`, arriba) + producto crediticio + capacidad digital, combinados
+-- nunca una sola dimensión aislada (p. ej. "crédito de vehículo + desfase de fecha + capacidad
+digital D1"). Ninguno de los dos campos nuevos es feature de IF/LR (ver `FORBIDDEN_FEATURES`
+equivalente en `config.py`): son contexto de enrutamiento para NBA/Policy Engine/LLM, no señal de
+riesgo o anomalía.
+
+| Campo | Valores | Fuente |
+|---|---|---|
+| `credit_product` | 10 productos (`PERSONAL_LOAN_PAYROLL_DEDUCTION`, `..._ACCOUNT_DEBIT`, `..._MORTGAGE_BACKED`, `CREDICHEQUE`, `SALARY_ADVANCE`, `OVERDRAFT_ELITE`, `EXTRA_FINANCING`, `HOME_LOAN`, `VEHICLE_LOAN`, `STUDENT_LOAN`) | Generador sintético, sorteo independiente (SUPUESTO DE DEMO) |
+| `digital_capability` | `D1` autónomo / `D2` necesita guía / `D3` no sabe usar bien la app | Generador sintético; SUPUESTO DE DEMO explícito: no hay dato de edad/alfabetización real, es un sorteo independiente (D1 65%, D2 25%, D3 10%) |
+| `needs_guided_help` | `digital_capability == "D3"` | `nba_engine.py` |
+| `complex_case` | `situation_hint == "S3"` y (producto sensible con severidad moderada, umbral bajo a propósito, **o** la regla genérica de escalamiento por baja respuesta digital + severidad alta) | `nba_engine.py` |
+| `human_support_recommended` | `complex_case` **o** (`needs_guided_help` y `situation_hint == "S3"`) | `nba_engine.py` |
+| `avoid_more_credit` | producto rotativo/liquidez-puente (`CREDICHEQUE`, `OVERDRAFT_ELITE`, `EXTRA_FINANCING`, `SALARY_ADVANCE`) y `situation_hint == "S3"` | `nba_engine.py` |
+
+**Productos sensibles** (`PERSONAL_LOAN_MORTGAGE_BACKED`, `HOME_LOAN`, `VEHICLE_LOAN`): el umbral
+de escalamiento a humano es más bajo (`balance_ratio < 0.5` o `failed_payment_attempts_30d >= 1`,
+en vez de `< 0.3` / `>= 3`) — un error de negociación automática pesa más en garantía real.
+
+**Productos rotativos** (`CREDICHEQUE`, `OVERDRAFT_ELITE`, `EXTRA_FINANCING`, `SALARY_ADVANCE`):
+`ALT-AUTOSAVE-PCT` nunca es elegible en `S3` (no comprometer más ingreso futuro sobre un cliente
+que ya usa liquidez-puente), y `ALT-PAYMENT-PLAN` (revisión humana) siempre lo es en su lugar.
+
+**`recommended_action` nuevo**: `GUIDED_APP_HELP` (capacidad digital D3 — guía paso a paso dentro
+de la app, con instrucciones explícitas de qué SÍ y qué NO puede hacer la IA inyectadas en el
+prompt, ver `conversation_engine.py`). Tiene prioridad sobre `CHANNEL_SWITCH`: no responder por
+el canal habitual y no saber usar la app son problemas distintos con soluciones distintas.
+
+Golden customers nuevos: `G13` (D3, `HOME_LOAN`, prueba `GUIDED_APP_HELP`) y `G14`
+(`PERSONAL_LOAN_MORTGAGE_BACKED`, severidad moderada, prueba el umbral de escalamiento más bajo
+para productos sensibles) — 14 golden customers en total.
 
 ## 6. conversation_result
 El resultado de la negociación capturado tras la interacción del cliente con el agente

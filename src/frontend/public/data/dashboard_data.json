@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-09-13T00:22:01.721471+00:00",
+  "generated_at": "2026-09-13T01:46:34.511221+00:00",
   "models": {
     "anomaly_detection": {
       "candidates": {
         "IsolationForest": {
           "auc_s0_vs_s3": 0.9588,
-          "fit_time_s": 0.199,
-          "latency_p50_ms": 5.098,
-          "latency_p95_ms": 5.615,
+          "fit_time_s": 0.556,
+          "latency_p50_ms": 15.784,
+          "latency_p95_ms": 18.907,
           "model_size_kb": 2258.9,
           "golden_g01_estable": 0.246,
           "golden_g02_anomalia_benigna": 0.691,
@@ -18,9 +18,9 @@
         },
         "LocalOutlierFactor": {
           "auc_s0_vs_s3": 0.6824,
-          "fit_time_s": 0.056,
-          "latency_p50_ms": 0.618,
-          "latency_p95_ms": 0.874,
+          "fit_time_s": 0.16,
+          "latency_p50_ms": 1.89,
+          "latency_p95_ms": 2.576,
           "model_size_kb": 1113.3,
           "golden_g01_estable": 0.049,
           "golden_g02_anomalia_benigna": 1.0,
@@ -31,9 +31,9 @@
         },
         "OneClassSVM": {
           "auc_s0_vs_s3": 0.8365,
-          "fit_time_s": 0.016,
-          "latency_p50_ms": 0.47,
-          "latency_p95_ms": 0.554,
+          "fit_time_s": 0.051,
+          "latency_p50_ms": 1.282,
+          "latency_p95_ms": 1.769,
           "model_size_kb": 27.3,
           "golden_g01_estable": 0.497,
           "golden_g02_anomalia_benigna": 1.0,
@@ -44,9 +44,9 @@
         },
         "ZScore_Mahalanobis": {
           "auc_s0_vs_s3": 0.9736,
-          "fit_time_s": 0.47,
-          "latency_p50_ms": 0.513,
-          "latency_p95_ms": 0.612,
+          "fit_time_s": 1.543,
+          "latency_p50_ms": 1.452,
+          "latency_p95_ms": 1.97,
           "model_size_kb": 27.4,
           "golden_g01_estable": 0.008,
           "golden_g02_anomalia_benigna": 0.231,
@@ -65,9 +65,9 @@
           "auc": 0.7369,
           "brier_score": 0.213,
           "calibration_mae": 0.1575,
-          "fit_time_s": 0.004,
-          "latency_p50_ms": 0.369,
-          "latency_p95_ms": 0.641,
+          "fit_time_s": 0.011,
+          "latency_p50_ms": 1.196,
+          "latency_p95_ms": 1.523,
           "model_size_kb": 1.4,
           "positive_rate_train": 0.35,
           "positive_rate_test": 0.345
@@ -76,9 +76,9 @@
           "auc": 0.7214,
           "brier_score": 0.216,
           "calibration_mae": 0.1444,
-          "fit_time_s": 0.302,
-          "latency_p50_ms": 26.068,
-          "latency_p95_ms": 28.224,
+          "fit_time_s": 0.898,
+          "latency_p50_ms": 73.165,
+          "latency_p95_ms": 94.032,
           "model_size_kb": 2224.0,
           "positive_rate_train": 0.35,
           "positive_rate_test": 0.345
@@ -87,9 +87,9 @@
           "auc": 0.6681,
           "brier_score": 0.2248,
           "calibration_mae": 0.1009,
-          "fit_time_s": 2.169,
-          "latency_p50_ms": 0.791,
-          "latency_p95_ms": 1.126,
+          "fit_time_s": 4.766,
+          "latency_p50_ms": 1.462,
+          "latency_p95_ms": 1.653,
           "model_size_kb": 623.9,
           "positive_rate_train": 0.35,
           "positive_rate_test": 0.345
@@ -100,37 +100,37 @@
     },
     "channel_preference": {
       "metrics": {
-        "channel_model_auc": 0.5256,
-        "channel_model_fit_time_s": 0.004,
+        "channel_model_auc": 0.5177,
+        "channel_model_fit_time_s": 0.011,
         "channel_model_n_train": 7923,
         "channel_model_n_test": 1981,
         "channel_model_size_kb": 2.7,
         "channel_source_distribution": {
-          "FALLBACK_CALL": 0.84,
-          "MODEL_LEVEL1": 0.16
+          "FALLBACK_CALL": 0.86,
+          "MODEL_LEVEL1": 0.14
         },
-        "channel_latency_p50_ms": 7.084,
-        "channel_latency_p95_ms": 8.41,
-        "timing_latency_p50_ms": 3.2,
-        "timing_latency_p95_ms": 4.581,
+        "channel_latency_p50_ms": 18.731,
+        "channel_latency_p95_ms": 23.478,
+        "timing_latency_p50_ms": 8.359,
+        "timing_latency_p95_ms": 12.716,
         "golden_g09_low_digital_response_channel": {
-          "channel": "APP_PUSH",
-          "confidence": 0.0121
+          "channel": "WHATSAPP",
+          "confidence": 0.0045
         }
       },
       "why": "Nivel 1 (tasa por cliente) + nivel 2 (Logistic Regression poblacional, AUC modesto porque no ve la afinidad oculta del generador) + fallback determinista a CALL. El diseño de dos niveles es la elección, no un solo algoritmo ganador."
     },
     "score_customer_latency": {
       "real_customers": {
-        "p50_ms": 51.30585000051724,
-        "p95_ms": 60.961900000120295,
-        "mean_ms": 57.072430000013505,
+        "p50_ms": 169.14960000121937,
+        "p95_ms": 308.70964999994595,
+        "mean_ms": 215.73022066676154,
         "n_reps": 150
       },
       "golden_customers": {
-        "p50_ms": 64.94314999963535,
-        "p95_ms": 67.40368499995384,
-        "mean_ms": 64.48433833326514,
+        "p50_ms": 354.14085000047635,
+        "p95_ms": 384.43243999954575,
+        "mean_ms": 1616.942523333364,
         "n_reps": 60
       }
     }
@@ -254,6 +254,26 @@
       "passed": true,
       "risk_level": "MEDIUM",
       "anomaly_score": 0.7812,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G13",
+      "scenario": "D3_dificultad_digital_necesita_guia",
+      "expected_situation": "S1",
+      "actual_situation": "S1",
+      "passed": true,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.7802,
+      "note": null
+    },
+    {
+      "customer_id": "GOLD-G14",
+      "scenario": "S6_producto_sensible_escalar_temprano",
+      "expected_situation": "S3",
+      "actual_situation": "S3",
+      "passed": true,
+      "risk_level": "MEDIUM",
+      "anomaly_score": 0.9127,
       "note": null
     }
   ],
@@ -451,7 +471,7 @@
   ],
   "portfolio": {
     "n_sampled": 1800,
-    "pct_no_contact": 88.1,
+    "pct_no_contact": 87.0,
     "situation_hint_distribution": {
       "S0": 0.5978,
       "S1": 0.3778,
@@ -462,36 +482,57 @@
       "HIGH": 0.335
     },
     "recommended_action_distribution": {
-      "SIMPLE_REMINDER": 139,
-      "CHANNEL_SWITCH": 68,
-      "EMPATHETIC_CONVERSATION": 8
+      "SIMPLE_REMINDER": 128,
+      "CHANNEL_SWITCH": 61,
+      "GUIDED_APP_HELP": 35,
+      "EMPATHETIC_CONVERSATION": 6,
+      "HUMAN_ESCALATION": 4
     },
     "channel_source_distribution": {
-      "FALLBACK_CALL": 0.9116,
-      "MODEL_LEVEL1": 0.0884
-    }
+      "FALLBACK_CALL": 0.8675,
+      "MODEL_LEVEL1": 0.1325
+    },
+    "credit_product_distribution": {
+      "PERSONAL_LOAN_PAYROLL_DEDUCTION": 0.2006,
+      "PERSONAL_LOAN_ACCOUNT_DEBIT": 0.1478,
+      "VEHICLE_LOAN": 0.1233,
+      "CREDICHEQUE": 0.0978,
+      "HOME_LOAN": 0.0939,
+      "STUDENT_LOAN": 0.0783,
+      "OVERDRAFT_ELITE": 0.0694,
+      "SALARY_ADVANCE": 0.0694,
+      "EXTRA_FINANCING": 0.0639,
+      "PERSONAL_LOAN_MORTGAGE_BACKED": 0.0556
+    },
+    "digital_capability_distribution": {
+      "D1": 0.665,
+      "D2": 0.2467,
+      "D3": 0.0883
+    },
+    "pct_needs_guided_help": 8.8,
+    "pct_complex_case": 0.2
   },
   "conversation_metrics": {
-    "n_conversations": 215,
+    "n_conversations": 234,
     "tone_distribution": {
-      "COOPERATIVE": 0.4884,
-      "NEUTRAL": 0.3535,
-      "TENSE": 0.1163,
-      "HOSTILE": 0.0419
+      "COOPERATIVE": 0.4915,
+      "NEUTRAL": 0.3504,
+      "TENSE": 0.1197,
+      "HOSTILE": 0.0385
     },
     "barrier_distribution": {
-      "FORGOT": 0.5116,
-      "LIQUIDITY": 0.1395,
-      "DISPUTE": 0.0744,
-      "OTHER": 0.0744,
-      "TECHNICAL": 0.0605,
-      "REFUSAL": 0.0512,
-      "ALREADY_PAID": 0.0465,
-      "DATE_MISMATCH": 0.0419
+      "FORGOT": 0.5128,
+      "LIQUIDITY": 0.1154,
+      "ALREADY_PAID": 0.0812,
+      "REFUSAL": 0.0684,
+      "DATE_MISMATCH": 0.0641,
+      "TECHNICAL": 0.0556,
+      "OTHER": 0.0556,
+      "DISPUTE": 0.047
     },
-    "barrier_vs_situation_match_rate": 0.5581,
-    "escalation_rate": 0.0419,
-    "acceptance_rate": 0.707
+    "barrier_vs_situation_match_rate": 0.5299,
+    "escalation_rate": 0.0427,
+    "acceptance_rate": 0.6624
   },
   "nba_priority_table_top": [
     {
@@ -499,26 +540,91 @@
       "barrier_detected": "DATE_MISMATCH",
       "channel": "CALL",
       "alt_id": "ALT-REMINDER-PAYLINK",
-      "n_offered": 5,
-      "n_accepted": 4,
-      "n_paid_on_time_after": 4,
+      "n_offered": 3,
+      "n_accepted": 3,
+      "n_paid_on_time_after": 3,
+      "avg_turns": 3.33,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 1.0,
+      "success_rate": 0.8
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "REFUSAL",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 9,
+      "n_accepted": 9,
+      "n_paid_on_time_after": 7,
       "avg_turns": 3.0,
-      "pct_tense_or_hostile": 0.2,
-      "acceptance_rate": 0.8,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 1.0,
+      "success_rate": 0.7273
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "DISPUTE",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 5,
+      "n_accepted": 5,
+      "n_paid_on_time_after": 4,
+      "avg_turns": 4.4,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 1.0,
       "success_rate": 0.7143
     },
     {
       "situation_hint": "S1",
-      "barrier_detected": "FORGOT",
+      "barrier_detected": "OTHER",
       "channel": "CALL",
       "alt_id": "ALT-REMINDER-PAYLINK",
-      "n_offered": 105,
-      "n_accepted": 86,
-      "n_paid_on_time_after": 71,
-      "avg_turns": 3.7,
-      "pct_tense_or_hostile": 0.1048,
-      "acceptance_rate": 0.819,
-      "success_rate": 0.6729
+      "n_offered": 8,
+      "n_accepted": 8,
+      "n_paid_on_time_after": 6,
+      "avg_turns": 3.0,
+      "pct_tense_or_hostile": 0.125,
+      "acceptance_rate": 1.0,
+      "success_rate": 0.7
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "TECHNICAL",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 8,
+      "n_accepted": 6,
+      "n_paid_on_time_after": 6,
+      "avg_turns": 3.12,
+      "pct_tense_or_hostile": 0.125,
+      "acceptance_rate": 0.75,
+      "success_rate": 0.7
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "FORGOT",
+      "channel": "SMS",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 7,
+      "n_accepted": 6,
+      "n_paid_on_time_after": 5,
+      "avg_turns": 3.14,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 0.8571,
+      "success_rate": 0.6667
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "DATE_MISMATCH",
+      "channel": "WHATSAPP",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 1,
+      "n_accepted": 1,
+      "n_paid_on_time_after": 1,
+      "avg_turns": 3.0,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 1.0,
+      "success_rate": 0.6667
     },
     {
       "situation_hint": "S0",
@@ -529,165 +635,100 @@
       "n_accepted": 1,
       "n_paid_on_time_after": 1,
       "avg_turns": 4.0,
-      "pct_tense_or_hostile": 0.0,
+      "pct_tense_or_hostile": 1.0,
       "acceptance_rate": 1.0,
       "success_rate": 0.6667
-    },
-    {
-      "situation_hint": "S3",
-      "barrier_detected": "LIQUIDITY",
-      "channel": "SMS",
-      "alt_id": "ALT-PARTIAL",
-      "n_offered": 1,
-      "n_accepted": 1,
-      "n_paid_on_time_after": 1,
-      "avg_turns": 4.0,
-      "pct_tense_or_hostile": 0.0,
-      "acceptance_rate": 1.0,
-      "success_rate": 0.6667
-    },
-    {
-      "situation_hint": "S1",
-      "barrier_detected": "OTHER",
-      "channel": "CALL",
-      "alt_id": "ALT-REMINDER-PAYLINK",
-      "n_offered": 9,
-      "n_accepted": 7,
-      "n_paid_on_time_after": 6,
-      "avg_turns": 3.78,
-      "pct_tense_or_hostile": 0.3333,
-      "acceptance_rate": 0.7778,
-      "success_rate": 0.6364
-    },
-    {
-      "situation_hint": "S1",
-      "barrier_detected": "DISPUTE",
-      "channel": "CALL",
-      "alt_id": "ALT-REMINDER-PAYLINK",
-      "n_offered": 9,
-      "n_accepted": 7,
-      "n_paid_on_time_after": 6,
-      "avg_turns": 4.11,
-      "pct_tense_or_hostile": 0.2222,
-      "acceptance_rate": 0.7778,
-      "success_rate": 0.6364
-    },
-    {
-      "situation_hint": "S1",
-      "barrier_detected": "LIQUIDITY",
-      "channel": "CALL",
-      "alt_id": "ALT-REMINDER-PAYLINK",
-      "n_offered": 11,
-      "n_accepted": 7,
-      "n_paid_on_time_after": 6,
-      "avg_turns": 3.91,
-      "pct_tense_or_hostile": 0.1818,
-      "acceptance_rate": 0.6364,
-      "success_rate": 0.5385
-    },
-    {
-      "situation_hint": "S1",
-      "barrier_detected": "REFUSAL",
-      "channel": "CALL",
-      "alt_id": "ALT-REMINDER-PAYLINK",
-      "n_offered": 8,
-      "n_accepted": 4,
-      "n_paid_on_time_after": 4,
-      "avg_turns": 4.5,
-      "pct_tense_or_hostile": 0.125,
-      "acceptance_rate": 0.5,
-      "success_rate": 0.5
-    },
-    {
-      "situation_hint": "S1",
-      "barrier_detected": "TECHNICAL",
-      "channel": "CALL",
-      "alt_id": "ALT-REMINDER-PAYLINK",
-      "n_offered": 11,
-      "n_accepted": 6,
-      "n_paid_on_time_after": 5,
-      "avg_turns": 4.18,
-      "pct_tense_or_hostile": 0.2727,
-      "acceptance_rate": 0.5455,
-      "success_rate": 0.4615
-    },
-    {
-      "situation_hint": "S3",
-      "barrier_detected": "LIQUIDITY",
-      "channel": "CALL",
-      "alt_id": "ALT-PARTIAL",
-      "n_offered": 9,
-      "n_accepted": 4,
-      "n_paid_on_time_after": 4,
-      "avg_turns": 4.22,
-      "pct_tense_or_hostile": 0.3333,
-      "acceptance_rate": 0.4444,
-      "success_rate": 0.4545
-    },
-    {
-      "situation_hint": "S1",
-      "barrier_detected": "ALREADY_PAID",
-      "channel": "CALL",
-      "alt_id": "ALT-REMINDER-PAYLINK",
-      "n_offered": 7,
-      "n_accepted": 4,
-      "n_paid_on_time_after": 3,
-      "avg_turns": 2.86,
-      "pct_tense_or_hostile": 0.1429,
-      "acceptance_rate": 0.5714,
-      "success_rate": 0.4444
     },
     {
       "situation_hint": "S1",
       "barrier_detected": "FORGOT",
-      "channel": "SMS",
-      "alt_id": "ALT-AUTOSAVE-PCT",
-      "n_offered": 3,
+      "channel": "WHATSAPP",
+      "alt_id": "ALT-GRACE-DAYS",
+      "n_offered": 1,
       "n_accepted": 1,
       "n_paid_on_time_after": 1,
-      "avg_turns": 2.67,
+      "avg_turns": 3.0,
       "pct_tense_or_hostile": 0.0,
-      "acceptance_rate": 0.3333,
-      "success_rate": 0.4
+      "acceptance_rate": 1.0,
+      "success_rate": 0.6667
     },
     {
-      "situation_hint": "S1",
-      "barrier_detected": "ALREADY_PAID",
+      "situation_hint": "S3",
+      "barrier_detected": "FORGOT",
       "channel": "CALL",
-      "alt_id": "ALT-GRACE-DAYS",
-      "n_offered": 3,
+      "alt_id": "ALT-PARTIAL",
+      "n_offered": 1,
       "n_accepted": 1,
       "n_paid_on_time_after": 1,
-      "avg_turns": 3.67,
+      "avg_turns": 2.0,
       "pct_tense_or_hostile": 0.0,
-      "acceptance_rate": 0.3333,
-      "success_rate": 0.4
-    },
-    {
-      "situation_hint": "S1",
-      "barrier_detected": "DISPUTE",
-      "channel": "CALL",
-      "alt_id": "ALT-GRACE-DAYS",
-      "n_offered": 3,
-      "n_accepted": 1,
-      "n_paid_on_time_after": 1,
-      "avg_turns": 5.0,
-      "pct_tense_or_hostile": 0.6667,
-      "acceptance_rate": 0.3333,
-      "success_rate": 0.4
+      "acceptance_rate": 1.0,
+      "success_rate": 0.6667
     },
     {
       "situation_hint": "S1",
       "barrier_detected": "LIQUIDITY",
       "channel": "CALL",
-      "alt_id": "ALT-GRACE-DAYS",
-      "n_offered": 3,
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 11,
+      "n_accepted": 8,
+      "n_paid_on_time_after": 7,
+      "avg_turns": 3.0,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 0.7273,
+      "success_rate": 0.6154
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "FORGOT",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 104,
+      "n_accepted": 76,
+      "n_paid_on_time_after": 61,
+      "avg_turns": 4.01,
+      "pct_tense_or_hostile": 0.1538,
+      "acceptance_rate": 0.7308,
+      "success_rate": 0.5849
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "ALREADY_PAID",
+      "channel": "CALL",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 9,
+      "n_accepted": 7,
+      "n_paid_on_time_after": 5,
+      "avg_turns": 3.11,
+      "pct_tense_or_hostile": 0.2222,
+      "acceptance_rate": 0.7778,
+      "success_rate": 0.5455
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "FORGOT",
+      "channel": "APP_PUSH",
+      "alt_id": "ALT-REMINDER-PAYLINK",
+      "n_offered": 2,
+      "n_accepted": 2,
+      "n_paid_on_time_after": 1,
+      "avg_turns": 3.5,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 1.0,
+      "success_rate": 0.5
+    },
+    {
+      "situation_hint": "S1",
+      "barrier_detected": "FORGOT",
+      "channel": "WHATSAPP",
+      "alt_id": "ALT-AUTOSAVE-PCT",
+      "n_offered": 2,
       "n_accepted": 1,
       "n_paid_on_time_after": 1,
-      "avg_turns": 5.33,
-      "pct_tense_or_hostile": 0.3333,
-      "acceptance_rate": 0.3333,
-      "success_rate": 0.4
+      "avg_turns": 3.5,
+      "pct_tense_or_hostile": 0.0,
+      "acceptance_rate": 0.5,
+      "success_rate": 0.5
     }
   ],
   "sample_scored_customers": [
@@ -712,9 +753,17 @@
         "top_factors": [],
         "flags": []
       },
+      "profile": {
+        "credit_product": "OVERDRAFT_ELITE",
+        "digital_capability": "D1",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
         "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0066,
+        "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
         "channel_used": "NONE"
       },
@@ -741,7 +790,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.204539+00:00"
+        "scored_at": "2026-09-13T01:46:36.120056+00:00"
       }
     },
     {
@@ -769,9 +818,17 @@
           "contact_history_insufficient"
         ]
       },
+      "profile": {
+        "credit_product": "SALARY_ADVANCE",
+        "digital_capability": "D1",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
         "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0121,
+        "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
         "channel_used": "CALL"
       },
@@ -798,7 +855,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.265437+00:00"
+        "scored_at": "2026-09-13T01:46:36.282007+00:00"
       }
     },
     {
@@ -825,9 +882,17 @@
         ],
         "flags": []
       },
+      "profile": {
+        "credit_product": "PERSONAL_LOAN_PAYROLL_DEDUCTION",
+        "digital_capability": "D1",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
         "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0121,
+        "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
         "channel_used": "NONE"
       },
@@ -854,7 +919,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.315544+00:00"
+        "scored_at": "2026-09-13T01:46:36.415243+00:00"
       }
     },
     {
@@ -883,9 +948,17 @@
           "contact_history_insufficient"
         ]
       },
+      "profile": {
+        "credit_product": "HOME_LOAN",
+        "digital_capability": "D2",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
         "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0121,
+        "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
         "channel_used": "CALL"
       },
@@ -912,7 +985,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.376480+00:00"
+        "scored_at": "2026-09-13T01:46:36.579483+00:00"
       }
     },
     {
@@ -940,9 +1013,17 @@
           "contact_history_insufficient"
         ]
       },
+      "profile": {
+        "credit_product": "VEHICLE_LOAN",
+        "digital_capability": "D1",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
         "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0121,
+        "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
         "channel_used": "CALL"
       },
@@ -969,7 +1050,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.435287+00:00"
+        "scored_at": "2026-09-13T01:46:36.741596+00:00"
       }
     },
     {
@@ -995,9 +1076,17 @@
         ],
         "flags": []
       },
+      "profile": {
+        "credit_product": "EXTRA_FINANCING",
+        "digital_capability": "D1",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
         "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0121,
+        "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
         "channel_used": "CALL"
       },
@@ -1026,7 +1115,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.496399+00:00"
+        "scored_at": "2026-09-13T01:46:36.915312+00:00"
       }
     },
     {
@@ -1056,9 +1145,17 @@
           "contact_history_insufficient"
         ]
       },
+      "profile": {
+        "credit_product": "VEHICLE_LOAN",
+        "digital_capability": "D1",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
         "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0121,
+        "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
         "channel_used": "CALL"
       },
@@ -1087,7 +1184,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.557597+00:00"
+        "scored_at": "2026-09-13T01:46:37.083826+00:00"
       }
     },
     {
@@ -1113,15 +1210,23 @@
         ],
         "flags": []
       },
+      "profile": {
+        "credit_product": "CREDICHEQUE",
+        "digital_capability": "D1",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
-        "channel_pref_model": "SMS",
-        "channel_pref_confidence": 0.6667,
-        "channel_source": "MODEL_LEVEL1",
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0045,
+        "channel_source": "FALLBACK_CALL",
         "channel_used": "NONE"
       },
       "timing": {
         "best_hour_window": "12:00-13:30",
-        "best_days_before_due": 4,
+        "best_days_before_due": 5,
         "timing_confidence": 0.3
       },
       "nba": {
@@ -1143,7 +1248,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.602105+00:00"
+        "scored_at": "2026-09-13T01:46:37.223735+00:00"
       }
     },
     {
@@ -1173,9 +1278,17 @@
           "contact_history_insufficient"
         ]
       },
+      "profile": {
+        "credit_product": "SALARY_ADVANCE",
+        "digital_capability": "D1",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
         "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0121,
+        "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
         "channel_used": "CALL"
       },
@@ -1203,7 +1316,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.662565+00:00"
+        "scored_at": "2026-09-13T01:46:37.377266+00:00"
       }
     },
     {
@@ -1229,6 +1342,14 @@
           "balance_vs_historical"
         ],
         "flags": []
+      },
+      "profile": {
+        "credit_product": "HOME_LOAN",
+        "digital_capability": "D2",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
       },
       "channel": {
         "channel_pref_model": "WHATSAPP",
@@ -1261,7 +1382,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.707320+00:00"
+        "scored_at": "2026-09-13T01:46:37.503011+00:00"
       }
     },
     {
@@ -1285,10 +1406,18 @@
         "top_factors": [],
         "flags": []
       },
+      "profile": {
+        "credit_product": "HOME_LOAN",
+        "digital_capability": "D2",
+        "needs_guided_help": false,
+        "human_support_recommended": true,
+        "complex_case": true,
+        "avoid_more_credit": false
+      },
       "channel": {
-        "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.3333,
-        "channel_source": "FALLBACK_CALL",
+        "channel_pref_model": "CALL",
+        "channel_pref_confidence": 0.5,
+        "channel_source": "MODEL_LEVEL1",
         "channel_used": "CALL"
       },
       "timing": {
@@ -1298,7 +1427,7 @@
       },
       "nba": {
         "should_contact": true,
-        "recommended_action": "EMPATHETIC_CONVERSATION",
+        "recommended_action": "HUMAN_ESCALATION",
         "scheduled_for": "2026-09-12T12:00",
         "nba_reason": "Señal de riesgo sin un factor dominante claro.",
         "block_reason": null
@@ -1310,12 +1439,13 @@
         "remaining_installments_assumed": 12,
         "eligible_alternatives_hint": [
           "ALT-PARTIAL",
+          "ALT-PAYMENT-PLAN",
           "ALT-AUTOSAVE-PCT"
         ]
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.757867+00:00"
+        "scored_at": "2026-09-13T01:46:37.650685+00:00"
       }
     },
     {
@@ -1343,10 +1473,18 @@
           "income_date_unknown"
         ]
       },
+      "profile": {
+        "credit_product": "SALARY_ADVANCE",
+        "digital_capability": "D1",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
-        "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.012,
-        "channel_source": "FALLBACK_CALL",
+        "channel_pref_model": "CALL",
+        "channel_pref_confidence": 0.5,
+        "channel_source": "MODEL_LEVEL1",
         "channel_used": "NONE"
       },
       "timing": {
@@ -1368,12 +1506,12 @@
         "remaining_installments_assumed": 12,
         "eligible_alternatives_hint": [
           "ALT-PARTIAL",
-          "ALT-AUTOSAVE-PCT"
+          "ALT-PAYMENT-PLAN"
         ]
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.811308+00:00"
+        "scored_at": "2026-09-13T01:46:37.769891+00:00"
       }
     },
     {
@@ -1401,9 +1539,17 @@
         ],
         "flags": []
       },
+      "profile": {
+        "credit_product": "EXTRA_FINANCING",
+        "digital_capability": "D1",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
         "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0121,
+        "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
         "channel_used": "NONE"
       },
@@ -1426,12 +1572,12 @@
         "remaining_installments_assumed": 12,
         "eligible_alternatives_hint": [
           "ALT-PARTIAL",
-          "ALT-AUTOSAVE-PCT"
+          "ALT-PAYMENT-PLAN"
         ]
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.861182+00:00"
+        "scored_at": "2026-09-13T01:46:37.901227+00:00"
       }
     },
     {
@@ -1459,10 +1605,18 @@
         ],
         "flags": []
       },
+      "profile": {
+        "credit_product": "PERSONAL_LOAN_ACCOUNT_DEBIT",
+        "digital_capability": "D2",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
-        "channel_pref_model": "APP_PUSH",
-        "channel_pref_confidence": 0.6667,
-        "channel_source": "MODEL_LEVEL1",
+        "channel_pref_model": "UNDETERMINED",
+        "channel_pref_confidence": 0.0045,
+        "channel_source": "FALLBACK_CALL",
         "channel_used": "NONE"
       },
       "timing": {
@@ -1489,7 +1643,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.906345+00:00"
+        "scored_at": "2026-09-13T01:46:38.051607+00:00"
       }
     },
     {
@@ -1519,9 +1673,17 @@
           "contact_history_insufficient"
         ]
       },
+      "profile": {
+        "credit_product": "PERSONAL_LOAN_ACCOUNT_DEBIT",
+        "digital_capability": "D2",
+        "needs_guided_help": false,
+        "human_support_recommended": false,
+        "complex_case": false,
+        "avoid_more_credit": false
+      },
       "channel": {
         "channel_pref_model": "UNDETERMINED",
-        "channel_pref_confidence": 0.0121,
+        "channel_pref_confidence": 0.0045,
         "channel_source": "FALLBACK_CALL",
         "channel_used": "NONE"
       },
@@ -1549,7 +1711,7 @@
       },
       "meta": {
         "model_version": "if_v1_lr_v1_ch_v1",
-        "scored_at": "2026-09-13T00:22:02.957109+00:00"
+        "scored_at": "2026-09-13T01:46:38.202987+00:00"
       }
     }
   ]

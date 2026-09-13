@@ -71,3 +71,40 @@ def test_g11_severe_case_offers_human_only_restructuring():
 def test_unknown_customer_gets_no_alternatives():
     profile = get_risk_profile("NO_EXISTE_9999")
     assert get_eligible_alternatives("NO_EXISTE_9999", profile) == []
+
+
+# --- Arquetipos de 3 capas: producto crediticio como contexto de elegibilidad ---
+
+def test_g14_sensitive_product_moderate_severity_gets_human_restructuring():
+    """G14 (garantía hipotecaria, balance_ratio 0.45) debe calificar para
+    ALT-PAYMENT-PLAN aunque no cumpla el umbral genérico (0.3) -- el umbral es
+    más bajo a propósito para productos sensibles."""
+    profile = get_risk_profile("GOLD-G14")
+    alts = get_eligible_alternatives("GOLD-G14", profile)
+    plan = next((a for a in alts if a["alt_id"] == "ALT-PAYMENT-PLAN"), None)
+    assert plan is not None
+    assert plan["human_only"] is True
+
+
+def test_revolving_product_under_liquidity_pressure_never_gets_autosave():
+    """Arquetipo 5: no empujar más deuda (comprometer % de ingreso futuro) a un
+    cliente que ya usa un producto rotativo y está en presión de liquidez."""
+    import pandas as pd
+    import os as _os
+    dataset = pd.read_csv(_os.path.join(_os.path.dirname(__file__), "..", "data", "synthetic", "dataset.csv"))
+    revolving = {"CREDICHEQUE", "OVERDRAFT_ELITE", "EXTRA_FINANCING", "SALARY_ADVANCE"}
+    checked = 0
+    for cid, product in zip(dataset["customer_id"], dataset["credit_product"]):
+        if product not in revolving:
+            continue
+        profile = get_risk_profile(cid)
+        if profile["situation_hint"] != "S3":
+            continue
+        alts = get_eligible_alternatives(cid, profile)
+        alt_ids = {a["alt_id"] for a in alts}
+        assert "ALT-AUTOSAVE-PCT" not in alt_ids
+        assert "ALT-PAYMENT-PLAN" in alt_ids
+        checked += 1
+        if checked >= 5:
+            break
+    assert checked > 0, "no se encontraron clientes rotativos en S3 en esta corrida -- revisar la muestra"
