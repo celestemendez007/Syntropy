@@ -55,6 +55,16 @@ def now():
 def clean(text):
     return "".join(c for c in unicodedata.normalize("NFD", text.lower()) if unicodedata.category(c) != "Mn")
 
+def statement(text):
+    """Solo las frases afirmativas de la apertura del modelo. El servidor agrega
+    después su propia pregunta de negociación: dos preguntas seguidas hacen que
+    la respuesta se sienta dispersa y que el cliente no sepa qué contestar."""
+    if not text:
+        return ''
+    kept = [part for part in re.split(r'(?<=[.!?])\s+', text.strip()) if '?' not in part and '¿' not in part]
+    return ' '.join(kept).strip()
+
+
 def spoken_date(value):
     day = date.fromisoformat(value)
     months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
@@ -67,6 +77,12 @@ def classify(text):
     if '?' in t or '¿' in t or re.search(r'\b(que pasa|como funciona)\b', t):
         return 'QUESTION'
     if re.fullmatch(r'(?:si[, ]+)?(?:acepto|confirmo|de acuerdo|estoy de acuerdo|si quiero|me parece bien|usar esta fecha)(?: (?:el pago|la opcion|esta opcion|esa opcion|la operacion))?[.! ]*', t):
+        return 'ACCEPT'
+    # Authorization is explicit wherever it appears: "está bien, confirmo" used to
+    # miss the exact match above and end up reinterpreted as a barrier. Any
+    # negation makes it ambiguous ("confirmo que no puedo pagar"), and ambiguous
+    # never authorizes a payment.
+    if re.search(r'\b(confirmo|acepto|autorizo)\b', t) and not re.search(r'\bno\b', t):
         return 'ACCEPT'
     if any(w in t for w in ['no todo', 'solo una parte', 'solamente una parte']):
         return 'LIQUIDITY'
@@ -85,11 +101,15 @@ def classify(text):
         ("DECLINE", ["no acepto", "no quiero", "no me sirve", "otra opcion"]),
         ("SEEN", ["ya lo veo", "ya veo", "veo el cambio", "ya aparece", "ya se actualizo"]),
         ("TECHNICAL", ["no se usar", "no entiendo la app", "no encuentro", "ayuda con la app", "error", "no me deja"]),
-        ("LIQUIDITY", ["no puedo cubrir", "no me alcanza", "parcial", "no tengo dinero", "sin trabajo", "perdi mi", "no puedo pagar"]),
-        ("DATE_MISMATCH", ["me pagan", "cobro", "viernes", "quincena", "despues", "otra fecha", "reprogram"]),
+        # Past tense and everyday wording matter: "no pude pagar" is the same
+        # barrier as "no puedo pagar", and it used to fall through to OTHER.
+        ("LIQUIDITY", ["no puedo cubrir", "no me alcanza", "parcial", "no tengo dinero", "sin trabajo", "perdi mi", "no puedo pagar",
+                        "no pude pagar", "no logre pagar", "no alcance a pagar", "no he podido pagar", "estoy corto", "ando corto",
+                        "no tengo como", "sin dinero", "gasto medico", "esta dificil", "se me complico", "ando apretado"]),
+        ("DATE_MISMATCH", ["me pagan", "me depositan", "cobro", "viernes", "quincena", "despues", "otra fecha", "reprogram"]),
         ("PAY", ["pagar ahora", "pagarlo ahora", "pago completo", "quiero pagar", "pagar mi cuota",
                  "puedo cubrir", "puedo pagar", "puedo cubrirlo", "puedo pagarlo", "cubro completo", "cubro toda"]),
-        ("FORGOT", ["olvide", "olvido", "recordatorio", "no recordaba"]),
+        ("FORGOT", ["olvide", "olvido", "recordatorio", "no recordaba", "se me paso", "se me olvido", "no me acorde"]),
     ]
     for intent, words in checks:
         if any(w in t for w in words):
@@ -111,8 +131,13 @@ class BankingService:
             db.execute("CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, state TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS demo_profiles (customer_id TEXT PRIMARY KEY, profile TEXT NOT NULL)")
             db.execute('CREATE TABLE IF NOT EXISTS calls (id TEXT PRIMARY KEY, session_id TEXT NOT NULL, started_at TEXT NOT NULL, ended_at TEXT, recording TEXT, mime TEXT)')
-            if not db.execute('SELECT 1 FROM demo_profiles LIMIT 1').fetchone():
-                from risk_engine import load_dataset, load_golden
+            stored = db.execute('SELECT profile FROM demo_profiles LIMIT 1').fetchone()
+            # Profiles built before `situation` existed cannot steer the demo login.
+            if stored and 'situation' not in json.loads(stored[0]):
+                db.execute('DELETE FROM demo_profiles')
+                stored = None
+            if not stored:
+                from risk_engine import load_dataset, load_golden, _situation_hint
                 import pandas as pd
                 all_rows = pd.concat([load_dataset(), load_golden()])
                 counts = all_rows.groupby('customer_id').size().to_dict()
@@ -129,13 +154,21 @@ class BankingService:
                     profile = {'full_name': name, 'document': str(row['dui_mock']),
                                'income_type': str(row['income_type']), 'monthly_income': round(float(row['income_last_30d']), 2),
                                'email': cid.lower() + '@example.test', 'synthetic': True,
-                               'credit_count': int(counts[cid])}
+                               'credit_count': int(counts[cid]),
+                               # Deterministic rules, no model: cheap enough for the
+                               # whole base and enough to keep the demo meaningful.
+                               'situation': _situation_hint(row)[0]}
                     db.execute('INSERT INTO demo_profiles VALUES (?, ?)', (cid, json.dumps(profile)))
 
     def random_session(self, multiple=False):
         with self.connect() as db:
             rows = db.execute('SELECT customer_id, profile FROM demo_profiles').fetchall()
-        candidates = [cid for cid, raw in rows if not multiple or json.loads(raw)['credit_count'] > 1]
+        profiles = [(cid, json.loads(raw)) for cid, raw in rows]
+        wanted = [(cid, p) for cid, p in profiles if not multiple or p['credit_count'] > 1]
+        # Half the base is S0: stable, nothing the Policy Engine can authorize. Landing
+        # there means the assistant can only answer "no hay alternativa" no matter what
+        # the customer says, so the demo starts on someone it can actually help.
+        candidates = [cid for cid, p in wanted if p.get('situation') != 'S0'] or [cid for cid, _ in wanted]
         if not candidates:
             raise DemoError('No hay perfiles con varios créditos disponibles.', 404)
         return self.create(secrets.choice(candidates))
@@ -371,7 +404,11 @@ class BankingService:
                          "LIQUIDITY": {"ALT-PARTIAL", "ALT-PAYMENT-PLAN", "ALT-AUTOSAVE-PCT"}}
         allowed = barrier_sets.get(state["barrier"])
         if allowed is not None:
-            eligible = [alt for alt in eligible if alt["alt_id"] in allowed]
+            # Prefer an alternative tagged for the barrier the customer named, but
+            # never answer "no hay alternativa" while the Policy Engine still has
+            # authorized options for this credit: most situations never carry
+            # ALT-DATE-SHIFT/ALT-GRACE-DAYS, so the strict filter empties the list.
+            eligible = [alt for alt in eligible if alt["alt_id"] in allowed] or eligible
         offers = []
         for alt in eligible:
             alt = dict(alt)
@@ -414,6 +451,20 @@ class BankingService:
             return
         state["pending_offer"] = {**offer, "token": str(uuid4())}
         self.assistant(state, self.offer_summary(state, offer) + ' El resumen ya está en tu pantalla. ¿Confirmas que registremos esta opción en la demostración?')
+
+    def offer_or_explain(self, state, offer_id):
+        """Selecting inside a conversation must answer, not raise. Conditions can
+        change between understanding the customer and resolving the alternative;
+        a policy refusal is explained in words instead of surfacing as an error."""
+        try:
+            self.select(state, offer_id)
+        except DemoError as exc:
+            self.refresh_offers(state)
+            if state["offers"]:
+                self.assistant(state, f"{exc.message} Podemos revisar: " + self.offer_summary(state, state["offers"][0])
+                               + " ¿Te parece que veamos esta opción?")
+            else:
+                self.assistant(state, f"{exc.message} Si quieres, puedo pedir que un asesor revise tu caso contigo.")
 
     def offer_summary(self, state, offer):
         title = offer['title'] + ' para tu ' + state['product']['name'] + '.'
@@ -505,7 +556,7 @@ class BankingService:
             self.select_product(state, decision['product_id'])
             self.assistant(state, 'Claro, ahora estamos revisando tu ' + state['product']['name'] + '. ¿Qué necesitas resolver con este pago?')
         elif intent == 'SELECT_OPTION' and decision.get('option_id'):
-            self.select(state, decision['option_id'])
+            self.offer_or_explain(state, decision['option_id'])
         elif intent == "UNSAFE":
             state["pending_offer"] = None
             self.assistant(state, "Entiendo que buscas una solución. Solo puedo mostrarte condiciones autorizadas para tu crédito. Podemos revisar las opciones disponibles o solicitar un asesor.")
@@ -527,11 +578,16 @@ class BankingService:
         elif intent == "SEEN" and (state["receipt"] or state.get('scheduled_reminder') or state['support']):
             state["call_end"] = True
             self.assistant(state, "Perfecto, gracias por confirmarlo. Tu comprobante está disponible en el historial. Gracias por tu tiempo; que tengas un excelente día.")
+        elif intent == "SEEN" and (state["pending_offer"] or state["offers"]):
+            # Seeing something on screen is not authorizing it: say what is missing.
+            self.assistant(state, "Sí, eso es lo que está en tu pantalla. Todavía no he registrado nada: "
+                           + ("dime «confirmo» y lo dejo registrado, o «no acepto» si prefieres que veamos otra opción."
+                              if state["pending_offer"] else "dime «acepto» y preparo el resumen para que lo revises antes de decidir."))
         elif intent == "DECLINE":
             state["pending_offer"] = None
             self.assistant(state, "Está bien, no he registrado ningún acuerdo. Podemos revisar otra alternativa o conversar con un asesor.")
         elif intent == "PAY":
-            self.select(state, "PAY_NOW")
+            self.offer_or_explain(state, "PAY_NOW")
         elif intent == "ACCEPT":
             if state["pending_offer"]:
                 try:
@@ -555,15 +611,20 @@ class BankingService:
                 state["view_hint"] = "support"
                 self.assistant(state, "Gracias por contármelo. Tu caso necesita una revisión personalizada. Puedo ayudarte a solicitar una llamada con un asesor.")
             elif state["offers"]:
-                opening = decision.get('opening') or ('Lamento que estés pasando por este momento. Gracias por confiarme lo que sucede.' if intent == 'LIQUIDITY' else 'Gracias por contármelo. Busquemos algo que se ajuste a tu situación.')
+                opening = statement(decision.get('opening')) or ('Lamento que estés pasando por este momento. Gracias por confiarme lo que sucede.' if intent == 'LIQUIDITY' else 'Gracias por contármelo. Busquemos algo que se ajuste a tu situación.')
                 self.assistant(state, opening + ' Podemos revisar: ' + self.offer_summary(state, state['offers'][0]) + ' ¿Te parece que revisemos esta opción?')
             else:
-                self.assistant(state, "Gracias por explicármelo. No hay una alternativa automática autorizada que responda a esta situación. Podemos solicitar una revisión con un asesor.")
+                self.assistant(state, "Gracias por contármelo. Para este crédito no tengo una alternativa automática autorizada que aplique, "
+                               "pero no te quedas sin salida: puedo pedir que un asesor revise tu caso contigo. ¿Te ayudo con eso?")
         elif intent == 'BUSY':
             self.assistant(state, 'Claro, respeto tu tiempo. Podemos continuar cuando te venga bien. Tu conversación queda guardada aquí. Que tengas un buen día.')
             state['call_end'] = True
         elif intent == 'QUESTION' and state['pending_offer']:
             self.assistant(state, self.offer_summary(state, state['pending_offer']) + ' Todavía no hemos hecho cambios. Puedes confirmarla o decirme qué te gustaría aclarar.')
+        elif intent == 'QUESTION' and state['offers']:
+            # Answer with the concrete authorized option instead of a vague line.
+            self.assistant(state, 'Con gusto te explico. ' + self.offer_summary(state, state['offers'][0])
+                           + ' Todavía no he registrado nada. ¿Quieres que la revisemos?')
         elif intent == 'GREETING' or re.search(r'\b(hola|buenas|buenos dias)\b', clean(text)):
             self.assistant(state, f"Hola, {state['name']}. Soy tu asistente de BA A Tiempo. Gracias por conversar conmigo. ¿Te viene bien que revisemos juntos tu próximo pago?")
         else:

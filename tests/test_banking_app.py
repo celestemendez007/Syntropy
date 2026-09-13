@@ -106,6 +106,38 @@ def test_human_review_idempotent_and_never_restructures(service):
     assert s['support']['id']==ref and s['product']==old
     assert len(s['events'])==1 and not s['offers']
 
+def test_a_named_barrier_never_dead_ends_while_alternatives_exist(service,monkeypatch):
+    """Filtering the catalog down to alternatives tagged for the exact barrier
+    empties the list for most situations, so the customer is told there is no
+    authorized option while the Policy Engine still has some. This has regressed
+    once already, hence the test."""
+    monkeypatch.setenv('BA_DIALOGUE_MODE','rules')
+    for cid in ['GOLD-G03','GOLD-G07','GOLD-G13']:
+        s=service.create(cid)
+        s=cmd(service,s,'message',text='me pagan después')
+        assert s['barrier']=='DATE_MISMATCH'
+        assert s['offers'],f'{cid} se quedó sin alternativas que ofrecer'
+
+def test_everyday_wording_reaches_the_right_barrier():
+    """Past tense and ordinary phrasing used to fall through to OTHER, so the
+    assistant answered a liquidity problem as if it had understood nothing."""
+    from app_service import classify
+    assert classify('no pude pagar la cuota')=='LIQUIDITY'
+    assert classify('no logre pagar')=='LIQUIDITY'
+    assert classify('estoy corto este mes')=='LIQUIDITY'
+    assert classify('se me paso la fecha')=='FORGOT'
+    assert classify('no puedo pagar')=='LIQUIDITY'  # present tense still works
+
+def test_authorization_is_recognised_but_never_when_negated():
+    """'está bien, confirmo' was falling through to the model, which reinterpreted
+    it as a barrier and ignored the customer's yes. Negated wording must still
+    never authorize anything."""
+    from app_service import classify
+    assert classify('esta bien, confirmo')=='ACCEPT'
+    assert classify('pues acepto entonces')=='ACCEPT'
+    assert classify('confirmo que no puedo pagar')!='ACCEPT'
+    assert classify('no acepto')=='DECLINE'
+
 def test_legacy_session_missing_products_and_product_id_still_works(service):
     """Sessions saved before `products`/`product.id` existed are still sitting in
     real demo databases. _read()'s upgrade path must backfill product.id too, or
