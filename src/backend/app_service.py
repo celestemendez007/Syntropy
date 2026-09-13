@@ -64,7 +64,8 @@ def classify(text):
         ("TECHNICAL", ["no se usar", "no entiendo la app", "no encuentro", "ayuda con la app", "error", "no me deja"]),
         ("LIQUIDITY", ["no puedo cubrir", "no me alcanza", "parcial", "no tengo dinero", "sin trabajo", "perdi mi", "no puedo pagar"]),
         ("DATE_MISMATCH", ["me pagan", "cobro", "viernes", "quincena", "despues", "otra fecha", "reprogram"]),
-        ("PAY", ["pagar ahora", "pagarlo ahora", "pago completo", "quiero pagar", "pagar mi cuota"]),
+        ("PAY", ["pagar ahora", "pagarlo ahora", "pago completo", "quiero pagar", "pagar mi cuota",
+                 "puedo cubrir", "puedo pagar", "puedo cubrirlo", "puedo pagarlo", "cubro completo", "cubro toda"]),
         ("ACCEPT", ["acepto", "de acuerdo", "usar esta fecha", "confirmo", "si quiero", "me parece bien"]),
         ("FORGOT", ["olvide", "olvido", "recordatorio", "no recordaba"]),
     ]
@@ -132,7 +133,7 @@ class BankingService:
             "score": score, "barrier": None, "messages": [], "events": [], "offers": [],
             "pending_offer": None, "receipt": None, "support": None, "opt_out": bool(score["gates"]["opt_out_flag"]),
             "reminder": False, "snoozed": False, "channel": score["channel"]["channel_used"],
-            "view_hint": None, "call_end": False,
+            "view_hint": None, "call_end": False, "unclear_streak": 0,
         }
         self.refresh_offers(state)
         with self.connect() as db:
@@ -262,6 +263,8 @@ class BankingService:
         state["messages"].append({"id": str(uuid4()), "role": "user", "content": text, "at": now()})
         intent = classify(text)
         state["events"].append({"type": "BARRIER_CLASSIFIED", "intent": intent, "at": now()})
+        if intent != "OTHER":
+            state["unclear_streak"] = 0
         if intent == "UNSAFE":
             state["pending_offer"] = None
             self.assistant(state, "Entiendo que buscas una solución. Solo puedo mostrarte condiciones autorizadas para tu crédito. Podemos revisar las opciones disponibles o solicitar un asesor.")
@@ -312,7 +315,14 @@ class BankingService:
             if re.search(r"\b(hola|buenas|buenos dias)\b", clean(text)):
                 self.assistant(state, "Hola, soy tu asistente de BA A Tiempo. Estoy aquí para ayudarte con tu próximo pago. ¿Puedes pagarlo ahora, tu ingreso llega después o necesitas otra ayuda?")
             else:
-                self.assistant(state, "Te escucho. Para orientarte con este pago, cuéntame si tu ingreso llega después, no puedes cubrir la cuota completa o necesitas ayuda con la app. También podemos hablar con un asesor.")
+                # A second unclear reply in a row means the local keyword matching
+                # isn't landing; recommend a concrete next step instead of repeating
+                # the same question and looping.
+                state["unclear_streak"] = state.get("unclear_streak", 0) + 1
+                if state["unclear_streak"] >= 2:
+                    self.support(state)
+                else:
+                    self.assistant(state, "Te escucho. Para orientarte con este pago, cuéntame si tu ingreso llega después, no puedes cubrir la cuota completa o necesitas ayuda con la app. También podemos hablar con un asesor.")
 
     def command(self, sid, command):
         with self.connect() as db:
