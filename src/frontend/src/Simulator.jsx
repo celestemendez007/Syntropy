@@ -148,7 +148,7 @@ export default function Simulator() {
           ))}
           <option value="RANDOM">-- Perfil Aleatorio --</option>
         </select>
-        <button onClick={generateRandomProfile} className="btn-secondary" style={{ background: '#8b5cf6', color: 'white', borderColor: '#8b5cf6' }}>Generar Perfil Aleatorio 🎲</button>
+        <button onClick={generateRandomProfile} className="btn-primary">Generar Perfil Aleatorio 🎲</button>
         <button onClick={() => setHistory([])} className="btn-secondary">Reiniciar Chat</button>
       </div>
       
