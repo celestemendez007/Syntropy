@@ -141,7 +141,7 @@ function TechnicalTab() {
       <section>
         <h2>Fase 3: Preferencia de Canal y Timing (Cuándo y Dónde)</h2>
         <div className="card">
-          <p><strong>Algoritmo de Canal:</strong> Modelo Híbrido. Nivel 1 evalúa la tasa de respuesta histórica del propio cliente. Nivel 2 es una Regresión Logística poblacional basada en <code>income_type</code>, <code>app_engagement</code>, y edad en la plataforma. Si ninguno da confianza alta (>0.5), hace <em>Fallback</em> a <strong>Llamada Telefónica</strong> obligatoria.</p>
+          <p><strong>Algoritmo de Canal:</strong> Modelo Híbrido. Nivel 1 evalúa la tasa de respuesta histórica del propio cliente. Nivel 2 es una Regresión Logística poblacional basada en <code>income_type</code>, <code>app_engagement</code>, y edad en la plataforma. Si ninguno da confianza alta (&gt;0.5), hace <em>Fallback</em> a <strong>Llamada Telefónica</strong> obligatoria.</p>
           <p><strong>Algoritmo de Momento (Hora):</strong> Agrupa (bucketiza) el historial de mensajes del cliente en rangos de 1.5 horas. Calcula promedios históricos. <em>No usa K-Means</em>, usa frecuencias estadísticas puras. Si no hay historial suficiente (menos de 5 mensajes previos), usa promedios poblacionales, por ejemplo, asignando la hora de almuerzo (12:00-13:30) para asalariados (<code>SALARIED</code>), ya que matemáticamente tienen mayor tasa de respuesta en ese horario.</p>
           <p><strong>Algoritmo de Momento (Días Antes):</strong> Igual que la hora, agrupa envíos previos en buckets (1-2 días, 3-5 días, 6-8 días). Elige el rango donde el cliente tenga mejor tasa histórica de conversión. Por defecto: 5 días antes.</p>
         </div>
