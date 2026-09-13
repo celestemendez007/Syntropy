@@ -14,10 +14,11 @@
       "sugerir activar recordatorios o revisar la programación de pago"
     ],
     "useful_alternatives": [
-      "ver próxima cuota",
-      "confirmar si el pago ya está programado",
-      "activar notificación",
-      "consultar historial de pagos"
+      "Si es Personal: Calendario financiero exportable, Ahorro y abono automático a capital, Pagos inteligentes y One-Click",
+      "Si es Credicheque: Calendario financiero exportable, Pagos inteligentes y One-Click, Educación y diagnóstico financiero",
+      "Si es Vehículo / Estudio: Calendario financiero exportable, Ahorro y abono automático a capital, Educación y diagnóstico financiero",
+      "Si es Garantía Hipotecaria / Vivienda: Calendario financiero exportable, Ahorro y abono automático a capital, Educación y diagnóstico financiero",
+      "Si es Adelanto / Sobregiro / Extra: Calendario financiero exportable, Educación y diagnóstico financiero, Omnicanalidad + accesibilidad"
     ],
     "escalation_rules": [
       "No insistir si el cliente no presenta riesgo",
@@ -40,10 +41,10 @@
       "explicar si el débito aún está pendiente o si faltan fondos"
     ],
     "useful_alternatives": [
-      "pago inmediato",
-      "promesa de pago en fecha cercana autorizada",
-      "recordatorio configurado",
-      "verificar si el cargo automático está activo"
+      "Si es Personal: Pagos inteligentes y One-Click, Calendario financiero exportable, Omnicanalidad + accesibilidad",
+      "Si es Garantía Hipotecaria / Vivienda: Pagos inteligentes y One-Click, Flexibilidad de fechas y promesas de pago, Omnicanalidad + accesibilidad",
+      "Si es Credicheque: Pagos inteligentes y One-Click, Calendario financiero exportable, Flexibilidad de fechas y promesas de pago",
+      "Si es Vehículo / Estudio: Pagos inteligentes y One-Click, Calendario financiero exportable, Omnicanalidad + accesibilidad"
     ],
     "escalation_rules": [
       "el cliente dice 'ya pagué' y no coincide el sistema",
@@ -66,10 +67,11 @@
       "explicar con claridad lo permitido"
     ],
     "useful_alternatives": [
-      "promesa de pago en fecha autorizada",
-      "reprogramación corta si existe en política",
-      "fecha de pago alternativa si el producto lo permite",
-      "contacto con asesor si necesita revisión más profunda"
+      "Si es Personal: Flexibilidad de fechas y promesas de pago, Pagos inteligentes y One-Click, Calendario financiero exportable",
+      "Si es Garantía Hipotecaria / Vivienda: Flexibilidad de fechas y promesas de pago, Educación y diagnóstico financiero, Omnicanalidad + accesibilidad",
+      "Si es Credicheque: Flexibilidad de fechas y promesas de pago, Pagos parciales / porcentaje de ingresos, Omnicanalidad + accesibilidad",
+      "Si es Vehículo / Estudio: Flexibilidad de fechas y promesas de pago, Pagos inteligentes y One-Click, Calendario financiero exportable",
+      "Si es Adelanto de Salario: Flexibilidad de fechas y promesas de pago, Educación y diagnóstico financiero, Pagos inteligentes y One-Click"
     ],
     "escalation_rules": [
       "pide más tiempo del permitido",
@@ -94,10 +96,11 @@
       "escalar si el caso supera el catálogo permitido"
     ],
     "useful_alternatives": [
-      "promesa de pago autorizada",
-      "pago parcial si la política lo permite",
-      "cambio a canal humano",
-      "revisión personalizada"
+      "Si es Personal: Pagos parciales / porcentaje de ingresos, Flexibilidad de fechas y promesas de pago, Educación y diagnóstico financiero",
+      "Si es Garantía Hipotecaria / Vivienda: Pagos parciales / porcentaje de ingresos, Flexibilidad de fechas y promesas de pago, Escalamiento y protocolo de emergencia",
+      "Si es Credicheque: Pagos parciales / porcentaje de ingresos, Educación y diagnóstico financiero, Flexibilidad de fechas y promesas de pago",
+      "Si es Vehículo / Estudio: Pagos parciales / porcentaje de ingresos, Flexibilidad de fechas y promesas de pago, Educación y diagnóstico financiero",
+      "Si es Extrafinanciamiento: Pagos parciales / porcentaje de ingresos, Educación y diagnóstico financiero, Escalamiento y protocolo de emergencia"
     ],
     "escalation_rules": [
       "el cliente dice que no puede pagar nada",
@@ -121,10 +124,10 @@
       "recomendar hablar con un asesor si la tensión es recurrente"
     ],
     "useful_alternatives": [
-      "promesa de pago",
-      "pago parcial si la política lo permite",
-      "reducción de fricción de pago",
-      "asesor humano"
+      "Si es Adelanto / Sobregiro / Extra: Educación y diagnóstico financiero, Escalamiento y protocolo de emergencia, Omnicanalidad + accesibilidad",
+      "Si es Personal: Educación y diagnóstico financiero, Pagos parciales / porcentaje de ingresos, Escalamiento y protocolo de emergencia",
+      "Si es Garantía Hipotecaria / Vivienda: Educación y diagnóstico financiero, Escalamiento y protocolo de emergencia, Flexibilidad de fechas y promesas de pago",
+      "Si es Credicheque / Vehículo / Estudio: Educación y diagnóstico financiero, Escalamiento y protocolo de emergencia, Pagos parciales / porcentaje de ingresos"
     ],
     "escalation_rules": [
       "haya uso repetido de liquidez puente",
@@ -148,10 +151,9 @@
       "evitar múltiples mensajes repetitivos"
     ],
     "useful_alternatives": [
-      "nuevo horario de contacto",
-      "llamada con asesor",
-      "mensaje más simple",
-      "acceso directo desde app"
+      "Si es producto a plazo: Omnicanalidad + accesibilidad, Escalamiento y protocolo de emergencia, Educación y diagnóstico financiero",
+      "Si es Garantía Hipotecaria / Vivienda: Omnicanalidad + accesibilidad, Escalamiento y protocolo de emergencia, Flexibilidad de fechas y promesas de pago",
+      "Si es Tarjetas / Credicheque: Omnicanalidad + accesibilidad, Escalamiento y protocolo de emergencia, Pagos inteligentes y One-Click"
     ],
     "escalation_rules": [
       "cuando hay cero respuesta tras varios intentos",
@@ -178,8 +180,10 @@
       "ofrecer botón de 'hablar con asesor'"
     ],
     "useful_alternatives": [
-      "guía paso a paso",
-      "explicación simplificada"
+      "Si es Personal / Credicheque: Omnicanalidad + accesibilidad, Pagos inteligentes y One-Click, Educación y diagnóstico financiero",
+      "Si es Garantía Hipotecaria / Vivienda: Omnicanalidad + accesibilidad, Pagos inteligentes y One-Click, Escalamiento y protocolo de emergencia",
+      "Si es Vehículo / Estudio: Omnicanalidad + accesibilidad, Pagos inteligentes y One-Click, Educación y diagnóstico financiero",
+      "Si es Adelanto / Sobregiro / Extra: Omnicanalidad + accesibilidad, Educación y diagnóstico financiero, Escalamiento y protocolo de emergencia"
     ],
     "escalation_rules": [
       "no logra iniciar sesión",
@@ -205,9 +209,10 @@
       "registrar el contexto"
     ],
     "useful_alternatives": [
-      "escalamiento a asesor",
-      "revisión personalizada",
-      "seguimiento humano"
+      "Si es Personal: Escalamiento y protocolo de emergencia, Flexibilidad de fechas y promesas de pago, Educación y diagnóstico financiero",
+      "Si es Garantía Hipotecaria / Vivienda: Escalamiento y protocolo de emergencia, Pagos parciales / porcentaje de ingresos, Omnicanalidad + accesibilidad",
+      "Si es Credicheque / Vehículo / Estudio: Escalamiento y protocolo de emergencia, Flexibilidad de fechas y promesas de pago, Educación y diagnóstico financiero",
+      "Si es Adelanto / Sobregiro / Extra: Escalamiento y protocolo de emergencia, Educación y diagnóstico financiero, Omnicanalidad + accesibilidad"
     ],
     "escalation_rules": [
       "siempre escalar rápido a humano"
