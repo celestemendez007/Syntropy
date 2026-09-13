@@ -3,8 +3,13 @@
     "id": "A1",
     "name": "Arquetipo 1 — Cliente estable y ordenado",
     "match": {
-      "situations": ["S0"],
-      "digital_capabilities": ["D1", "D2"]
+      "situations": [
+        "S0"
+      ],
+      "digital_capabilities": [
+        "D1",
+        "D2"
+      ]
     },
     "description": "Cliente que normalmente paga bien, tiene buen patrón y no presenta señales relevantes.",
     "ai_can_do": [
@@ -14,11 +19,11 @@
       "sugerir activar recordatorios o revisar la programación de pago"
     ],
     "useful_alternatives": [
-      "Si es Personal: Calendario financiero exportable, Ahorro y abono automático a capital, Pagos inteligentes y One-Click",
-      "Si es Credicheque: Calendario financiero exportable, Pagos inteligentes y One-Click, Educación y diagnóstico financiero",
-      "Si es Vehículo / Estudio: Calendario financiero exportable, Ahorro y abono automático a capital, Educación y diagnóstico financiero",
-      "Si es Garantía Hipotecaria / Vivienda: Calendario financiero exportable, Ahorro y abono automático a capital, Educación y diagnóstico financiero",
-      "Si es Adelanto / Sobregiro / Extra: Calendario financiero exportable, Educación y diagnóstico financiero, Omnicanalidad + accesibilidad"
+      "Si es Personal: Extrafinanciamiento: Ofrecer un crédito adicional que se vincula al límite de su tarjeta de crédito. Tarjeta Protegida: Un seguro que garantiza la protección de su tarjeta de débito ante hurto o fraude, y que incluye el reembolso de hasta $50 para la reposición de documentos personales expedidos en El Salvador, como el DUI.",
+      "Si es Credicheque: Sobregiro Elite: Notificarle la disponibilidad de una línea de crédito rotativa que puede usar para planes inmediatos sin necesidad de garantía. Tarjeta Visa Empresarial Business: Si su perfil es transaccional comercial, ofrecerle esta tarjeta que brinda hasta 12 meses de financiamiento para capital de trabajo.",
+      "Si es Vehículo / Estudio: Tarjeta Crédito Joven VISA: Ideal para perfiles de estudiantes, ofreciendo el control de su dinero con descuentos exclusivos en sus tiendas favoritas. Tarjeta Crédito Platinum LifeMiles VISA: Para que el pago de sus cuotas o gastos diarios le permita acumular millas y convertirlas en experiencias de viaje.",
+      "Si es Garantía Hipotecaria / Vivienda: Tarjeta de Crédito VISA Infinite: Una tarjeta de élite para usuarios que pueden justificar ingresos desde $2,600.00; ofrece 12 accesos anuales gratis a Salas VIP internacionales con Priority Pass y asistencia 24/7 con Visa Digital Concierge. Tarjeta Crédito Súper Selectos VISA: Para potenciar la economía del hogar, acumulando Puntos Bancoagrícola cada vez que compran en el supermercado.",
+      "Si es Adelanto / Sobregiro / Extra: Tarjeta Crédito Black Mastercard: Recomendada para enfocarse en un estilo de vida de alto perfil con múltiples beneficios exclusivos. Maximización de Puntos: Notificaciones push recordando que sus puntos acumulados le dan hasta un 40% de descuento en la canasta básica en Súper Selectos y 40% en Farmacias San Nicolás."
     ],
     "escalation_rules": [
       "No insistir si el cliente no presenta riesgo",
@@ -30,8 +35,14 @@
     "id": "A2",
     "name": "Arquetipo 2 — Cliente que olvidó o tuvo una fricción leve",
     "match": {
-      "situations": ["S1"],
-      "digital_capabilities": ["D1", "D2", "D3"]
+      "situations": [
+        "S1"
+      ],
+      "digital_capabilities": [
+        "D1",
+        "D2",
+        "D3"
+      ]
     },
     "description": "Sí puede pagar, pero olvidó la fecha, no revisó la app o tuvo una fricción leve.",
     "ai_can_do": [
@@ -56,8 +67,14 @@
     "id": "A3",
     "name": "Arquetipo 3 — Cliente con desfase de fecha de ingreso",
     "match": {
-      "situations": ["S2"],
-      "digital_capabilities": ["D1", "D2", "D3"]
+      "situations": [
+        "S2"
+      ],
+      "digital_capabilities": [
+        "D1",
+        "D2",
+        "D3"
+      ]
     },
     "description": "Quiere pagar, pero su flujo de ingresos no coincide con la fecha de vencimiento.",
     "ai_can_do": [
@@ -84,8 +101,14 @@
     "id": "A4",
     "name": "Arquetipo 4 — Cliente con presión de liquidez temporal",
     "match": {
-      "situations": ["S3"],
-      "digital_capabilities": ["D1", "D2", "D3"]
+      "situations": [
+        "S3"
+      ],
+      "digital_capabilities": [
+        "D1",
+        "D2",
+        "D3"
+      ]
     },
     "description": "El cliente no puede cubrir el pago completo en este ciclo.",
     "ai_can_do": [
@@ -113,8 +136,15 @@
     "id": "A5",
     "name": "Arquetipo 5 — Cliente de productos rotativos / uso intensivo de liquidez",
     "match": {
-      "situations": ["S3", "S4"],
-      "digital_capabilities": ["D1", "D2", "D3"]
+      "situations": [
+        "S3",
+        "S4"
+      ],
+      "digital_capabilities": [
+        "D1",
+        "D2",
+        "D3"
+      ]
     },
     "description": "Cliente que usa mucho productos como Credicheque, Sobregiro, Extrafinanciamiento. Requiere prudencia.",
     "ai_can_do": [
@@ -139,8 +169,14 @@
     "id": "A6",
     "name": "Arquetipo 6 — Cliente con baja respuesta digital o canal inefectivo",
     "match": {
-      "situations": ["S4"],
-      "digital_capabilities": ["D1", "D2", "D3"]
+      "situations": [
+        "S4"
+      ],
+      "digital_capabilities": [
+        "D1",
+        "D2",
+        "D3"
+      ]
     },
     "description": "El problema no necesariamente es incapacidad de pago, sino que el canal digital no está funcionando.",
     "ai_can_do": [
@@ -165,8 +201,17 @@
     "id": "A7",
     "name": "Arquetipo 7 — Cliente con baja alfabetización digital / necesita guía",
     "match": {
-      "situations": ["S0", "S1", "S2", "S3", "S4", "S5"],
-      "digital_capabilities": ["D3"]
+      "situations": [
+        "S0",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "digital_capabilities": [
+        "D3"
+      ]
     },
     "description": "Persona que no usa bien la app, se confunde, no sabe revisar cuota o necesita instrucciones claras.",
     "ai_can_do": [
@@ -197,8 +242,14 @@
     "id": "A8",
     "name": "Arquetipo 8 — Cliente en circunstancia compleja / no puede pagar",
     "match": {
-      "situations": ["S6"],
-      "digital_capabilities": ["D1", "D2", "D3"]
+      "situations": [
+        "S6"
+      ],
+      "digital_capabilities": [
+        "D1",
+        "D2",
+        "D3"
+      ]
     },
     "description": "Cliente que directamente no puede pagar por pérdida de ingreso, enfermedad, etc.",
     "ai_can_do": [
