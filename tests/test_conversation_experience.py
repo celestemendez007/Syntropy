@@ -127,3 +127,23 @@ def test_legacy_session_migration_preserves_existing_payment(client):
     migrated = service.get(s['id'])
     assert migrated['products'][0]['remaining'] == 27.5
     assert migrated['profile']['full_name'] and migrated['product']['remaining'] == 27.5
+
+
+class _Segment:
+    def __init__(self, text, no_speech_prob=.1, avg_logprob=-.3):
+        self.text, self.no_speech_prob, self.avg_logprob = text, no_speech_prob, avg_logprob
+
+
+def test_transcriber_noise_is_not_treated_as_something_the_customer_said():
+    """Noise that reaches the transcriber does not come back empty: it comes back
+    as an invented phrase, very often the priming text itself. Answering those is
+    what makes the assistant look like it is listening to the whole room."""
+    from voice_service import heard
+    assert heard([_Segment(' no pude pagar la cuota ')]) == 'no pude pagar la cuota'
+    assert heard([_Segment('Bueno, dime.')]) == ''
+    assert heard([_Segment(' Sí, claro. Bueno, dime. ')]) == ''
+    assert heard([_Segment('lo que sea', no_speech_prob=.9)]) == ''
+    assert heard([_Segment('ajshdk', avg_logprob=-1.8)]) == ''
+    assert heard([_Segment('...')]) == ''
+    # A real sentence that happens to reuse a priming word must survive.
+    assert heard([_Segment('claro que sí, acepto la opción')]) == 'claro que sí, acepto la opción'

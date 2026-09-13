@@ -23,7 +23,7 @@ async function checked(url,options={},timeout=25000){
 const bounded=(promise,ms)=>Promise.race([promise,new Promise(resolve=>setTimeout(resolve,ms))])
 
 export class CallAudio {
-  constructor(sid,cb){Object.assign(this,{sid,cb,parts:[],recorded:[],preRoll:[],spoken:new Set(),closed:false,muted:false,thinking:false,speaking:false,generation:0,thinkingSince:0})}
+  constructor(sid,cb){Object.assign(this,{sid,cb,parts:[],recorded:[],preRoll:[],spoken:new Set(),closed:false,muted:false,thinking:false,speaking:false,generation:0,thinkingSince:0,noiseFloor:.012,voiced:0,done:false})}
   wait(on){this.thinking=on;this.thinkingSince=on?performance.now():0}
   // Last line of defence: whatever goes wrong, the call goes back to listening
   // instead of sitting on "Estoy revisando lo que me cuentas…" forever.
@@ -51,18 +51,33 @@ export class CallAudio {
     this.cb.accept(result.state);this.cb.status('listening');await this.say(result.state.messages.at(-1),false)
   }
   frame(input){
-    if(this.closed||this.muted||this.thinking||!this.callId)return
+    if(this.closed||this.done||this.muted||this.thinking||!this.callId)return
     const frame=new Float32Array(input),rms=Math.sqrt(frame.reduce((n,s)=>n+s*s,0)/frame.length),time=performance.now()
     this.preRoll.push(frame);if(this.preRoll.length>3)this.preRoll.shift()
-    if(rms>(this.speaking?.040:.020)){
+    // The room sets the bar, not a fixed number. A fixed threshold opens the
+    // microphone on its own wherever there is traffic, a fan or a television,
+    // and the browser's automatic gain lifts that noise further during pauses.
+    const gate=Math.max(this.speaking?.05:.022,this.noiseFloor*(this.speaking?6:3.2))
+    const loud=rms>gate
+    if(loud){
+      this.voiced++
       if(!this.voicedAt)this.voicedAt=time
       if(this.speaking&&time-this.voicedAt>450)this.interrupt()
+    }else{
+      this.voiced=0;this.voicedAt=null
+      // Learn the room only from quiet frames, and never mid-sentence.
+      if(!this.parts.length)this.noiseFloor=this.noiseFloor*.97+rms*.03
+    }
+    // One loud frame is a door or a keystroke; speech sustains across frames.
+    if(loud&&this.voiced>=3){
+      if(!this.parts.length){this.parts=[...this.preRoll];this.began=this.voicedAt}else this.parts.push(frame)
       this.lastSound=time
-      if(!this.parts.length){this.parts=[...this.preRoll];this.began=time}else this.parts.push(frame)
-    }else{this.voicedAt=null;if(this.parts.length)this.parts.push(frame)}
+    }else if(this.parts.length)this.parts.push(frame)
     if(this.parts.length&&(time-this.lastSound>750||time-this.began>22000)){
       const parts=this.parts;this.parts=[];this.preRoll=[]
-      if(this.lastSound-this.began>170)this.hear(encodeWav(parts,this.context.sampleRate))
+      // Too brief to be a sentence. Sending a cough or a knock to the
+      // transcriber is what makes it answer things nobody said.
+      if(this.lastSound-this.began>450)this.hear(encodeWav(parts,this.context.sampleRate))
     }
   }
   async hear(audio){
@@ -83,13 +98,14 @@ export class CallAudio {
       this.spoken.add(message.id)
       this.source=this.context.createBufferSource();this.source.buffer=audio;this.source.connect(this.context.destination);this.source.connect(this.destination)
       this.speaking=true;playing=true;this.cb.status('speaking')
-      this.source.onended=()=>{this.speaking=false;this.source=null;this.parts=[];this.preRoll=[];if(!this.closed){if(closeAfter)this.cb.finish();else this.idle()}}
+      // After a farewell the line stays open: the customer hangs up, not the app.
+      this.source.onended=()=>{this.speaking=false;this.source=null;this.parts=[];this.preRoll=[];if(!this.closed){if(closeAfter){this.done=true;this.cb.finish()}else this.idle()}}
       await this.context.resume();this.source.start()
     }catch(e){
       // The reply is already on screen: losing the voice must not end the call,
       // and the turn must not be retried forever against a failing synthesizer.
       this.spoken.add(message.id)
-      if(!this.closed){this.cb.error('No pudimos reproducir la voz esta vez. Puedes seguir leyendo y hablando.');if(closeAfter)this.cb.finish()}
+      if(!this.closed){this.cb.error('No pudimos reproducir la voz esta vez. Puedes seguir leyendo y hablando.');if(closeAfter){this.done=true;this.cb.finish()}}
     }finally{if(!playing)this.idle()}
   }
   toggleMute(){this.muted=!this.muted;this.parts=[];this.preRoll=[];this.stream?.getAudioTracks().forEach(t=>{t.enabled=!this.muted});if(!this.speaking)this.cb.status(this.muted?'muted':'listening');return this.muted}

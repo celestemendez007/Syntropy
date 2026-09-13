@@ -5,7 +5,8 @@ from concurrent.futures import ThreadPoolExecutor
 import pytest
 from fastapi.testclient import TestClient
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src' / 'backend'))
-from app_service import BankingService, DemoError, SCENARIOS
+from datetime import date
+from app_service import ADVISORS, BankingService, DemoError, SCENARIOS
 from main import app
 
 @pytest.fixture
@@ -118,6 +119,50 @@ def test_a_named_barrier_never_dead_ends_while_alternatives_exist(service,monkey
         assert s['barrier']=='DATE_MISMATCH'
         assert s['offers'],f'{cid} se quedó sin alternativas que ofrecer'
 
+def test_a_closed_negotiation_says_goodbye_and_waits_to_be_hung_up(service,monkeypatch):
+    monkeypatch.setenv('BA_DIALOGUE_MODE','rules')
+    s=service.create('GOLD-G07')
+    s=service.start_call(s['id'])['state']
+    s=cmd(service,s,'message',text='no puedo pagar todo este mes')
+    s=cmd(service,s,'message',text='acepto')
+    assert s['pending_offer'],'debía quedar un resumen por confirmar'
+    s=cmd(service,s,'message',text='confirmo')
+    assert s['receipt'],'el acuerdo debe quedar registrado'
+    assert s['call_end'],'tras cerrar el acuerdo la llamada se despide'
+    farewell=s['messages'][-1]['content']
+    assert 'día' in farewell and '?' not in farewell,'la despedida no vuelve a preguntar nada'
+
+def test_a_negotiation_that_fails_hands_the_case_to_a_named_person(service,monkeypatch):
+    """Sin acuerdo posible el cliente no se queda en el aire: pasa a una persona
+    concreta, con fecha concreta, y la llamada se despide."""
+    monkeypatch.setenv('BA_DIALOGUE_MODE','rules')
+    s=service.create('GOLD-G07')
+    s=service.start_call(s['id'])['state']
+    s=cmd(service,s,'message',text='no puedo pagar este mes')
+    seen=set()
+    for _ in range(6):
+        if s['call_end']:break
+        assert s['messages'][-1]['content'] not in seen,'no puede repetir la misma oferta en bucle'
+        seen.add(s['messages'][-1]['content'])
+        s=cmd(service,s,'message',text='no me sirve')
+    assert s['call_end'],'al no llegar a acuerdo la llamada debe cerrarse'
+    assert s['support']['advisor'] in ADVISORS
+    assert date.fromisoformat(s['support']['date'])>date.today()
+    assert s['support']['time'] and s['support']['advisor'] in s['messages'][-1]['content']
+
+def test_requesting_an_advisor_does_not_empty_the_call(service,monkeypatch):
+    """Opening a call from the support screen files a callback request, and that
+    used to switch off every authorized alternative for the rest of the session,
+    so the call had nothing left to negotiate."""
+    monkeypatch.setenv('BA_DIALOGUE_MODE','rules')
+    s=service.create('GOLD-G07')
+    s=cmd(service,s,'callback')
+    assert s['support']
+    s=service.start_call(s['id'])['state']
+    s=cmd(service,s,'message',text='no puedo pagar')
+    assert s['offers'],'la llamada se quedó sin alternativas tras pedir un asesor'
+    assert s['support'],'la solicitud de asesor debe seguir registrada'
+
 def test_everyday_wording_reaches_the_right_barrier():
     """Past tense and ordinary phrasing used to fall through to OTHER, so the
     assistant answered a liquidity problem as if it had understood nothing."""
@@ -127,6 +172,16 @@ def test_everyday_wording_reaches_the_right_barrier():
     assert classify('estoy corto este mes')=='LIQUIDITY'
     assert classify('se me paso la fecha')=='FORGOT'
     assert classify('no puedo pagar')=='LIQUIDITY'  # present tense still works
+
+def test_a_question_without_a_question_mark_is_still_a_question():
+    """Dictated and hurried messages drop the '?'. Without this, "y cuánto sería"
+    was read as choosing the option and jumped straight to confirming it."""
+    from app_service import classify
+    assert classify('y cuanto seria')=='QUESTION'
+    assert classify('cuando vence')=='QUESTION'
+    # The same words later in the sentence state something, they do not ask.
+    assert classify('me pagan cuando cobre el viernes')=='DATE_MISMATCH'
+    assert classify('no puedo pagar')=='LIQUIDITY'
 
 def test_authorization_is_recognised_but_never_when_negated():
     """'está bien, confirmo' was falling through to the model, which reinterpreted

@@ -30,6 +30,39 @@ test('sustained user speech interrupts playback but a transient click does not',
 test('muted microphone cannot dispatch audio for transcription',()=>{
  const a=new CallAudio('test',{});a.callId='test';a.muted=true;a.frame(new Float32Array(4096).fill(.8));assert.equal(a.parts.length,0)
 })
+const withClock=run=>{let time=0;const original=globalThis.performance
+ Object.defineProperty(globalThis,'performance',{value:{now:()=>time},configurable:true})
+ try{return run(()=>{time+=100})}finally{Object.defineProperty(globalThis,'performance',{value:original,configurable:true})}}
+const listening=()=>{const a=new CallAudio('test',{});a.callId='test';a.context={sampleRate:16000}
+ const heard=[];a.hear=b=>heard.push(b);return[a,heard]}
+
+test('steady background noise never opens the microphone on its own',()=>{
+ withClock(tick=>{const [a,heard]=listening()
+  // Loud enough to trip the old fixed threshold, but it is the room, not a voice.
+  const room=new Float32Array(1600).fill(.03)
+  for(let i=0;i<80;i++){tick();a.frame(room)}
+  assert.equal(heard.length,0)
+  assert.ok(a.noiseFloor>.02,'the room should have been learned')
+ })
+})
+test('a voice still gets through once the room is noisy',()=>{
+ withClock(tick=>{const [a,heard]=listening()
+  const room=new Float32Array(1600).fill(.03),voice=new Float32Array(1600).fill(.25),quiet=new Float32Array(1600).fill(.03)
+  for(let i=0;i<40;i++){tick();a.frame(room)}
+  for(let i=0;i<8;i++){tick();a.frame(voice)}
+  for(let i=0;i<12;i++){tick();a.frame(quiet)}
+  assert.equal(heard.length,1)
+ })
+})
+test('a knock or a cough is too short to be sent for transcription',()=>{
+ withClock(tick=>{const [a,heard]=listening()
+  const knock=new Float32Array(1600).fill(.4),silence=new Float32Array(1600)
+  for(let i=0;i<4;i++){tick();a.frame(knock)}      // ~300ms, below the 450ms floor
+  for(let i=0;i<12;i++){tick();a.frame(silence)}
+  assert.equal(heard.length,0)
+ })
+})
+
 test('a turn that never comes back releases the call instead of freezing it',()=>{
  let time=0;const original=globalThis.performance
  Object.defineProperty(globalThis,'performance',{value:{now:()=>time},configurable:true})

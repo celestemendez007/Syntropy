@@ -18,7 +18,7 @@ export function useVoice(onText) {
   useEffect(()=>()=>ref.current?.abort(),[])
   return {start,stop,listening,voiceError}
 }
-const labels={connecting:'Conectando tu llamada…',speaking:'Tu asistente está hablando',listening:'Te escucho, habla con confianza',thinking:'Estoy revisando lo que me cuentas…',muted:'Micrófono silenciado',ended:'Llamada finalizada'}
+const labels={connecting:'Conectando tu llamada…',speaking:'Tu asistente está hablando',listening:'Te escucho, habla con confianza',thinking:'Estoy revisando lo que me cuentas…',muted:'Micrófono silenciado',farewell:'Conversación terminada · puedes colgar',ended:'Llamada finalizada'}
 export default function VoiceCall(){
   const {state,command,callOpen,setCallOpen,busy,navigate,accept}=useBank()
   const [status,setStatus]=useState('connecting'),[seconds,setSeconds]=useState(0),[text,setText]=useState(''),[caption,setCaption]=useState(''),[error,setError]=useState('')
@@ -40,7 +40,9 @@ export default function VoiceCall(){
     setError('');setAudioUrl(null);setStatus('connecting');setSeconds(0);setMuted(false)
     const instance=new CallAudio(latest.current.state.id,{
       status:v=>!disposed&&setStatus(v),caption:v=>!disposed&&setCaption(v),error:v=>!disposed&&setError(v),
-      accept:s=>!disposed&&latest.current.accept(s,false),message:t=>latest.current.command('message',{text:t}),finish:()=>!disposed&&end(),
+      accept:s=>!disposed&&latest.current.accept(s,false),message:t=>latest.current.command('message',{text:t}),
+      // The assistant said goodbye; hanging up is the customer's to make.
+      finish:()=>!disposed&&setStatus('farewell'),
     })
     engine.current=instance
     instance.start().catch(async e=>{if(!disposed){setError(e.name==='NotAllowedError'?'Permite el micrófono para conversar. También puedes continuar por texto.':e.message);setStatus('ended')}await instance.end().catch(()=>{})})
@@ -57,7 +59,7 @@ export default function VoiceCall(){
   return <section className="voice-call" aria-label="Llamada con BA A Tiempo">
     <div className="call-top"><span className={'round-icon yellow '+(status==='speaking'?'speaking':'')}><Icon name="headset" size={30}/></span><div><strong>BA A Tiempo</strong><span>{labels[status]} · {Math.floor(seconds/60).toString().padStart(2,'0')}:{(seconds%60).toString().padStart(2,'0')}</span></div><button className="icon-button" aria-label="Cerrar llamada" onClick={()=>end(true)}><Icon name="close"/></button></div>
     <div className="voice-wave" aria-hidden="true">{Array.from({length:15},(_,i)=><i key={i} style={{height:[12,22,36,19,29][i%5],animationDelay:i*.08+'s',animationPlayState:['speaking','listening'].includes(status)?'running':'paused'}}/>)}</div>
-    <p className="recording-status">{saving?'Guardando tu grabación…':ended?(audioUrl?'Grabación y conversación guardadas':'Conversación guardada'):'● Grabando · Puedes hablar sin tocar el micrófono e interrumpirme'}</p>
+    <p className="recording-status">{saving?'Guardando tu grabación…':ended?(audioUrl?'Grabación y conversación guardadas':'Conversación guardada'):status==='farewell'?'Puedes colgar cuando quieras. Tu conversación queda guardada.':'● Grabando · Puedes hablar sin tocar el micrófono e interrumpirme'}</p>
     <p className="call-caption" aria-live="polite">{caption}</p>
     {error&&<p className="voice-note" role="alert">{error}</p>}
     {state.pending_offer&&!ended&&<div className="call-offer"><strong>{state.pending_offer.title}</strong><p>El resumen está en tu pantalla. Puedes decir «confirmo» o «no acepto».</p></div>}

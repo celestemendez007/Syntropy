@@ -9,6 +9,27 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 _model = None
 _lock = threading.Lock()
+# Primes the transcriber for short conversational Spanish. Whisper also tends to
+# echo this text back when it is handed noise, so heard() below drops that echo.
+PROMPT = 'Bueno, dime. Sí, claro. Asistencia de Bancoagrícola.'
+_PROMPT_WORDS = set(re.findall(r'\w+', PROMPT.lower()))
+
+
+def heard(segments):
+    """What the customer actually said, or nothing.
+
+    Noise that slips through still reaches the transcriber, and a transcriber
+    given noise does not stay quiet: it invents a plausible phrase, often the
+    priming text itself. Answering those is what makes the assistant look like
+    it is listening to the whole room.
+    """
+    kept = [s.text.strip() for s in segments
+            if s.no_speech_prob < .6 and getattr(s, 'avg_logprob', 0) > -1.0]
+    text = ' '.join(kept).strip()
+    words = re.findall(r'\w+', text.lower())
+    if not words:
+        return ''
+    return '' if set(words) <= _PROMPT_WORDS else text
 
 
 def transcribe(data):
@@ -21,8 +42,8 @@ def transcribe(data):
                                   cpu_threads=4, download_root=str(ROOT / '.runtime' / 'whisper'))
         segments, _ = _model.transcribe(io.BytesIO(data), language='es', beam_size=3,
                                        vad_filter=True, condition_on_previous_text=False,
-                                       initial_prompt='Bueno, dime. Sí, claro. Asistencia de Bancoagrícola.')
-        text = ' '.join(s.text.strip() for s in segments if s.no_speech_prob < .6).strip()
+                                       initial_prompt=PROMPT)
+        text = heard(segments)
     return {'text': text, 'latency_ms': round((time.perf_counter() - started) * 1000)}
 
 

@@ -55,6 +55,18 @@ def now():
 def clean(text):
     return "".join(c for c in unicodedata.normalize("NFD", text.lower()) if unicodedata.category(c) != "Mn")
 
+ADVISORS = ['Marta Elena Rivas', 'Óscar Alberto Peña', 'Karla Vanessa Bonilla',
+            'Ernesto Alonso Iraheta', 'Silvia Margarita Portillo', 'Rodrigo Antonio Mejía']
+
+
+def appointment():
+    """Un espacio de agenda plausible: día hábil cercano, en horario de oficina."""
+    day = date.today() + timedelta(days=secrets.choice([1, 2, 3, 4]))
+    while day.weekday() >= 5:
+        day += timedelta(days=1)
+    return day.isoformat(), secrets.choice(['9:00 a. m.', '10:30 a. m.', '2:00 p. m.', '3:30 p. m.'])
+
+
 def statement(text):
     """Solo las frases afirmativas de la apertura del modelo. El servidor agrega
     después su propia pregunta de negociación: dos preguntas seguidas hacen que
@@ -74,7 +86,11 @@ def classify(text):
     t = clean(text)
     if re.search(r'\bno\s+(?:lo\s+)?(?:confirmo|acepto|autorizo)\b', t):
         return 'DECLINE'
-    if '?' in t or '¿' in t or re.search(r'\b(que pasa|como funciona)\b', t):
+    # People drop the question mark when typing or dictating. An interrogative
+    # that opens the message is a question; the same word later usually is not
+    # ("me pagan cuando cobre" states a date, it does not ask one).
+    if ('?' in t or '¿' in t or re.search(r'\b(que pasa|como funciona)\b', t)
+            or re.match(r'(?:y\s+|pero\s+)?(?:cuanto|cuando|como|cual|cuales|por que|de cuanto)\b', t)):
         return 'QUESTION'
     if re.fullmatch(r'(?:si[, ]+)?(?:acepto|confirmo|de acuerdo|estoy de acuerdo|si quiero|me parece bien|usar esta fecha)(?: (?:el pago|la opcion|esta opcion|esa opcion|la operacion))?[.! ]*', t):
         return 'ACCEPT'
@@ -383,7 +399,12 @@ class BankingService:
         return result
 
     def refresh_offers(self, state):
-        if state["product"]["status"] != "UPCOMING" or state["opt_out"] or state["support"]:
+        # Having asked for an advisor does not take the authorized options away:
+        # starting a call from the support screen files that request, and this
+        # used to leave the whole call with nothing to negotiate. A case that
+        # genuinely needs a person is already handled by complex_case below,
+        # which keeps only the human_only alternatives.
+        if state["product"]["status"] != "UPCOMING" or state["opt_out"]:
             state["offers"] = []
             return
         risk = {**state["score"]["risk"], **state["score"]["situation"]}
@@ -424,15 +445,32 @@ class BankingService:
         state["messages"].append({"id": str(uuid4()), "role": "assistant", "content": text, "at": now(),
                                   'call_id': state.get('active_call_id'), 'product_id': state['product']['id']})
 
-    def support(self, state):
+    def support(self, state, closing=False):
+        """Deriva el caso a una persona con nombre y cita concretos.
+
+        `closing` es el cierre de una negociación que no llegó a acuerdo: se
+        despide y deja que el cliente cuelgue, en vez de seguir insistiendo.
+        """
         if not state["support"]:
-            state["support"] = {"id": "BA-" + uuid4().hex[:8].upper(), "status": "Pendiente", "at": now(), "product": state["product"]["name"]}
-            state["events"].append({"type": "CALLBACK_REQUESTED", "at": now(), **state["support"]})
+            day, hour = appointment()
+            state["support"] = {"id": "BA-" + uuid4().hex[:8].upper(), "status": "Pendiente", "at": now(),
+                                "product": state["product"]["name"], "advisor": secrets.choice(ADVISORS),
+                                "date": day, "time": hour}
+            state["events"].append({"type": "CALLBACK_REQUESTED", "title": "Revisión con un asesor", **state["support"]})
             state['product']['_support'] = state['support']
         state["pending_offer"] = None
         state["offers"] = []
         state["view_hint"] = "support"
-        self.assistant(state, "Tu solicitud quedó registrada en esta demostración. Un asesor podrá revisar tu caso contigo. No necesitas resolverlo a solas.")
+        s = state["support"]
+        # La hora ya termina en punto ("9:00 a. m."): no se le agrega otro.
+        cita = f"{s['advisor']} va a revisar tu caso contigo y te contactará el {spoken_date(s['date'])} a las {s['time']}"
+        cita += '' if cita.endswith('.') else '.'
+        if closing:
+            state["call_end"] = True
+            self.assistant(state, f"Entiendo, y está bien: no quiero presionarte. Dejé tu caso con una persona. {cita} "
+                           "Gracias por tomarte el tiempo de conversar conmigo; que tengas un buen día.")
+        else:
+            self.assistant(state, f"Tu solicitud quedó registrada en esta demostración. {cita} No necesitas resolverlo a solas.")
 
     def select(self, state, offer_id):
         if state["product"]["remaining"] <= 0:
@@ -466,6 +504,13 @@ class BankingService:
                                + " ¿Te parece que veamos esta opción?")
             else:
                 self.assistant(state, f"{exc.message} Si quieres, puedo pedir que un asesor revise tu caso contigo.")
+
+    def propose(self, state, offer):
+        """Anota qué opción concreta quedó sobre la mesa. Sin esto, un «no me
+        sirve» no dice a qué le dice que no, y la conversación vuelve a ofrecer
+        lo mismo indefinidamente en vez de avanzar."""
+        state["proposed"] = offer["alt_id"]
+        return self.offer_summary(state, offer)
 
     def offer_summary(self, state, offer):
         title = offer['title'] + ' para tu ' + state['product']['name'] + '.'
@@ -534,7 +579,15 @@ class BankingService:
         state["pending_offer"] = None
         state["view_hint"] = "receipt"
         self.refresh_offers(state)
-        self.assistant(state, "Listo, tu operación simulada quedó registrada y tu producto ya está actualizado. ¿Ya puedes ver el cambio en tu pantalla?")
+        if state.get("active_call_id"):
+            # Cerrada la negociación no queda nada que negociar: se despide y
+            # deja la línea abierta para que el cliente cuelgue cuando quiera.
+            state["call_end"] = True
+            self.assistant(state, f"Listo, {state['name']}: tu acuerdo quedó registrado y tu crédito ya está actualizado. "
+                           "El comprobante te queda en el historial para que lo revises cuando quieras. "
+                           "Gracias por resolverlo conmigo hoy; que tengas un excelente día.")
+        else:
+            self.assistant(state, "Listo, tu operación simulada quedó registrada y tu producto ya está actualizado. ¿Ya puedes ver el cambio en tu pantalla?")
 
     def message(self, state, text, decision=None):
         state["messages"].append({"id": str(uuid4()), "role": "user", "content": text, "at": now(),
@@ -572,7 +625,8 @@ class BankingService:
             state["pending_offer"] = None
             self.assistant(state, "Gracias por avisarme. Registré tu aviso de pago y pausé el recordatorio. El estado del crédito solo cambiará al verificar el pago; si lo necesitas, podemos solicitar una revisión.")
         elif intent == "HUMAN":
-            self.support(state)
+            # Pedir una persona durante la llamada cierra la llamada: ya hay cita.
+            self.support(state, closing=bool(state.get("active_call_id")))
         elif intent == "TECHNICAL":
             state["view_hint"] = "guided"
             self.assistant(state, "Claro, vamos paso a paso. Toca Mis Productos, selecciona tu crédito y busca Próximo pago. No necesito tu contraseña ni códigos. También puedes pedir ayuda a una persona.")
@@ -585,8 +639,18 @@ class BankingService:
                            + ("dime «confirmo» y lo dejo registrado, o «no acepto» si prefieres que veamos otra opción."
                               if state["pending_offer"] else "dime «acepto» y preparo el resumen para que lo revises antes de decidir."))
         elif intent == "DECLINE":
+            refused = (state["pending_offer"] or {}).get("alt_id") or state.get("proposed")
             state["pending_offer"] = None
-            self.assistant(state, "Está bien, no he registrado ningún acuerdo. Podemos revisar otra alternativa o conversar con un asesor.")
+            if refused:
+                state.setdefault("declined", []).append(refused)
+            self.refresh_offers(state)
+            left = [o for o in state["offers"] if o["alt_id"] not in state.get("declined", [])]
+            if left:
+                self.assistant(state, "Está bien, no he registrado ningún acuerdo. Podemos ver otra opción: "
+                               + self.propose(state, left[0]) + " ¿Te parece que revisemos esta?")
+            else:
+                # Sin acuerdo y sin nada más autorizado que ofrecer: lo toma una persona.
+                self.support(state, closing=True)
         elif intent == "PAY":
             self.offer_or_explain(state, "PAY_NOW")
         elif intent == "ACCEPT":
@@ -613,7 +677,7 @@ class BankingService:
                 self.assistant(state, "Gracias por contármelo. Tu caso necesita una revisión personalizada. Puedo ayudarte a solicitar una llamada con un asesor.")
             elif state["offers"]:
                 opening = statement(decision.get('opening')) or ('Lamento que estés pasando por este momento. Gracias por confiarme lo que sucede.' if intent == 'LIQUIDITY' else 'Gracias por contármelo. Busquemos algo que se ajuste a tu situación.')
-                self.assistant(state, opening + ' Podemos revisar: ' + self.offer_summary(state, state['offers'][0]) + ' ¿Te parece que revisemos esta opción?')
+                self.assistant(state, opening + ' Podemos revisar: ' + self.propose(state, state['offers'][0]) + ' ¿Te parece que revisemos esta opción?')
             else:
                 self.assistant(state, "Gracias por contármelo. Para este crédito no tengo una alternativa automática autorizada que aplique, "
                                "pero no te quedas sin salida: puedo pedir que un asesor revise tu caso contigo. ¿Te ayudo con eso?")
@@ -624,7 +688,7 @@ class BankingService:
             self.assistant(state, self.offer_summary(state, state['pending_offer']) + ' Todavía no hemos hecho cambios. Puedes confirmarla o decirme qué te gustaría aclarar.')
         elif intent == 'QUESTION' and state['offers']:
             # Answer with the concrete authorized option instead of a vague line.
-            self.assistant(state, 'Con gusto te explico. ' + self.offer_summary(state, state['offers'][0])
+            self.assistant(state, 'Con gusto te explico. ' + self.propose(state, state['offers'][0])
                            + ' Todavía no he registrado nada. ¿Quieres que la revisemos?')
         elif intent == 'GREETING' or re.search(r'\b(hola|buenas|buenos dias)\b', clean(text)):
             self.assistant(state, f"Hola, {state['name']}. Soy tu asistente de BA A Tiempo. Gracias por conversar conmigo. ¿Te viene bien que revisemos juntos tu próximo pago?")
